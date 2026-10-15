@@ -1,0 +1,23 @@
+/* Keep complete glyphs inside the native header and ticker animation masks. */
+.header .header-link .txt,
+.header .header-menu-toggle .txt,
+.header .header-linkedin .txt,
+.related-news .txt {
+  text-box-trim: none;
+  line-height: 1.6;
+}
+
+/* Keep the taller news line readable above the dark hero background. */
+.header .related-news {
+  background-color: #111;
+}
+
+/* SHOWAVE labels are longer than the reference menu labels. */
+.header .header-menu-list {
+  width: max-content;
+}
+
+.header .header-link .txt,
+.header .header-linkedin .txt {
+  white-space: nowrap;
+}
