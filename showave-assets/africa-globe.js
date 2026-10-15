@@ -1,6 +1,6 @@
 /* Keep the native scene, with a worker-free Canvas2D renderer when graphics fail. */
-import { r as createNativeGlobe, i as preloadLand } from '/mirror/united-carriers.netlify.app/chunks/my-flights-DRrlP7HY.js?showave-native=3';
-import { createFallbackGlobe } from './globe-fallback.js?v=drag-1';
+import { r as createNativeGlobe, i as preloadLand } from '/mirror/united-carriers.netlify.app/chunks/my-flights-DRrlP7HY.js?showave-native=4';
+import { createFallbackGlobe } from './globe-fallback.js?v=perf-1';
 import { createGlobeInteraction } from './globe-interaction.js';
 import { ORIGIN, AFRICA_PHI, airportsData, flightsData } from './globe-routes.js';
 
@@ -26,7 +26,7 @@ function hasDrawnPixels(context) {
 export function r(canvas, options = {}) {
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let source = canvas, native = null, fallback = null, context = null;
-  let destroyed = false, contextLost = false, landReady = false;
+  let destroyed = false, attached = true, contextLost = false, landReady = false;
   let labelsVisible = true, originBranded = false, elapsed = 0;
   let readyFrames = 0, checkedPixels = false, recovering = false;
   const originalMask = canvas.style.getPropertyValue('mask-image');
@@ -115,7 +115,7 @@ export function r(canvas, options = {}) {
 
   return {
     update({ deltaTime = 0 } = {}) {
-      if (destroyed) return;
+      if (destroyed || !attached || document.hidden) return;
       const manual = interaction.getState();
       if (!motion.matches && !manual.isInteracting) elapsed += Math.min(100, Math.max(0, Number.isFinite(deltaTime) ? deltaTime : 0));
       const frame = {
@@ -152,15 +152,18 @@ export function r(canvas, options = {}) {
       source = native ? native.attach(nextCanvas) : fallback.attach(nextCanvas);
       if (native && fallback) fallback.attach(source);
       interaction.attach(source);
+      attached = true;
       return source;
     },
     detach() {
+      attached = false;
       interaction.detach();
       native?.detach();
       fallback?.detach();
     },
     destroy() {
       destroyed = true;
+      attached = false;
       clearTimeout(landTimeout);
       canvas.removeEventListener('webglcontextlost', onLost);
       canvas.removeEventListener('webglcontextrestored', onRestored);

@@ -4,7 +4,10 @@ import { landPoints } from './globe-land-points.js';
 
 const TAU = Math.PI * 2;
 const RAD = Math.PI / 180;
+const FRAME_MS = 1000 / 30;
+const MAX_PIXELS = 1000000;
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
+const projectedPoint = () => ({ x: 0, y: 0, front: false, depth: 0 });
 
 function vector(longitude, latitude) {
   const cos = Math.cos(latitude * RAD);
@@ -46,6 +49,12 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
   const offsetY = Number(options.globeOffsetY) || 0;
   let tiltX = Number.isFinite(options.globeRotationX) ? options.globeRotationX : 0.15;
   const tiltZ = Number.isFinite(options.globeRotationZ) ? options.globeRotationZ : 0.05;
+  let xCos = 1, xSin = 0, zCos = 1, zSin = 0;
+  const projectedLand = land.map(projectedPoint);
+  const projectedRoutes = routes.map(route => ({ ...route, projected: route.points.map(projectedPoint) }));
+  const pins = destinations.map((point, index) => ({ ...point, projected: projectedPoint(), index }));
+  pins.push({ ...ORIGIN, vector: origin, projected: projectedPoint(), index: -1 });
+  const buckets = [[], [], [], []];
   const overlay = document.createElement('canvas');
   overlay.className = 'showave-globe-fallback';
   overlay.setAttribute('aria-hidden', 'true');
@@ -61,9 +70,7 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
   let centerY = 0;
 
   // Match the native renderer's XYZ Euler rotation and perspective camera.
-  function project(point, sine, cosine) {
-    const zCos = Math.cos(tiltZ), zSin = Math.sin(tiltZ);
-    const xCos = Math.cos(tiltX), xSin = Math.sin(tiltX);
+  function project(point, sine, cosine, projected) {
     const x0 = point[0] * zCos - point[1] * zSin;
     const y0 = point[0] * zSin + point[1] * zCos;
     const x1 = x0 * cosine + point[2] * sine;
@@ -71,12 +78,11 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     const y = y0 * xCos - z1 * xSin;
     const z = y0 * xSin + z1 * xCos;
     const perspective = focal / Math.max(0.1, cameraZ - z * scale);
-    return {
-      x: width / 2 + (x1 * scale + offsetX) * perspective,
-      y: height / 2 - (y * scale + offsetY) * perspective,
-      front: z * cameraZ > scale,
-      depth: z
-    };
+    projected.x = width / 2 + (x1 * scale + offsetX) * perspective;
+    projected.y = height / 2 - (y * scale + offsetY) * perspective;
+    projected.front = z * cameraZ > scale;
+    projected.depth = z;
+    return projected;
   }
 
   function makeSphere() {
@@ -118,13 +124,14 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     if (destroyed) return;
     const w = Math.max(1, Math.round(nextWidth || source.clientWidth || source.offsetWidth || 800));
     const h = Math.max(1, Math.round(nextHeight || source.clientHeight || source.offsetHeight || w));
-    const ratio = clamp(window.devicePixelRatio || 1, 1, 1.5);
+    // Keep the same CSS size and geometry without allocating huge 4K buffers.
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5, Math.sqrt(MAX_PIXELS / (w * h)));
     if (w === width && h === height && ratio === dpr) return;
     width = w;
     height = h;
     dpr = ratio;
-    overlay.width = Math.round(width * dpr);
-    overlay.height = Math.round(height * dpr);
+    overlay.width = Math.max(1, Math.floor(width * dpr));
+    overlay.height = Math.max(1, Math.floor(height * dpr));
     overlay.style.width = `${width}px`;
     overlay.style.height = `${height}px`;
     focal = height / (2 * Math.tan(27.5 * RAD));
@@ -185,13 +192,15 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
 
   function draw() {
     const sine = Math.sin(phi), cosine = Math.cos(phi);
+    xCos = Math.cos(tiltX); xSin = Math.sin(tiltX);
+    zCos = Math.cos(tiltZ); zSin = Math.sin(tiltZ);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
     ctx.drawImage(sphere, 0, 0, width, height);
     const pointRadius = clamp(radius * 0.0015, 0.5, 1);
-    const buckets = [[], [], [], []];
-    for (const point of land) {
-      const p = project(point, sine, cosine);
+    for (const bucket of buckets) bucket.length = 0;
+    for (let index = 0; index < land.length; index++) {
+      const p = project(land[index], sine, cosine, projectedLand[index]);
       if (p.front) buckets[clamp(Math.floor((p.depth - scale / cameraZ) * 6), 0, 3)].push(p);
     }
     for (let index = 0; index < buckets.length; index++) {
@@ -203,15 +212,15 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
       }
       ctx.fill();
     }
-    for (const route of routes) {
-      const points = route.points.map(point => project(point, sine, cosine));
-      const visible = point => point.front || Math.hypot(point.x - centerX, point.y - centerY) > radius * 1.002;
+    for (const route of projectedRoutes) {
+      const points = route.projected;
+      for (let index = 0; index < points.length; index++) project(route.points[index], sine, cosine, points[index]);
       const head = (elapsed / 6500 + route.phase) % 1.5;
       const tail = head - 0.55;
       ctx.lineWidth = Math.max(0.7, radius * 0.0018);
       for (let index = 1; index < points.length; index++) {
         const progress = index / 64;
-        if (progress > head || progress < tail || !visible(points[index - 1]) || !visible(points[index])) continue;
+        if (progress > head || progress < tail || !routeVisible(points[index - 1]) || !routeVisible(points[index])) continue;
         ctx.strokeStyle = `rgba(255,${150 + Math.round(55 * progress)},70,${clamp((progress - tail) / 0.55, 0, 1) * 0.95})`;
         ctx.beginPath();
         ctx.moveTo(points[index - 1].x, points[index - 1].y);
@@ -219,10 +228,8 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
         ctx.stroke();
       }
     }
-    const pins = destinations.map((point, index) => ({ ...point, projected: project(point.vector, sine, cosine), index }));
-    pins.push({ ...ORIGIN, projected: project(origin, sine, cosine), index: -1 });
     for (const pin of pins) {
-      const point = pin.projected;
+      const point = project(pin.vector, sine, cosine, pin.projected);
       if (!point.front) continue;
       const isOrigin = pin.index === -1;
       const dotRadius = clamp(radius * (isOrigin ? 0.012 : 0.005), isOrigin ? 4 : 2, isOrigin ? 8 : 4);
@@ -241,19 +248,25 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     needsDraw = false;
   }
 
+  function routeVisible(point) {
+    const dx = point.x - centerX, dy = point.y - centerY;
+    return point.front || dx * dx + dy * dy > radius * radius * 1.004004;
+  }
+
   function update({ phi: nextPhi, theta, deltaTime = 0 } = {}) {
-    if (destroyed) return;
+    if (destroyed || !attached || document.hidden) return;
     if (Number.isFinite(nextPhi)) phi = nextPhi;
     if (Number.isFinite(theta)) tiltX = theta;
     elapsed += clamp(Number.isFinite(deltaTime) ? deltaTime : 0, 0, 100);
     const now = performance.now();
-    if (!needsDraw && now - lastDraw < 1000 / 30) return;
+    const sinceDraw = now - lastDraw;
+    if (!needsDraw && sinceDraw < FRAME_MS) return;
     // Native GSAP controls the source canvas. Mirror it so reveals and page
     // transitions keep exactly the same visibility and transform ownership.
     const visible = syncSource();
     if (!visible) return;
     draw();
-    lastDraw = now;
+    lastDraw = Number.isFinite(sinceDraw) ? now - sinceDraw % FRAME_MS : now;
   }
 
   function attach(newSourceCanvas) {
@@ -281,6 +294,11 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     },
     isInteracting() { return false; },
     detach() { attached = false; source.remove(); overlay.remove(); },
-    destroy() { destroyed = true; attached = false; overlay.remove(); sphere.width = sphere.height = 0; }
+    destroy() {
+      destroyed = true;
+      attached = false;
+      overlay.remove();
+      overlay.width = overlay.height = sphere.width = sphere.height = 0;
+    }
   };
 }

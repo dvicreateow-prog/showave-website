@@ -8,6 +8,10 @@ Drag the globe with a mouse, swipe horizontally on touch screens, or focus it an
 
 The ocean uses the original live water shader and cloud transitions on compact screens as well as desktop. A lighter simulation and disabled ocean camera gestures keep compact views scrollable. While graphics initialize or are unavailable, a Canvas2D surface animates the saved ocean photograph; the existing mobile wake video accompanies it. Compatibility animation pauses offscreen and in hidden tabs, and respects reduced-motion settings.
 
+Graphics preparation warms compressed upcoming assets in the browser's HTTP cache using two low-priority requests at a time. It yields during input, pauses in hidden tabs, and skips speculative downloads on data-saving connections. Image sequences asynchronously decode a small directional frame window, share at most two decode jobs, and cap decoded storage at 64 MiB on desktop / 32 MiB on compact screens. Their buffers use layout dimensions with a one-million-pixel cap rather than transformed dimensions. All original frames remain available; distant decoded frames are released and can be restored from HTTP cache.
+
+Ocean GPU setup starts after the hero reveal and yields between preparation stages, while near-viewport loading still handles fast scrolling. Ocean drawing is capped at 60 fps, offscreen/hidden simulation and ship bobbing pause, and camera calculations reuse cached dimensions. Native globe buffers are capped at 1.5 million pixels and fallback buffers at one million; routes and interaction remain unchanged.
+
 Static hosting adaptations include a same-origin content policy, the publication hostname, three ocean texture aliases, directory-route handling, legacy redirects, and the existing public Windows preview.14 download configuration. Scene imagery remains as it was in the saved SHOWAVE project.
 
 GitHub Pages serves https://showave.afrounity.club/. Preview locally with `python -m http.server 8182 --bind 127.0.0.1` from this directory. Downloads are hosted at https://github.com/dvicreateow-prog/showave-releases.
