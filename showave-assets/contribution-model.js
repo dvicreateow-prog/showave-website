@@ -41,7 +41,7 @@ export function navigationLink(value) {
   const external = publicSource(value);
   if (external) return external;
   // Local navigation is deliberately separate from public evidence validation.
-  return typeof value === 'string' && /^\/(?:manuals|software|downloads|community|foundation|blog|plugins|api|mcp|donate|developers|contributors)\/?(?:\?[a-z0-9_=&%-]+)?(?:#[a-z0-9-]+)?$/i.test(value) ? value : null;
+  return typeof value === 'string' && /^\/(?:manuals|software|downloads|community|foundation|blog|plugins|api|mcp|donate|developers|contributors)(?:\?[a-z0-9_=&%-]+)?(?:#[a-z0-9-]+)?$/i.test(value) ? value : null;
 }
 
 export function publicIdentity(profile) {

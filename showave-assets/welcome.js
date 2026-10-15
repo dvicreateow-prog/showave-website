@@ -145,10 +145,10 @@ if (page) {
 
   // An optional host can use this API; this page never redirects on its own.
   window.SHOWAVEWelcome = Object.freeze({
-    route: '/start/',
+    route: '/start',
     startupEnabled: () => state.preferences.welcomeOnStart,
     setStartup(enabled) { state.preferences.welcomeOnStart = enabled === true; startup.checked = state.preferences.welcomeOnStart; save(); },
-    open() { window.location.assign('/start/'); }
+    open() { window.location.assign('/start'); }
   });
   startup.checked = state.preferences.welcomeOnStart;
   renderFilter();

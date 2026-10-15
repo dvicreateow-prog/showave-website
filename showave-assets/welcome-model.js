@@ -1,7 +1,7 @@
 /* Website welcome preferences and recent guide links. No desktop file history. */
 export const STORAGE_KEY = 'showave.welcome.v1';
 export const MAX_RECENTS = 8;
-export const DRAFT_LINK = '/community/#community-dashboard';
+export const DRAFT_LINK = '/community#community-dashboard';
 const MAX_STORED_BYTES = 32768;
 const freeze = value => Object.freeze(value);
 
@@ -28,7 +28,7 @@ const toolById = new Map(TOOLS.map(tool => [tool.id, tool]));
 const roleIds = new Set(ROLES.map(role => role.id));
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 export const toolFor = id => toolById.get(id) || null;
-export const guideFor = id => toolById.has(id) ? `/manuals/?article=product-family#${id}` : null;
+export const guideFor = id => toolById.has(id) ? `/manuals?article=product-family#${id}` : null;
 
 export function filterTools(role = 'general', query = '') {
   const selectedRole = roleIds.has(role) ? role : 'general';

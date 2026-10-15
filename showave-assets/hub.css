@@ -39,10 +39,10 @@
 .hub-response h3 {font:22px var(--display);color:#e4eaf3;}
 .hub-response p {color:#a8b3c3;line-height:1.7;overflow-wrap:anywhere;}
 .hub-status {min-height:25px;color:#ffd0b2;font:13px/1.6 Arial,sans-serif;margin:16px 0;}
-.showave-guide-launcher {position:fixed;bottom:22px;right:24px;z-index:1010;border:1px solid #f79267;color:#fff;background:#171c26;padding:13px 17px;border-radius:99px;box-shadow:0 5px 26px #0005;font:11px/1.2 'monospace',monospace;cursor:pointer;}
+.showave-guide-launcher {position:fixed;bottom:22px;right:24px;z-index:1010;border:1px solid #f79267;color:#fff;background:#171c26;padding:13px 17px;border-radius:99px;box-shadow:0 5px 26px #0005;font:11px/1.2 'BT Steinhart Mono',monospace;cursor:pointer;}
 .showave-guide-dialog {width:min(570px,calc(100vw - 32px));max-height:calc(100dvh - 40px);padding:32px;border:1px solid #3d4757;border-radius:8px;background:#10151e;color:#e7edf6;box-shadow:0 20px 100px #000a;color-scheme:dark;overflow:auto;font-family:Arial,sans-serif;}
 .showave-guide-dialog::backdrop {background:#0009;backdrop-filter:blur(3px);}
-.showave-guide-dialog h2 {font:36px/1.1 'Chakra Petch',Arial,sans-serif;margin:16px 0;}
+.showave-guide-dialog h2 {font:36px/1.1 'BT Steinhart',Arial,sans-serif;margin:16px 0;}
 .showave-guide-dialog h3 {font-size:17px;margin:16px 0 9px;}
 .showave-guide-note {font:12px/1.65 Arial,sans-serif;color:#9daabd;}
 .showave-guide-close {position:absolute;right:14px;top:12px;background:transparent;border:0;color:#ccc;font-size:26px;cursor:pointer;width:36px;height:36px;}

@@ -1,0 +1,40 @@
+/* The origin label belongs to the existing globe's CSS2D renderer. */
+.showave-origin-label .globe-label-text {
+  position: relative;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 157, 95, .8);
+  border-radius: 3px;
+  background: rgba(12, 17, 25, .94);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.25;
+  white-space: nowrap;
+  box-shadow: 0 0 22px rgba(255, 120, 60, .24);
+}
+.showave-origin-caption {
+  display: block;
+  margin-top: 4px;
+  color: #ffb489;
+  font-size: 7px;
+  letter-spacing: .08em;
+}
+.showave-origin-label .globe-label-text::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border: 1px solid rgba(255, 149, 84, .7);
+  border-radius: 6px;
+  pointer-events: none;
+  animation: showave-origin-wave 3s ease-out infinite;
+}
+@keyframes showave-origin-wave {
+  0% { transform: scale(.94); opacity: .6; }
+  85%, 100% { transform: scale(1.32, 1.65); opacity: 0; }
+}
+@media (max-width: 767px) {
+  .showave-origin-label .globe-label-text { padding: 6px 8px; font-size: 8px; }
+  .showave-origin-caption { font-size: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .showave-origin-label .globe-label-text::before { animation: none; opacity: .25; }
+}

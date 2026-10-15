@@ -1,0 +1,23 @@
+Reference-font provenance for this localhost-only design comparison
+Retrieved 2026-10-04 from public assets used by https://unitedcarriers.com/.
+The owner requested the original fonts for the local reference reconstruction.
+No font license has been supplied or asserted by this file. Do not treat this
+provenance record as permission to redistribute or publish the fonts.
+
+steinhart-bold.woff2 — BT Steinhart Bold, weight 700
+https://cdn.prod.website-files.com/6a44eec1ed1af2c4c403df6b/6a44eec1ed1af2c4c403df88_BTSteinhart-Bold-subset.woff2
+
+steinhart-medium.woff2 — BT Steinhart Medium, weight 500
+https://cdn.prod.website-files.com/6a44eec1ed1af2c4c403df6b/6a44eec1ed1af2c4c403df89_BTSteinhart-Medium-subset.woff2
+
+steinhart-mono.woff2 — BT Steinhart Regular Mono, weight 400
+https://cdn.prod.website-files.com/6a44eec1ed1af2c4c403df6b/6a44eec1ed1af2c4c403df8c_BTSteinhart-RegularMono-subset.woff2
+
+Public stylesheet declaring these font names and weights:
+https://cdn.prod.website-files.com/6a44eec1ed1af2c4c403df6b/css/united-carriers.webflow.shared.fc188c3b2.min.css
+
+helvetica-medium.woff2 — Helvetica Neue Medium, weight500
+https://cdn.prod.website-files.com/6a44eec1ed1af2c4c403df6b/6a44eec1ed1af2c4c403df8b_HelveticaNeueMedium-subset.woff2
+
+helvetica-roman.woff2 — Helvetica Neue Roman, weight400
+https://cdn.prod.website-files.com/6a44eec1ed1af2c4c403df6b/6a44eec1ed1af2c4c403df8a_HelveticaNeueRoman-subset.woff2

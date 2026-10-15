@@ -53,21 +53,21 @@ function start() {
     warning.setAttribute('role', 'status'); dashboard.append(warning);
   }
 
-  const buildPanel = panel('Find the work. Join the review.', 'community-build-title', 'Use the contribution guide to prepare a focused change. Use the public website repository for website changes, reproducible reports and review.');
+  const buildPanel = panel('Find the work. Join the review.', 'community-build-title', 'Use the contribution guide to prepare a focused change. Contributors with access can discuss it in the current repository and request a review.');
   buildPanel.id = 'build-with-us'; buildPanel.classList.add('community-build');
   const buildGrid = node('div', 'community-build-grid');
   const repositoryCard = node('div', 'community-repository-card');
   const repositoryHeading = node('div', 'community-repository-heading');
-  repositoryHeading.append(node('span', 'community-tag community-tag-draft', 'Public website source'), node('span', 'community-build-kicker', 'WEBSITE DEVELOPMENT'));
-  repositoryCard.append(repositoryHeading, node('h3', '', 'Build in the open.'), node('p', 'community-repository-path', 'dvicreateow-prog / showave-website'), node('p', 'community-note', 'This public repository contains the website and guides. The desktop application source remains private; installer downloads are published separately in SHOWAVE Releases.'));
+  repositoryHeading.append(node('span', 'community-tag community-tag-draft', 'Access required'), node('span', 'community-build-kicker', 'CURRENT DEVELOPMENT HOME'));
+  repositoryCard.append(repositoryHeading, node('h3', '', 'Build in the open.'), node('p', 'community-repository-path', 'dvicreateow-prog / openlive'), node('p', 'community-note', 'Free and open source is our commitment. The current GitHub links require repository access. The contribution guide explains source publication and licensing status.'));
   const repositoryUrl = githubLink(communityConfig.links.repository);
   if (repositoryUrl) {
     const link = navigation(repositoryUrl, 'Open repository ↗'); link.className = 'community-button community-button-primary'; repositoryCard.append(link);
   }
   const workLinks = node('nav', 'community-work-links'); workLinks.setAttribute('aria-label', 'Current project on GitHub');
   [
-    { key: 'issues', title: 'Issues', description: 'Public website feedback and preview reports' },
-    { key: 'pullRequests', title: 'Pull requests', description: 'Public website code reviews' }
+    { key: 'issues', title: 'Issues', description: 'Issue tracker · access required' },
+    { key: 'pullRequests', title: 'Pull requests', description: 'Code reviews · access required' }
   ].forEach(item => {
     const url = githubLink(communityConfig.links[item.key]); if (!url) return;
     const link = navigation(url, `${item.title} on GitHub`); link.className = 'community-work-link';

@@ -1,9 +1,7 @@
-# Website reference restoration
+# SHOWAVE website
 
-Complete saved United Carriers website reference, retained for the owner's later SHOWAVE branding work. Original design, business copy, imagery, fonts, page structure and native animation modules are preserved from the supplied local project. The original reference remains https://unitedcarriers.com/; existing third-party notices remain with their files.
+The complete saved SHOWAVE website from before hosting: the official logo, Afro Unity Group identity, Kampala globe, native animation sequence, software family and authored information pages. This export preserves the saved homepage and all 35 authored routes. The original local project and private application source are not included in this repository.
 
-All 81 captured pages and 1,566 captured assets are included. Changes for static hosting add the publication hostname to the existing native startup allowlist, materialize three ocean-texture aliases, and add a same-origin network policy. The saved local project and its source snapshots are unchanged. The captured source had one unavailable generic Webflow placeholder SVG.
+Static hosting adaptations are limited to a same-origin content policy, the publication hostname, three ocean texture aliases, directory-route handling, legacy redirects, and the existing public Windows preview.14 download configuration. Scene imagery remains as it was in the saved SHOWAVE project.
 
-Original forms, commerce and account services are not connected to their production backends. The SHOWAVE app source remains private. Its existing public Windows download is retained at /downloads/ and https://github.com/dvicreateow-prog/showave-releases.
-
-GitHub Pages serves https://showave.afrounity.club/. Preview with `python -m http.server 8182 --bind 127.0.0.1` from this directory.
+GitHub Pages serves https://showave.afrounity.club/. Preview locally with `python -m http.server 8182 --bind 127.0.0.1` from this directory. Downloads are hosted at https://github.com/dvicreateow-prog/showave-releases.

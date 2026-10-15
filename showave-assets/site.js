@@ -75,6 +75,7 @@
     }));
   }
   // The deployable site only uses explicitly configured public HTTPS links.
+  // The localhost preview can additionally serve the three exact, existing build artifacts.
   const platformDetails = {
     windows: { title: 'Windows desktop preview', arch: 'x64', icon: '⊞', description: 'An unsigned preview for testing SHOWAVE on Windows. Rehearse with your hardware and sources before using it in a live production.' },
     linux: { title: 'Linux portable preview', arch: 'x64', icon: '◇', description: 'A portable Linux build with its local helper included. Graphics, screen capture, and production hardware still need testing on a real Linux desktop.' },
@@ -82,11 +83,12 @@
   };
   const dialog = $('#download-dialog');
   let selectedPlatform = /Android/i.test(navigator.userAgent) ? 'android' : /Linux/i.test(navigator.userAgent) ? 'linux' : 'windows';
-  let releases = { version: '0.1.0-preview.14', platforms: {} };
+  let releases = { version: '0.1.0-preview.6', platforms: {} };
   let releasePromise;
+  const isLocalPreview = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
   function safeDownload(value) {
     if (!value || typeof value !== 'string') return null;
-    try { const url = new URL(value, location.href); if (url.username || url.password) return null; return url.protocol === 'https:' ? url.href : null; } catch { return null; }
+    try { const url = new URL(value, location.href); if (url.username || url.password) return null; return url.protocol === 'https:' || (isLocalPreview && url.origin === location.origin && /^\/downloads\/(windows|linux|android)$/.test(url.pathname)) ? url.href : null; } catch { return null; }
   }
   async function loadReleases() {
     if (releasePromise) return releasePromise;
@@ -95,12 +97,14 @@
         const response = await fetch('/showave-assets/release-config.json');
         if (response.ok) { const config = await response.json(); if (config.version && config.platforms) releases = config; }
       } catch { /* Keep the truthful unavailable state when offline. */ }
-
+      if (isLocalPreview) {
+        try { const response = await fetch('/_preview/releases.json'); if (response.ok) { const local = await response.json(); if (local.version === releases.version) releases.platforms = { ...releases.platforms, ...local.platforms }; } } catch { /* A generic static preview has no local release endpoint. */ }
+      }
       renderPlatform(selectedPlatform);
       $$('[data-platform-summary]').forEach(label => {
         const entry = releases.platforms[label.dataset.platformSummary];
         const available = Boolean(safeDownload(entry?.url));
-        label.textContent = available ? [entry.version || releases.version, entry.size ? `${(entry.size / 1e6).toFixed(0)} MB` : '', 'Public installer available'].filter(Boolean).join(' · ') : 'Public build pending · No public download is available';
+        label.textContent = [entry?.version || releases.version, available ? [entry.size ? `${(entry.size / 1e6).toFixed(0)} MB` : '', entry.local ? 'Local installer available' : 'Public installer available'].filter(Boolean).join(' · ') : 'Public installer link is being prepared'].join(' · ');
       });
     })();
     return releasePromise;
@@ -115,8 +119,8 @@
     $('#release-panel').setAttribute('aria-labelledby', `platform-${key}`);
     $('#release-name').textContent = details.title;
     const version = release?.version || releases.version;
-    $('#release-version').textContent = url ? `${version} · ${details.arch}` : `Public build pending · ${details.arch}`;
-    $$('[data-release-build]', dialog).forEach(label => { label.textContent = url ? `BUILD ${version.toUpperCase()} / BETA` : 'PUBLIC BUILD PENDING'; });
+    $('#release-version').textContent = `${version} · ${details.arch}`;
+    $$('[data-release-build]', dialog).forEach(label => { label.textContent = `BUILD ${version.toUpperCase()} / BETA`; });
     $('#platform-icon').textContent = details.icon;
     $('#release-description').textContent = details.description;
     const download = $('#release-download');
@@ -124,8 +128,8 @@
     if (url) { download.href = url; download.innerHTML = `Download ${key === 'android' ? 'review APK' : `${key === 'linux' ? 'Linux' : 'Windows'} preview`} <span aria-hidden="true">↓</span>`; }
     else download.removeAttribute('href');
     $('#release-unavailable').hidden = Boolean(url);
-    $('#release-unavailable').textContent = 'No public installer is available for this platform. A reviewed public build is pending.';
-    $('#release-size').textContent = url ? [release.size ? `${(release.size / 1e6).toFixed(0)} MB` : '', 'Preview build. Read the release notes before installing.'].filter(Boolean).join(' · ') : 'Choose Windows for the current public preview, or check the release notes for platform status.';
+    $('#release-unavailable').textContent = 'No installer is available from this server yet. Public download links are being prepared.';
+    $('#release-size').textContent = url ? [release.size ? `${(release.size / 1e6).toFixed(0)} MB` : '', release.local ? 'Available from your local preview server.' : 'Preview build. Read the release notes before installing.'].filter(Boolean).join(' · ') : 'The release page will link to verified installers when public hosting is ready.';
   }
   if (dialog) {
     let originalOverflow = '';
@@ -166,7 +170,7 @@
   const articleMount = $('#article-mount');
   if (articleMount) {
     const routeArticles = { '/plugins': 'plugins', '/api': 'api', '/developers': 'api', '/mcp': 'mcp', '/donate': 'donate', '/source': 'open-source', '/governance': 'governance', '/contribute': 'contribute', '/sponsors': 'sponsorship' };
-    const key = new URLSearchParams(location.search).get('article') || routeArticles[location.pathname.replace(/\/+$/, '') || '/'] || 'getting-started';
+    const key = new URLSearchParams(location.search).get('article') || routeArticles[location.pathname.replace(/\/$/, '') || '/'] || 'getting-started';
     const collection = window.SHOWAVE_CONTENT || {};
     const article = Object.prototype.hasOwnProperty.call(collection, key) ? collection[key] : null;
     if (article) {
@@ -204,7 +208,7 @@
     }
   }
   // One destination registry serves the dashboard and the library. Swapping the
-  // public website repository later updates these links without rewriting articles.
+  // temporary repository later updates these links without rewriting articles.
   if ($('[data-community-link]')) {
     import('./community-config.js').then(({ communityConfig, githubLink }) => {
       $$('[data-community-link]').forEach(link => {

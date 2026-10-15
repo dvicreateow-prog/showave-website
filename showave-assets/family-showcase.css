@@ -1,0 +1,75 @@
+/* The product directory uses its own type and spacing; native scenes stay scoped outside it. */
+#showave-family {
+  --family-ink: #171918;
+  --family-muted: #626863;
+  --family-line: #dedfd9;
+  --family-paper: #fbfbf8;
+  --family-accent: #b84021;
+  position: relative;
+  color: var(--family-ink);
+  background: var(--family-paper);
+  scroll-margin-top: 80px;
+}
+#showave-family .home-partners { padding: 68px 0 54px; background: transparent; }
+#showave-family .home-partners-bg { display: none; }
+#showave-family .showave-family-container { width: calc(100% - 80px); max-width: 1360px; margin: 0 auto; }
+#showave-family .showave-family-heading { display: grid; grid-template-columns: 1.15fr 1fr; column-gap: 80px; row-gap: 28px; padding-bottom: 38px; }
+#showave-family .home-partners-label,
+#showave-family .home-partners-cate { position: static; padding: 0; width: auto; height: auto; }
+#showave-family .showave-family-eyebrow,
+#showave-family .showave-family-count { font-family: Arial, sans-serif; font-size: 11px; line-height: 1.5; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+#showave-family .showave-family-eyebrow::before { content: ''; display: inline-block; width: 6px; height: 6px; margin: 0 9px 1px 0; border-radius: 50%; background: var(--family-accent); }
+#showave-family .showave-family-count { color: var(--family-muted); text-align: right; font-variant-numeric: tabular-nums; }
+#showave-family #showave-family-title { margin: 0; font-family: Arial, sans-serif; font-size: clamp(38px, 4.3vw, 64px); line-height: 1.04; font-weight: 600; letter-spacing: -.055em; text-transform: none; }
+#showave-family #showave-family-title span { color: var(--family-muted); }
+#showave-family .showave-family-intro { align-self: end; max-width: 380px; justify-self: end; }
+#showave-family .showave-family-intro p { margin: 0 0 20px; font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; font-weight: 400; letter-spacing: -.01em; }
+#showave-family .showave-family-intro a { display: inline-flex; align-items: center; gap: 26px; color: var(--family-ink); font-family: Arial, sans-serif; font-size: 13px; line-height: 1.5; font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--family-ink); padding: 0 0 5px; }
+#showave-family .showave-family-intro a span { font-size: 20px; line-height: 1; }
+#showave-family .home-partners-main { width: 100%; margin: 0; padding: 0; }
+#showave-family .showave-family-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1px; padding: 1px; background: var(--family-line); width: 100%; }
+#showave-family .showave-family-item { display: block; min-width: 0; width: auto; height: auto; padding: 0; aspect-ratio: auto; opacity: 1 !important; visibility: visible !important; transform: none !important; border: 0; background: var(--family-paper); }
+#showave-family .showave-family-card { display: flex; flex-direction: column; position: relative; height: 100%; min-height: 266px; padding: 24px 28px 22px; color: var(--family-ink); text-decoration: none; background: var(--family-paper); box-sizing: border-box; }
+#showave-family .showave-family-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+#showave-family .showave-family-symbol { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #f0f1eb; border: 1px solid #e7e8e1; border-radius: 8px; }
+#showave-family .showave-family-symbol svg { display: block; width: 30px; height: 30px; }
+#showave-family .showave-family-number { color: #767c76; font-family: Arial,sans-serif; font-size: 11px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+#showave-family .showave-family-category { margin: 0 0 6px; color: var(--family-muted); font-family: Arial,sans-serif; font-size: 10px; line-height: 1.45; font-weight: 600; letter-spacing: .085em; text-transform: uppercase; }
+#showave-family .showave-family-card h3 { margin: 0 0 10px; font-family: Arial,sans-serif; font-size: 28px; line-height: 1.12; font-weight: 600; letter-spacing: -.035em; text-transform: none; }
+#showave-family .showave-family-description { max-width: 310px; margin: 0; font-family: Arial,sans-serif; color: var(--family-muted); font-size: 13px; line-height: 1.6; font-weight: 400; letter-spacing: 0; }
+#showave-family .showave-family-card-link { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: auto; padding-top: 22px; font-family: Arial,sans-serif; font-size: 11px; line-height: 1.4; font-weight: 600; }
+#showave-family .showave-family-card-link svg { display: block; width: 20px; height: 20px; flex: 0 0 auto; }
+#showave-family .showave-family-card:hover { background: #f1f2ec; }
+#showave-family .showave-family-card:hover .showave-family-symbol { color: var(--family-accent); background: #fbeee7; border-color: #ecd4c6; }
+#showave-family .showave-family-card:hover .showave-family-card-link svg { transform: translateX(4px); }
+#showave-family a:focus-visible { outline: 2px solid var(--family-accent); outline-offset: -4px; border-radius: 2px; }
+#showave-family .showave-family-intro a:focus-visible { outline-offset: 5px; }
+#showave-family .showave-family-footer { display: flex; justify-content: space-between; gap: 16px; padding-top: 20px; font-family: Arial,sans-serif; font-size: 11px; line-height: 1.5; color: var(--family-muted); }
+@media (prefers-reduced-motion:no-preference) {
+  #showave-family .showave-family-card, #showave-family .showave-family-symbol, #showave-family .showave-family-card-link svg { transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease; }
+}
+@media (max-width:991px) {
+  /* The header already links to SHOWAVE; the floating badge obscures narrow layouts. */
+  #awwwards.awwwards-badge { display: none; }
+  #showave-family .showave-family-container { width: calc(100% - 48px); }
+  #showave-family .showave-family-heading { column-gap: 32px; }
+  #showave-family .showave-family-card { padding: 22px; }
+  #showave-family .showave-family-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #showave-family .showave-family-item:last-child { grid-column: 1 / -1; }
+  #showave-family .showave-family-item:last-child .showave-family-card { min-height: 240px; }
+}
+@media (max-width:600px) {
+  #showave-family .home-partners { padding: 42px 0 32px; }
+  #showave-family .showave-family-container { width: calc(100% - 40px); }
+  #showave-family .showave-family-heading { display: flex; flex-direction: column; gap: 18px; padding-bottom: 28px; }
+  #showave-family .home-partners-cate { display: none; }
+  #showave-family .showave-family-intro { align-self: stretch; max-width: none; }
+  #showave-family .showave-family-intro p { font-size: 14px; margin-bottom: 16px; }
+  #showave-family .showave-family-list { grid-template-columns: minmax(0,1fr); }
+  #showave-family .showave-family-card { min-height: 0; padding: 22px; }
+  #showave-family .showave-family-card-top { margin-bottom: 18px; }
+  #showave-family .showave-family-description { max-width: none; font-size: 14px; }
+  #showave-family .showave-family-card h3 { font-size: 28px; }
+  #showave-family .showave-family-item:last-child .showave-family-card { min-height: 0; }
+  #showave-family .showave-family-footer { flex-direction: column; gap: 6px; }
+}

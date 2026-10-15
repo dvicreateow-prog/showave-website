@@ -1,5 +1,5 @@
-@font-face{font-family:ShowDisplay;src:url("/showave-assets/assets/chakra-petch-semibold.ttf") format("truetype");font-weight:700;font-display:swap}
-@font-face{font-family:ShowMono;src:local("Courier New");font-display:swap}
+@font-face{font-family:ShowDisplay;src:url('/showave-assets/assets/reference-fonts/steinhart-bold.woff2') format('woff2');font-weight:700;font-display:swap}
+@font-face{font-family:ShowMono;src:url('/showave-assets/assets/reference-fonts/steinhart-mono.woff2') format('woff2');font-display:swap}
 .ecosystem-page,.resource-page{--ink:#f4f5f7;--paper:#101319;--line:#303640;--muted:#a4abb8;--display:ShowDisplay,Arial,sans-serif;--mono:ShowMono,monospace;background:#101319;color:var(--ink);color-scheme:dark}
 .ecosystem-page .site-header,.resource-page .site-header{background:#101319;border-bottom:1px solid #303640;display:flex;align-items:center;justify-content:space-between;gap:25px;min-height:100px}
 .ecosystem-page .desktop-nav,.resource-page .desktop-nav{display:flex;flex-direction:row;gap:23px;font:11px var(--mono)}

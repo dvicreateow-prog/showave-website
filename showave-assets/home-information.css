@@ -1,0 +1,7 @@
+/* Information/icon pass only. Native scene geometry and transitions are frozen. */
+.home-service-item-ic img { object-fit: contain; }
+.home-partners-item-thumb img { object-fit: contain; max-height: 70%; max-width: 70%; }
+.home-partners-item-thumb { display: flex; align-items: center; justify-content: center; }
+.home-partners-wrap .home-partners-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.home-service-item[data-showave-tool] .home-service-item-title h3 { text-transform: uppercase; }
+.footer-logo-placeholder img { filter: brightness(.35); }

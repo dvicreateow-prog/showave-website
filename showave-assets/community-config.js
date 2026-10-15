@@ -36,13 +36,13 @@ export const communityConfig = freeze({
     sponsors: []
   },
   links: {
-    contributionGuide: '/manuals/?article=contribute',
-    sponsorship: '/foundation/#support',
-    // Public website destinations. No desktop application source migration or
+    contributionGuide: '/manuals?article=contribute',
+    sponsorship: '/foundation#support',
+    // Owner-supplied destinations. The repository is temporary; no migration or
     // automatic contributor import is implied by these navigation links.
-    repository: 'https://github.com/dvicreateow-prog/showave-website',
-    issues: 'https://github.com/dvicreateow-prog/showave-website/issues',
-    pullRequests: 'https://github.com/dvicreateow-prog/showave-website/pulls',
+    repository: 'https://github.com/dvicreateow-prog/openlive',
+    issues: 'https://github.com/dvicreateow-prog/openlive/issues',
+    pullRequests: 'https://github.com/dvicreateow-prog/openlive/pulls',
     futureHome: 'https://github.com/afrounity256-hub?tab=repositories'
   },
   tiers: [
