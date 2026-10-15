@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="t d">
+  <title id="t">SHOWAVE Chaser</title>
+  <desc id="d">Slice sequencing and pixel maps. SHOWAVE wolf on the Chaser signature colour, code Ch.</desc>
+  <defs>
+    <linearGradient id="chaser-tile" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#caf671"/><stop offset=".5" stop-color="#B6F23A"/><stop offset="1" stop-color="#6a8c22"/></linearGradient>
+    <radialGradient id="chaser-glow" cx=".28" cy=".12" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset=".45" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="chaser-rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#374911" stop-opacity=".6"/></linearGradient>
+    <filter id="chaser-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#374911" flood-opacity=".55"/></filter>
+    <clipPath id="chaser-clip"><rect x="8" y="8" width="240" height="240" rx="58"/></clipPath>
+  </defs>
+  <rect x="8" y="12" width="240" height="240" rx="58" fill="#374911" opacity=".45"/>
+  <rect x="8" y="8" width="240" height="240" rx="58" fill="url(#chaser-tile)"/>
+  <g clip-path="url(#chaser-clip)">
+    <rect x="8" y="8" width="240" height="240" fill="url(#chaser-glow)"/>
+    <path d="M-10 168C30 168 40 140 78 140S122 196 160 196 206 150 266 150M-10 186C30 186 40 158 78 158S122 214 160 214 206 168 266 168M-10 204C30 204 40 176 78 176S122 232 160 232 206 186 266 186" fill="none" stroke="#121A02" stroke-opacity=".16" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="212" cy="44" r="5" fill="#121A02" opacity=".9"/>
+    <circle cx="212" cy="44" r="11" fill="none" stroke="#121A02" stroke-opacity=".35" stroke-width="2"/>
+  </g>
+  <svg x="66" y="30" width="124" height="126" viewBox="256.797 202.383 378.75 384.75" overflow="visible"><path d="M 370.992188 430.945312 C 363.929688 415.097656 349.679688 397.382812 327.035156 377.136719 L 399.363281 403.90625 L 418.941406 445.597656 Z M 521.5 430.945312 C 528.5625 415.097656 542.8125 397.382812 565.457031 377.136719 L 493.128906 403.90625 L 473.550781 445.597656 Z M 446.246094 278.703125 L 487.535156 273.375 L 577.84375 202.382812 L 590.894531 269.648438 L 591.429688 347.566406 L 551.871094 311.605469 L 572.78125 293.222656 L 564.65625 249.269531 L 526.429688 317.597656 L 588.765625 365.949219 L 635.515625 413.765625 L 591.960938 434.277344 L 622.863281 447.863281 L 561.460938 494.082031 L 553.46875 465.445312 L 513.644531 546.160156 L 477.414062 481.160156 L 490.332031 564.273438 L 472.753906 587.050781 L 450.90625 576.128906 L 472.484375 545.496094 L 463.828125 521.785156 L 428.664062 521.785156 L 420.007812 545.496094 L 441.585938 576.128906 L 419.742188 587.050781 L 402.160156 564.273438 L 415.078125 481.160156 L 378.847656 546.160156 L 339.023438 465.445312 L 331.03125 494.082031 L 269.628906 447.863281 L 300.53125 434.277344 L 256.976562 413.765625 L 303.726562 365.949219 L 366.0625 317.597656 L 327.835938 249.269531 L 319.578125 293.222656 L 340.621094 311.605469 L 301.0625 347.566406 L 301.597656 269.648438 L 314.648438 202.382812 L 404.957031 273.375 Z M 446.246094 278.703125" fill="#121A02" fill-rule="evenodd" filter="url(#chaser-shadow)"/></svg>
+  <text x="34" y="222" fill="#121A02" font-family="'Space Grotesk','Arial Black',Arial,Helvetica,sans-serif" font-size="46" font-weight="800" letter-spacing="-2">Ch</text>
+  <g transform="translate(176 176)">
+    <rect width="50" height="50" rx="15" fill="#121A02" fill-opacity=".14"/>
+    <g transform="translate(9 9) scale(1.333)" color="#121A02" fill="none" stroke="#121A02" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5.5L11 12l-6.5 6.5M12.5 5.5L19 12l-6.5 6.5"/></g>
+  </g>
+  <rect x="9" y="9" width="238" height="238" rx="57" fill="none" stroke="url(#chaser-rim)" stroke-width="2"/>
+</svg>

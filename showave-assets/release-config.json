@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0-preview.14",
+  "platforms": {
+    "windows": {
+      "version": "0.1.0-preview.14",
+      "url": "https://github.com/dvicreateow-prog/showave-releases/releases/download/v0.1.0-preview.14/SHOWAVE-Live-Preview-Setup-0.1.0-preview.14-x64.exe"
+    },
+    "linux": {
+      "version": "0.1.0-preview.6",
+      "url": null
+    },
+    "android": {
+      "version": "0.1.0-preview.6",
+      "url": null
+    }
+  }
+}

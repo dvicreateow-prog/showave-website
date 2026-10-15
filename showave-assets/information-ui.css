@@ -1,0 +1,9 @@
+/* New information pages only; no native homepage or scene selectors. */
+@media (max-width: 800px) {
+  .ecosystem-page .site-header, .resource-page .site-header { flex-direction: row; align-items: center; min-height: 88px; gap: 16px; padding: 20px 22px; }
+  .ecosystem-page .desktop-nav, .resource-page .desktop-nav { display: none; }
+  .ecosystem-page .header-actions, .resource-page .header-actions { flex-shrink: 0; }
+  .ecosystem-page .menu-toggle, .resource-page .menu-toggle { display: block; min-width: 44px; min-height: 44px; }
+  .ecosystem-page .mobile-menu, .resource-page .mobile-menu { top: 88px; overflow-y: auto; padding: 28px 22px; gap: 14px; }
+  .mobile-menu a { display: block; }
+}
