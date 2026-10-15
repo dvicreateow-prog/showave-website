@@ -116,7 +116,8 @@ export function r(canvas, options = {}) {
       if (destroyed) return;
       if (!motion.matches && !native?.isInteracting()) elapsed += Math.min(100, Math.max(0, Number.isFinite(deltaTime) ? deltaTime : 0));
       const frame = {
-        phi: AFRICA_PHI + (motion.matches ? 0 : Math.sin(elapsed / 24000) * 0.22),
+        // One full turn in about 70 seconds makes the sphere's depth visible.
+        phi: AFRICA_PHI + (motion.matches ? 0 : (elapsed * 0.00009) % (Math.PI * 2)),
         deltaTime: motion.matches ? 0 : deltaTime
       };
       if (native && !contextLost && (!fallback || recovering)) {

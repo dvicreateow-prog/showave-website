@@ -32,6 +32,12 @@
   85%, 100% { transform: scale(1.32, 1.65); opacity: 0; }
 }
 @media (max-width: 767px) {
+  /* The native sphere is 100svh square. A fixed negative right offset
+     pushes its centre off-screen in short mobile/browser panels. */
+  .home-hero-globe {
+    left: calc(50% - 50svh);
+    right: auto;
+  }
   .showave-origin-label .globe-label-text { padding: 6px 8px; font-size: 8px; }
   .showave-origin-caption { font-size: 6px; }
 }
