@@ -1,0 +1,28 @@
+/* Preserve the original water layers while exposing the full scene at every width. */
+.home-why-ocean {
+  background: #07344f url('/mirror/cdn.prod.website-files.com/6a44eec1ed1af2c4c403df6b/6a44eec1ed1af2c4c403e981_a44825c5ffe02b6cfe7c994f6b46794b_ocean%20%281%29.jpg') center / cover;
+}
+.home-why-ocean webflow-3d[scene="OceanScene"] {
+  display: block;
+  pointer-events: none;
+  touch-action: pan-y pinch-zoom;
+}
+.home-why-ocean webflow-3d[scene="OceanScene"] canvas {
+  pointer-events: none;
+  touch-action: pan-y pinch-zoom !important;
+}
+.home-why-ocean[data-showave-water="native"] .home-why-ocean-img.mobile,
+.home-why-ocean[data-showave-water="fallback"] .home-why-ocean-img.mobile {
+  visibility: hidden;
+}
+.home-why-ocean[data-showave-water="native"] .home-why-ship-wave {
+  visibility: hidden;
+}
+@media (max-width: 767px) {
+  .home-why-wrap .home-why-cloud-overlap,
+  .home-why-wrap .home-why-cloud-overlap-bg,
+  .home-why-wrap .home-why-cloud-decor,
+  .home-why-wrap .home-why-cloud-overlap-item {
+    display: block;
+  }
+}
