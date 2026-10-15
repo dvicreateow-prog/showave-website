@@ -9,13 +9,20 @@ function connect(ocean) {
   const nativeHost = ocean.querySelector('webflow-3d[scene="OceanScene"]');
   if (!nativeHost) return;
   let nativeCanvas = null;
+  let supported = false;
+  let capabilityChecked = false;
+  let canvasVisibility = '';
   let contextLost = false;
   let mode = '';
   let visible = false;
   let destroyed = false;
+  let resizeFrame = 0;
+  let videoPlayPending = null;
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const video = ocean.querySelector('video');
+  const wake = video?.closest('.home-why-ship-wave') || video;
   const fallback = createOceanFallback(ocean, { onReady: inspect });
+  const fallbackCanvas = ocean.querySelector('.showave-ocean-fallback');
 
   function onLost(event) {
     event.preventDefault();
@@ -25,7 +32,28 @@ function connect(ocean) {
 
   function onRestored() {
     contextLost = false;
+    capabilityChecked = false;
     inspect();
+  }
+
+  function updateVideo(ready) {
+    if (!video) return;
+    // Native water or an offscreen scene needs no layout read or wake playback.
+    const shouldPlay = !ready && visible && !document.hidden && !motion.matches &&
+      getComputedStyle(wake).display !== 'none';
+    if (!shouldPlay) {
+      if (!video.paused || videoPlayPending) {
+        videoPlayPending = null;
+        video.pause();
+      }
+      return;
+    }
+    if (!video.paused || videoPlayPending) return;
+    const request = {};
+    videoPlayPending = request;
+    Promise.resolve(video.play()).catch(() => {}).finally(() => {
+      if (videoPlayPending === request) videoPlayPending = null;
+    });
   }
 
   function inspect() {
@@ -35,21 +63,26 @@ function connect(ocean) {
       nativeCanvas?.removeEventListener('webglcontextlost', onLost);
       nativeCanvas?.removeEventListener('webglcontextrestored', onRestored);
       nativeCanvas = nextCanvas;
+      capabilityChecked = false;
+      supported = false;
       contextLost = false;
       nativeCanvas?.addEventListener('webglcontextlost', onLost);
       nativeCanvas?.addEventListener('webglcontextrestored', onRestored);
     }
-    let supported = false;
-    try {
-      const context = nativeCanvas?.getContext('webgl2');
-      supported = !!context && !context.isContextLost() &&
-        !!context.getExtension('EXT_color_buffer_float');
-    } catch { /* The moving photographic surface covers unavailable graphics. */ }
-    const ready = supported && !contextLost && nativeCanvas.style.visibility === 'visible';
+    if (nativeCanvas && !capabilityChecked && !contextLost) {
+      try {
+        const context = nativeCanvas.getContext('webgl2');
+        supported = !!context && !context.isContextLost() &&
+          !!context.getExtension('EXT_color_buffer_float');
+        capabilityChecked = !!context && !context.isContextLost();
+      } catch { supported = false; capabilityChecked = true; }
+    }
+    canvasVisibility = nativeCanvas?.style.visibility || '';
+    const ready = supported && !contextLost && canvasVisibility === 'visible';
     if (nativeCanvas && (!supported || contextLost)) nativeHost.dataset.showaveOceanPaused = 'true';
     else delete nativeHost.dataset.showaveOceanPaused;
     fallback.setActive(!ready);
-    const painted = ocean.querySelector('.showave-ocean-fallback')?.dataset.ready === 'true';
+    const painted = fallbackCanvas?.dataset.ready === 'true';
     const nextMode = ready ? 'native' : painted ? 'fallback' : 'loading';
     if (nextMode !== mode) {
       mode = nextMode;
@@ -57,14 +90,15 @@ function connect(ocean) {
     }
     // The native shader creates its own wake. Keep the supplied wake video
     // above the photographic renderer when GPU water is unavailable.
-    if (video) {
-      const wakeVisible = getComputedStyle(video.closest('.home-why-ship-wave') || video).display !== 'none';
-      if (ready || !visible || !wakeVisible || document.hidden || motion.matches) video.pause();
-      else video.play().catch(() => {});
-    }
+    updateVideo(ready);
   }
 
-  const nativeObserver = new MutationObserver(inspect);
+  const nativeObserver = new MutationObserver(records => {
+    // GSAP writes transforms every scrolling frame. Renderer readiness only
+    // changes when its canvas is replaced or its visibility changes.
+    if (records.some(record => record.type === 'childList' ||
+      (record.target === nativeCanvas && nativeCanvas.style.visibility !== canvasVisibility))) inspect();
+  });
   nativeObserver.observe(nativeHost, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
   const viewObserver = new IntersectionObserver(entries => {
     visible = entries[0].isIntersecting;
@@ -72,18 +106,26 @@ function connect(ocean) {
   });
   viewObserver.observe(ocean);
   document.addEventListener('visibilitychange', inspect);
-  window.addEventListener('resize', inspect);
+  function onResize() {
+    if (!resizeFrame) resizeFrame = requestAnimationFrame(() => {
+      resizeFrame = 0;
+      inspect();
+    });
+  }
+  window.addEventListener('resize', onResize);
   motion.addEventListener('change', inspect);
   inspect();
   bindings.set(ocean, () => {
     destroyed = true;
+    if (resizeFrame) cancelAnimationFrame(resizeFrame);
+    videoPlayPending = null;
     video?.pause();
     nativeObserver.disconnect();
     viewObserver.disconnect();
     nativeCanvas?.removeEventListener('webglcontextlost', onLost);
     nativeCanvas?.removeEventListener('webglcontextrestored', onRestored);
     document.removeEventListener('visibilitychange', inspect);
-    window.removeEventListener('resize', inspect);
+    window.removeEventListener('resize', onResize);
     motion.removeEventListener('change', inspect);
     fallback.destroy();
     delete ocean.dataset.showaveWater;

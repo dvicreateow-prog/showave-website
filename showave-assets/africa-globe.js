@@ -1,6 +1,6 @@
 /* Keep the native scene, with a worker-free Canvas2D renderer when graphics fail. */
-import { r as createNativeGlobe, i as preloadLand } from '/mirror/united-carriers.netlify.app/chunks/my-flights-DRrlP7HY.js?showave-native=4';
-import { createFallbackGlobe } from './globe-fallback.js?v=perf-1';
+import { r as createNativeGlobe, i as preloadLand } from '/mirror/united-carriers.netlify.app/chunks/my-flights-DRrlP7HY.js?showave-native=5';
+import { createFallbackGlobe } from './globe-fallback.js?v=smooth-1';
 import { createGlobeInteraction } from './globe-interaction.js';
 import { ORIGIN, AFRICA_PHI, airportsData, flightsData } from './globe-routes.js';
 
@@ -29,6 +29,7 @@ export function r(canvas, options = {}) {
   let destroyed = false, attached = true, contextLost = false, landReady = false;
   let labelsVisible = true, originBranded = false, elapsed = 0;
   let readyFrames = 0, checkedPixels = false, recovering = false;
+  let lastNativePhi = NaN, lastNativeTilt = NaN, nativeDirty = true;
   const originalMask = canvas.style.getPropertyValue('mask-image');
   const originalMaskPriority = canvas.style.getPropertyPriority('mask-image');
 
@@ -54,6 +55,7 @@ export function r(canvas, options = {}) {
     source.dataset.showaveRenderer = 'webgl';
     delete source.dataset.showaveGlobeReason;
     recovering = false;
+    nativeDirty = true;
   }
 
   function onLost(event) {
@@ -124,9 +126,14 @@ export function r(canvas, options = {}) {
         theta: 0.15 + manual.pitch,
         deltaTime: motion.matches ? 0 : deltaTime
       };
-      if (native && !contextLost && (!fallback || recovering)) {
+      const nativeNeedsFrame = nativeDirty || !motion.matches || !checkedPixels || recovering ||
+        frame.phi !== lastNativePhi || frame.theta !== lastNativeTilt;
+      if (native && !contextLost && (!fallback || recovering) && nativeNeedsFrame) {
         try {
           native.update(frame);
+          lastNativePhi = frame.phi;
+          lastNativeTilt = frame.theta;
+          nativeDirty = false;
           identifyOrigin();
           if (landReady && !checkedPixels && ++readyFrames >= 30 && source.clientWidth > 0) {
             checkedPixels = true;
@@ -139,11 +146,13 @@ export function r(canvas, options = {}) {
     },
     resize(width, height) {
       if (destroyed) return;
+      nativeDirty = true;
       try { native?.resize(width, height); } catch { useFallback('resize-error'); }
       fallback?.resize(width, height);
     },
     isInteracting() { return interaction.getState().isInteracting; },
     setLabelsVisible(visible) {
+      nativeDirty = true;
       labelsVisible = visible;
       native?.setLabelsVisible(visible && !fallback);
       fallback?.setLabelsVisible(visible);
@@ -153,6 +162,7 @@ export function r(canvas, options = {}) {
       if (native && fallback) fallback.attach(source);
       interaction.attach(source);
       attached = true;
+      nativeDirty = true;
       return source;
     },
     detach() {

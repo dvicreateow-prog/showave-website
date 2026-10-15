@@ -4,8 +4,10 @@ import { landPoints } from './globe-land-points.js';
 
 const TAU = Math.PI * 2;
 const RAD = Math.PI / 180;
-const FRAME_MS = 1000 / 30;
+const FRAME_MS = 1000 / 60;
+const FRAME_TOLERANCE = FRAME_MS / 4;
 const MAX_PIXELS = 1000000;
+const MIN_PIXELS = 600000;
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
 const projectedPoint = () => ({ x: 0, y: 0, front: false, depth: 0 });
 
@@ -43,6 +45,11 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
   let lastDraw = -Infinity;
   let phi = AFRICA_PHI;
   let needsDraw = true;
+  let pixelBudget = MAX_PIXELS;
+  let averageCost = 0, costlyFrames = 0, easyFrames = 0;
+  let paintedPhi = NaN, paintedTilt = NaN, paintedTime = NaN;
+  let labelFontSize = 8, drawingFont = '';
+  const labelMetrics = new Map();
   const cameraZ = Math.max(1.2, Number(options.cameraZ) || 2.9);
   const scale = clamp(Number(options.globeScale) || 1, 0.1, cameraZ - 0.1);
   const offsetX = Number(options.globeOffsetX) || 0;
@@ -125,7 +132,7 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     const w = Math.max(1, Math.round(nextWidth || source.clientWidth || source.offsetWidth || 800));
     const h = Math.max(1, Math.round(nextHeight || source.clientHeight || source.offsetHeight || w));
     // Keep the same CSS size and geometry without allocating huge 4K buffers.
-    const ratio = Math.min(window.devicePixelRatio || 1, 1.5, Math.sqrt(MAX_PIXELS / (w * h)));
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.5, Math.sqrt(pixelBudget / (w * h)));
     if (w === width && h === height && ratio === dpr) return;
     width = w;
     height = h;
@@ -138,6 +145,9 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     radius = focal * scale / Math.sqrt(cameraZ * cameraZ - scale * scale);
     centerX = width / 2 + offsetX * focal / cameraZ;
     centerY = height / 2 - offsetY * focal / cameraZ;
+    labelFontSize = clamp(width / 115, 8, 11);
+    labelMetrics.clear();
+    drawingFont = '';
     makeSphere();
     needsDraw = true;
   }
@@ -165,11 +175,18 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
 
   function drawLabel(point, text, isOrigin = false) {
     if (!labelsVisible || !point.front) return;
-    const fontSize = clamp(width / 115, 8, 11);
+    const fontSize = labelFontSize;
     const padding = isOrigin ? 10 : 5;
-    ctx.font = `bold ${fontSize}px "Courier New", monospace`;
-    const labelWidth = ctx.measureText(text).width + padding * 2;
-    const labelHeight = fontSize * (isOrigin ? 3.4 : 1.8);
+    const font = `bold ${fontSize}px "Courier New", monospace`;
+    if (drawingFont !== font) { ctx.font = font; drawingFont = font; }
+    let metrics = labelMetrics.get(text);
+    if (!metrics || metrics.isOrigin !== isOrigin) {
+      metrics = { width: ctx.measureText(text).width + padding * 2,
+        height: fontSize * (isOrigin ? 3.4 : 1.8), isOrigin };
+      labelMetrics.set(text, metrics);
+    }
+    const labelWidth = metrics.width;
+    const labelHeight = metrics.height;
     const x = point.x - labelWidth / 2;
     const y = point.y - labelHeight - (isOrigin ? 21 : 12);
     ctx.fillStyle = isOrigin ? 'rgba(8,12,19,.94)' : 'rgba(7,10,15,.84)';
@@ -184,7 +201,8 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     ctx.textBaseline = 'middle';
     ctx.fillText(text, point.x, y + fontSize * (isOrigin ? 1.1 : 0.9));
     if (isOrigin) {
-      ctx.font = `bold ${fontSize * 0.72}px "Courier New", monospace`;
+      drawingFont = `bold ${fontSize * 0.72}px "Courier New", monospace`;
+      ctx.font = drawingFont;
       ctx.fillStyle = '#ffac76';
       ctx.fillText('AFRO UNITY GROUP', point.x, y + fontSize * 2.35);
     }
@@ -245,7 +263,25 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
       ctx.fill();
       drawLabel(point, isOrigin ? ORIGIN.label : pin.country, isOrigin);
     }
+    paintedPhi = phi;
+    paintedTilt = tiltX;
+    paintedTime = elapsed;
     needsDraw = false;
+  }
+
+  function adaptQuality(cost) {
+    averageCost = averageCost ? averageCost * 0.9 + cost * 0.1 : cost;
+    costlyFrames = averageCost > 8 ? costlyFrames + 1 : 0;
+    easyFrames = averageCost < 4 ? easyFrames + 1 : 0;
+    let nextBudget = pixelBudget;
+    if (costlyFrames >= 30) nextBudget = Math.max(MIN_PIXELS, Math.floor(pixelBudget * 0.8));
+    else if (easyFrames >= 180) nextBudget = Math.min(MAX_PIXELS, Math.ceil(pixelBudget * 1.2));
+    if (nextBudget !== pixelBudget) {
+      pixelBudget = nextBudget;
+      // Resize before the next paint, keeping every land point and route.
+      needsDraw = true;
+      costlyFrames = easyFrames = 0;
+    }
   }
 
   function routeVisible(point) {
@@ -260,13 +296,20 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     elapsed += clamp(Number.isFinite(deltaTime) ? deltaTime : 0, 0, 100);
     const now = performance.now();
     const sinceDraw = now - lastDraw;
-    if (!needsDraw && sinceDraw < FRAME_MS) return;
+    // The GSAP callback may arrive a few milliseconds before its ideal phase.
+    // Allow that jitter without accidentally reducing a 60 Hz ticker to 30 Hz.
+    if (!needsDraw && sinceDraw < FRAME_MS - FRAME_TOLERANCE) return;
     // Native GSAP controls the source canvas. Mirror it so reveals and page
     // transitions keep exactly the same visibility and transform ownership.
     const visible = syncSource();
     if (!visible) return;
+    if (!needsDraw && phi === paintedPhi && tiltX === paintedTilt && elapsed === paintedTime) return;
+    const forced = needsDraw;
+    const started = performance.now();
     draw();
-    lastDraw = Number.isFinite(sinceDraw) ? now - sinceDraw % FRAME_MS : now;
+    adaptQuality(Math.max(0, performance.now() - started));
+    lastDraw = forced || !Number.isFinite(sinceDraw) ? now :
+      lastDraw + Math.max(1, Math.floor((sinceDraw + FRAME_TOLERANCE) / FRAME_MS)) * FRAME_MS;
   }
 
   function attach(newSourceCanvas) {

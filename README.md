@@ -12,6 +12,10 @@ Graphics preparation warms compressed upcoming assets in the browser's HTTP cach
 
 Ocean GPU setup starts after the hero reveal and yields between preparation stages, while near-viewport loading still handles fast scrolling. Ocean drawing is capped at 60 fps, offscreen/hidden simulation and ship bobbing pause, and camera calculations reuse cached dimensions. Native globe buffers are capped at 1.5 million pixels and fallback buffers at one million; routes and interaction remain unchanged.
 
+The ocean loads a prepared half-float reflection map instead of filtering the environment image during page startup. It was generated from the original environment with the bundled renderer and verified against the original reflected pixels at three roughness levels. The original generator remains available if the prepared asset cannot load. Wake shaders compile before the first simulation step. Sustained slow rendering gently reduces the ocean backing resolution, with gradual recovery when frame timing improves; the wave simulation and visual effects stay intact.
+
+Both globe and ocean scheduling tolerate callback jitter while targeting 60 fps. The native globe skips completely invisible arrival rings and reuses parent transforms. Globe backing resolution adapts within bounded limits during sustained rendering pressure, while native text labels stay at full CSS resolution. The compatibility globe caches text measurements and avoids repainting unchanged reduced-motion frames. Ocean support reacts to readiness changes instead of repeating GPU and layout checks on every animated transform.
+
 Static hosting adaptations include a same-origin content policy, the publication hostname, three ocean texture aliases, directory-route handling, legacy redirects, and the existing public Windows preview.14 download configuration. Scene imagery remains as it was in the saved SHOWAVE project.
 
 GitHub Pages serves https://showave.afrounity.club/. Preview locally with `python -m http.server 8182 --bind 127.0.0.1` from this directory. Downloads are hosted at https://github.com/dvicreateow-prog/showave-releases.
