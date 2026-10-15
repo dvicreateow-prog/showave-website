@@ -1,6 +1,7 @@
 /* Keep the native scene, with a worker-free Canvas2D renderer when graphics fail. */
-import { r as createNativeGlobe, i as preloadLand } from '/mirror/united-carriers.netlify.app/chunks/my-flights-DRrlP7HY.js?showave-native=2';
-import { createFallbackGlobe } from './globe-fallback.js';
+import { r as createNativeGlobe, i as preloadLand } from '/mirror/united-carriers.netlify.app/chunks/my-flights-DRrlP7HY.js?showave-native=3';
+import { createFallbackGlobe } from './globe-fallback.js?v=drag-1';
+import { createGlobeInteraction } from './globe-interaction.js';
 import { ORIGIN, AFRICA_PHI, airportsData, flightsData } from './globe-routes.js';
 
 export { airportsData as n, flightsData as t, preloadLand as i };
@@ -73,7 +74,7 @@ export function r(canvas, options = {}) {
   canvas.setAttribute('aria-label', 'SHOWAVE connections from Kampala, Uganda, to the world. Illustrative routes.');
   try {
     native = createNativeGlobe(canvas, {
-      ...options, airportsData, flightsData, showArcs: true,
+      ...options, airportsData, flightsData, showArcs: true, enableControls: false,
       pinDotColor: '#ff8a45', arcColor: '#ff783c', arcThickness: 0.0016,
       arcAltBase: 0.035, arcAltMultiplier: 0.09,
       onLandReady() {
@@ -91,6 +92,7 @@ export function r(canvas, options = {}) {
   } catch {
     useFallback('webgl-unavailable');
   }
+  const interaction = createGlobeInteraction(canvas);
 
   // A failed or blocked worker must not leave the hero empty indefinitely.
   const landTimeout = window.setTimeout(() => {
@@ -114,10 +116,12 @@ export function r(canvas, options = {}) {
   return {
     update({ deltaTime = 0 } = {}) {
       if (destroyed) return;
-      if (!motion.matches && !native?.isInteracting()) elapsed += Math.min(100, Math.max(0, Number.isFinite(deltaTime) ? deltaTime : 0));
+      const manual = interaction.getState();
+      if (!motion.matches && !manual.isInteracting) elapsed += Math.min(100, Math.max(0, Number.isFinite(deltaTime) ? deltaTime : 0));
       const frame = {
         // One full turn in about 70 seconds makes the sphere's depth visible.
-        phi: AFRICA_PHI + (motion.matches ? 0 : (elapsed * 0.00009) % (Math.PI * 2)),
+        phi: AFRICA_PHI + manual.yaw + (motion.matches ? 0 : (elapsed * 0.00009) % (Math.PI * 2)),
+        theta: 0.15 + manual.pitch,
         deltaTime: motion.matches ? 0 : deltaTime
       };
       if (native && !contextLost && (!fallback || recovering)) {
@@ -138,7 +142,7 @@ export function r(canvas, options = {}) {
       try { native?.resize(width, height); } catch { useFallback('resize-error'); }
       fallback?.resize(width, height);
     },
-    isInteracting() { return !fallback && !!native?.isInteracting(); },
+    isInteracting() { return interaction.getState().isInteracting; },
     setLabelsVisible(visible) {
       labelsVisible = visible;
       native?.setLabelsVisible(visible && !fallback);
@@ -147,9 +151,11 @@ export function r(canvas, options = {}) {
     attach(nextCanvas) {
       source = native ? native.attach(nextCanvas) : fallback.attach(nextCanvas);
       if (native && fallback) fallback.attach(source);
+      interaction.attach(source);
       return source;
     },
     detach() {
+      interaction.detach();
       native?.detach();
       fallback?.detach();
     },
@@ -160,6 +166,7 @@ export function r(canvas, options = {}) {
       canvas.removeEventListener('webglcontextrestored', onRestored);
       fallback?.destroy();
       native?.destroy();
+      interaction.destroy();
       if (originalMask) source.style.setProperty('mask-image', originalMask, originalMaskPriority);
       else source.style.removeProperty('mask-image');
       delete source.dataset.showaveRenderer;

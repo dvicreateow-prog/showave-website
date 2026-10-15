@@ -1,3 +1,23 @@
+/* Let the globe receive gestures through the hero's decorative text layer. */
+.home-hero-text-wrap { pointer-events: none; }
+.home-hero-text-wrap a,
+.home-hero-text-wrap button { pointer-events: auto; }
+.home-hero-globe .globe-label { pointer-events: none !important; }
+.home-hero-globe {
+  pointer-events: auto;
+  touch-action: pan-y pinch-zoom;
+}
+/* OrbitControls writes touch-action inline even when its controls are disabled. */
+#globe {
+  pointer-events: auto;
+  touch-action: pan-y pinch-zoom !important;
+}
+#globe:focus-visible {
+  outline: 2px solid rgba(255, 157, 95, .85);
+  outline-offset: -4px;
+  border-radius: 50%;
+}
+
 /* The origin label belongs to the existing globe's CSS2D renderer. */
 .showave-origin-label .globe-label-text {
   position: relative;

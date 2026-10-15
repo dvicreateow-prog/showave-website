@@ -44,7 +44,7 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
   const scale = clamp(Number(options.globeScale) || 1, 0.1, cameraZ - 0.1);
   const offsetX = Number(options.globeOffsetX) || 0;
   const offsetY = Number(options.globeOffsetY) || 0;
-  const tiltX = Number.isFinite(options.globeRotationX) ? options.globeRotationX : 0.15;
+  let tiltX = Number.isFinite(options.globeRotationX) ? options.globeRotationX : 0.15;
   const tiltZ = Number.isFinite(options.globeRotationZ) ? options.globeRotationZ : 0.05;
   const overlay = document.createElement('canvas');
   overlay.className = 'showave-globe-fallback';
@@ -241,9 +241,10 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     needsDraw = false;
   }
 
-  function update({ phi: nextPhi, deltaTime = 0 } = {}) {
+  function update({ phi: nextPhi, theta, deltaTime = 0 } = {}) {
     if (destroyed) return;
     if (Number.isFinite(nextPhi)) phi = nextPhi;
+    if (Number.isFinite(theta)) tiltX = theta;
     elapsed += clamp(Number.isFinite(deltaTime) ? deltaTime : 0, 0, 100);
     const now = performance.now();
     if (!needsDraw && now - lastDraw < 1000 / 30) return;
