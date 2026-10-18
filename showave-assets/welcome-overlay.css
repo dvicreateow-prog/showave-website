@@ -42,6 +42,12 @@
 #showave-welcome-overlay .welcome-home-guides p{margin:8px 0 12px;color:#aaa;font-size:12px;line-height:1.55}
 #showave-welcome-overlay .welcome-home-guides a{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:29px;border-radius:2px;color:#ccc;font-size:11px;line-height:1.4;padding:4px 0}
 .welcome-home-guides a span{flex-shrink:0;font-size:10px;color:#999}
+#showave-welcome-overlay .welcome-home-pitch .welcome-home-pitch-kicker{margin:0 0 8px;color:#c7c7c7;font:600 9px/1.35 'Segoe UI',system-ui,Arial,sans-serif;letter-spacing:.015em}
+#showave-welcome-overlay .welcome-home-body .welcome-home-pitch-title{margin:0;color:#f4f4f4;font:700 28px/.98 var(--font--heading,WelcomeHomeBrand,'Segoe UI',sans-serif);letter-spacing:-.025em;text-transform:uppercase}
+#showave-welcome-overlay .welcome-home-pitch .welcome-home-pitch-intro{margin:11px 0 10px;color:#b5b5b5;font:11px/1.5 'Segoe UI',system-ui,Arial,sans-serif}
+#showave-welcome-overlay .welcome-home-guides .welcome-home-start-show{color:#f2f2f2}
+#showave-welcome-overlay[open] .welcome-home-pitch{animation:welcome-home-pitch-enter 650ms cubic-bezier(.2,.65,.3,1) 80ms both}
+@keyframes welcome-home-pitch-enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .welcome-home-footer{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:30px;min-height:77px;margin:0 32px;padding:14px 0 16px;border-top:1px solid #303030}
 #showave-welcome-overlay .welcome-home-footer .welcome-home-donate{padding:2px 0;min-height:25px}
 .welcome-home-donate img{display:block;width:112px;max-width:100%;height:auto;pointer-events:none}
@@ -50,7 +56,9 @@
 #showave-welcome-overlay .welcome-overlay-continue:hover{color:#fff}
 .welcome-overlay-continue>span:last-child{font-size:16px;color:#aaa}
 .motion-paused .welcome-home-portrait-secondary{transition:none}
+.motion-paused #showave-welcome-overlay[open] .welcome-home-pitch{animation:none}
 @media(max-width:540px){#showave-welcome-overlay{width:calc(100% - 20px);max-height:calc(100svh - 20px)}.welcome-home-hero{flex-basis:auto;aspect-ratio:2/1}.welcome-home-body{gap:18px;padding-inline:22px}.welcome-home-footer{column-gap:18px;margin-inline:22px}.welcome-home-bottom{margin-inline:22px}#showave-welcome-overlay .welcome-home-brand{left:18px;font-size:28px}.welcome-home-brand img{width:38px;height:38px;flex-basis:38px}.welcome-home-credit{left:18px}}
 @media(max-width:380px){.welcome-home-body{gap:12px;padding-inline:16px}.welcome-home-footer{column-gap:12px;margin-inline:16px}.welcome-home-bottom{margin-inline:16px}#showave-welcome-overlay .welcome-home-workspaces a,#showave-welcome-overlay .welcome-home-footer a{font-size:11px}#showave-welcome-overlay .welcome-home-guides a{font-size:10px}#showave-welcome-overlay .welcome-home-brand{font-size:26px;left:16px;gap:5px}.welcome-home-brand img{width:34px;height:34px;flex-basis:34px}.welcome-home-credit{left:16px}.welcome-home-credit span:first-child{font-size:8px}.welcome-home-credit strong{font-size:12px}.welcome-home-credit span:last-child{font-size:10px}}
 @media(max-height:600px) and (min-width:541px){.welcome-home-hero{flex-basis:160px}}
-@media(prefers-reduced-motion:reduce){.welcome-home-portrait-secondary{transition:none}}
+@media(max-width:380px){#showave-welcome-overlay .welcome-home-body .welcome-home-pitch-title{font-size:22px}#showave-welcome-overlay .welcome-home-pitch .welcome-home-pitch-kicker{font-size:8px;margin-bottom:7px}#showave-welcome-overlay .welcome-home-pitch .welcome-home-pitch-intro{font-size:10px;line-height:1.5;margin-top:9px}}
+@media(prefers-reduced-motion:reduce){.welcome-home-portrait-secondary{transition:none}#showave-welcome-overlay[open] .welcome-home-pitch{animation:none}}
