@@ -1,113 +1,90 @@
-import { STORAGE_KEY, readWelcomeStore, serializeWelcomeStore } from './welcome-model.js';
-
-const SEEN = 'showave.welcome.seen.v1';
-let dialog,content,preference,status,previousFocus,loadPromise;
-let installed=false,loaded=false,storageAvailable=true,visitPreference;
-
-function preferred() {
-  if(typeof visitPreference==='boolean')return visitPreference;
-  try {
-    const raw=localStorage.getItem(STORAGE_KEY);
-    if(!raw||raw.length>32768)return true;
-    const parsed=JSON.parse(raw);
-    // The historical model defaults missing/invalid data to false. Only a
-    // persisted, explicit false is an opt-out from this new default welcome.
-    return !(parsed?.version===1&&parsed.preferences?.welcomeOnStart===false);
-  } catch {return true;}
+// Compact public counterpart of the installed Home. No private app runtime or extra globe.
+const ART='/showave-assets/assets/start/';
+const icons={
+ live:'<path d="M3 5h7v9H3zM5 5V2h5v3M12 3v5M9.5 5.5h5"/>',
+ broadcast:'<rect x="1.5" y="2.5" width="13" height="9" rx="1"/><path d="M5 14h6M8 11.5V14M6.5 5l4 2-4 2z"/>',
+ timeline:'<rect x="1.5" y="2.5" width="13" height="11" rx="1"/><path d="M1.5 6h13M5 2.5V6M11 2.5V6M4 9h3M9 11h3"/>',
+ forge:'<rect x="1.5" y="2" width="4" height="4" rx=".5"/><rect x="10.5" y="10" width="4" height="4" rx=".5"/><path d="M3.5 6v6h7M5.5 4h7v6"/>',
+ map:'<path d="M2 3l4-1 4 2 4-1v10l-4 1-4-2-4 1zM6 2v10M10 4v10"/>',
+ encode:'<path d="M3 1.5h6.5L13 5v9.5H3zM9.5 1.5V5H13M5 9h6M8.5 6.5L11 9l-2.5 2.5"/>',
+ grid:'<rect x="2" y="2" width="12" height="12" rx="1"/><path d="M6 2v12M10 2v12M2 6h12M2 10h12"/>',
+ chaser:'<path d="M2 4h4v8H2zM6 6h4v6H6zM10 8h4v4h-4"/>',
+ gsl5:'<path d="M5 2h6v5H5zM8 7v4M3 14l5-3 5 3M3 5H1M15 5h-2"/>',
+ download:'<path d="M8 2v8M5 7l3 3 3-3M2 11v3h12v-3"/>',
+ manual:'<path d="M2 3h5l1 1 1-1h5v10H9l-1 1-1-1H2zM8 4v10"/>',
+ news:'<circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c4 4 4 8 0 12M8 2c-4 4-4 8 0 12"/>'
+};
+const icon=name=>`<svg class="welcome-home-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">${icons[name]}</svg>`;
+const workspaces=[['live','Live Show'],['broadcast','Broadcast'],['timeline','Timeline'],['forge','Forge (Preview)'],['map','Map'],['encode','Encode'],['grid','Grid Tool'],['chaser','Chaser'],['gsl5','GSL5 Lighting']];
+const guide=id=>id==='broadcast'?'/manuals?article=broadcast-guide':`/manuals?article=product-family#${id}`;
+const rows=list=>list.map(([id,label])=>`<a data-barba-prevent="all" href="${guide(id)}">${icon(id)}<span>${label}</span></a>`).join('');
+let dialog,previousFocus,coverTimer,savedScroll,motionObserver;
+let coverReady=false,coverFrame=0,coverPaused=false,installed=false;
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+function syncPortrait(){
+ clearTimeout(coverTimer);coverTimer=null;if(!dialog)return;
+ const still=reduced.matches||document.body.classList.contains('motion-paused');
+ const running=dialog.open&&coverReady&&!coverPaused&&!document.hidden&&!still;
+ const hero=dialog.querySelector('.welcome-home-hero'),toggle=dialog.querySelector('.welcome-home-pause');
+ if(still){coverFrame=0;dialog.querySelector('.welcome-home-portrait-secondary').classList.remove('is-active');}
+ hero.dataset.coverSlideshow=!coverReady?'loading':still?'reduced-motion':running?'running':'paused';
+ toggle.disabled=still;toggle.textContent=still?'Still':coverPaused?'Play':'Pause';
+ toggle.setAttribute('aria-label',still?'Portrait animation disabled by motion preference':coverPaused?'Play portrait animation':'Pause portrait animation');
+ toggle.setAttribute('aria-pressed',String(coverPaused||still));
+ if(running)coverTimer=setTimeout(()=>{coverFrame=coverFrame?0:1;dialog.querySelector('.welcome-home-portrait-secondary').classList.toggle('is-active',coverFrame===1);syncPortrait();},8000);
 }
-function seen(){try{return !!sessionStorage.getItem(SEEN);}catch{return false;}}
-function markSeen(){try{sessionStorage.setItem(SEEN,'1');}catch{}}
-function savePreference() {
-  visitPreference=preference.checked;
-  try {
-    const saved=readWelcomeStore(localStorage.getItem(STORAGE_KEY));
-    saved.preferences.welcomeOnStart=preference.checked;
-    localStorage.setItem(STORAGE_KEY,serializeWelcomeStore(saved));
-    storageAvailable=true;
-  } catch {storageAvailable=false;status.textContent='Your choice applies to this visit. Browser storage is unavailable.';}
+async function refreshRelease(){
+ try{const response=await fetch('/showave-assets/release-config.json',{cache:'no-cache'});if(!response.ok)return;
+ const release=await response.json(),version=release.platforms?.windows?.version||release.version;
+ if(typeof version!=='string'||!/^\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?$/.test(version))return;
+ const label=dialog.querySelector('[data-welcome-version]');label.textContent=version;label.dataset.publishedVersion=version;label.setAttribute('aria-label',`Published Windows preview ${version}`);
+ }catch{/* Release labels stay independent from the artwork. */}
 }
-function stylesheet(href) {
-  const existing=[...document.querySelectorAll('link[rel="stylesheet"]')].find(link=>new URL(link.href,location.href).pathname===new URL(href,location.href).pathname);
-  if(existing)return Promise.resolve();
-  return new Promise(resolve=>{
-    const link=document.createElement('link');link.rel='stylesheet';link.href=href;
-    link.addEventListener('load',resolve,{once:true});link.addEventListener('error',resolve,{once:true});
-    const appearance=document.querySelector('link[href*="/appearance.css"]');
-    if(appearance)appearance.before(link);else document.head.append(link);
-    // The dismiss control remains usable even if styles are unavailable.
-    setTimeout(resolve,1500);
-  });
+function mount(){
+ if(dialog)return;
+ dialog=document.createElement('dialog');dialog.id='showave-welcome-overlay';dialog.className='showave-welcome-overlay';
+ dialog.setAttribute('aria-labelledby','welcome-home-title');dialog.setAttribute('data-lenis-prevent','');
+ dialog.innerHTML=`<header class="welcome-home-hero">
+ <div class="welcome-home-portraits" aria-hidden="true"><img class="welcome-home-portrait" src="${ART}showave-welcome-cover.jpg" alt="" width="1080" height="1080" fetchpriority="high"><img class="welcome-home-portrait welcome-home-portrait-secondary" src="${ART}showave-welcome-cover-2.jpg" alt="" width="1080" height="1034"></div>
+ <div class="welcome-home-brand"><img src="/showave-assets/assets/showave-mark.svg" alt="" width="46" height="46"><span>SHOWAVE</span></div>
+ <h2 id="welcome-home-title" class="welcome-home-sr">Welcome to SHOWAVE</h2><span class="welcome-home-version" data-welcome-version>Windows preview</span>
+ <button class="welcome-overlay-close" type="button" aria-label="Close welcome" title="Continue to the website"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+ <div class="welcome-home-credit"><span>Founded by</span><strong>Godrick Sakonfa</strong><span>Afro Unity Group</span></div>
+ <button type="button" class="welcome-home-pause" aria-label="Pause portrait animation" aria-pressed="false">Pause</button></header>
+ <div class="welcome-home-scroll"><div class="welcome-home-body">
+ <section class="welcome-home-workspaces" aria-labelledby="welcome-home-workspaces-title"><h3 id="welcome-home-workspaces-title">Workspaces</h3><nav aria-label="Workspace guides">${rows(workspaces.slice(0,6))}</nav>
+ <div id="welcome-home-more-workspaces" hidden><nav aria-label="More workspace guides">${rows(workspaces.slice(6))}</nav></div>
+ <button class="welcome-home-more" type="button" aria-expanded="false" aria-controls="welcome-home-more-workspaces"><span>Show More</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6l3 3 3-3"/></svg></button></section>
+ <section class="welcome-home-guides" aria-labelledby="welcome-home-guides-title"><h3 id="welcome-home-guides-title">Start your next show</h3><p>Your software.<br>Your guides. Your next show.</p><nav aria-label="Start creating"><a data-barba-prevent="all" href="/manuals?article=getting-started">Your first show <span aria-hidden="true">↗</span></a><a data-barba-prevent="all" href="/workflows">Production workflows <span aria-hidden="true">↗</span></a><a data-barba-prevent="all" href="/academy">Learn with SHOWAVE <span aria-hidden="true">↗</span></a></nav></section></div>
+ <footer class="welcome-home-footer"><div><a data-barba-prevent="all" href="/downloads/">${icon('download')}<span>Get SHOWAVE</span></a><a data-barba-prevent="all" href="/manuals/">${icon('manual')}<span>Manuals</span></a></div><div><a data-barba-prevent="all" href="/downloads/#beta">${icon('news')}<span>What's New</span></a><a class="welcome-home-donate" data-barba-prevent="all" href="/fund" aria-label="Donate — support SHOWAVE development"><img src="${ART}showave-donate-animated.svg" alt="" width="112" height="23"></a></div></footer></div>
+ <div class="welcome-home-bottom"><button type="button" class="welcome-overlay-continue"><span>Continue to website</span><span aria-hidden="true">→</span></button></div>`;
+ document.body.append(dialog);
+ dialog.querySelectorAll('.welcome-overlay-close,.welcome-overlay-continue').forEach(button=>button.addEventListener('click',closeWelcomeOverlay));
+ dialog.querySelector('.welcome-home-pause').addEventListener('click',()=>{coverPaused=!coverPaused;syncPortrait();});
+ dialog.querySelector('.welcome-home-more').addEventListener('click',event=>{const button=event.currentTarget,expanded=button.getAttribute('aria-expanded')!=='true';button.setAttribute('aria-expanded',String(expanded));button.querySelector('span').textContent=expanded?'Show Less':'Show More';dialog.querySelector('#welcome-home-more-workspaces').hidden=!expanded;});
+ // Dismiss only a complete outside gesture, never a drag out of a card control.
+ let outsideStart=false;
+ const outside=event=>{const r=dialog.getBoundingClientRect();return event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom;};
+ dialog.addEventListener('pointerdown',event=>{outsideStart=event.target===dialog&&outside(event);});
+ dialog.addEventListener('click',event=>{if(outsideStart&&event.target===dialog&&outside(event))closeWelcomeOverlay();outsideStart=false;});
+ dialog.addEventListener('cancel',event=>{event.preventDefault();closeWelcomeOverlay();});
+ dialog.addEventListener('keydown',event=>{if(event.key!=='Tab')return;const controls=[...dialog.querySelectorAll('a[href],button:not([disabled])')].filter(node=>node.getClientRects().length),first=controls[0],last=controls.at(-1);if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}else if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}});
+ dialog.addEventListener('close',()=>{syncPortrait();document.documentElement.removeAttribute('data-welcome-overlay-open');document.documentElement.style.overflow=savedScroll.html;document.body.style.overflow=savedScroll.body;const target=previousFocus&&previousFocus!==document.body&&previousFocus.isConnected?previousFocus:document.querySelector('.header-logo')||document.querySelector('a[href]');target?.focus({preventScroll:true});window.dispatchEvent(new CustomEvent('showave:welcome-overlay',{detail:{open:false}}));});
+ reduced.addEventListener('change',syncPortrait);document.addEventListener('visibilitychange',syncPortrait);
+ window.addEventListener('pagehide',()=>{clearTimeout(coverTimer);coverTimer=null;});
+ window.addEventListener('pageshow',()=>{syncPortrait();if(dialog.open)void refreshRelease();});
+ motionObserver=new MutationObserver(syncPortrait);motionObserver.observe(document.body,{attributes:true,attributeFilter:['class']});
+ Promise.all([...dialog.querySelectorAll('.welcome-home-portrait')].map(image=>image.decode())).then(()=>{coverReady=true;syncPortrait();}).catch(()=>{dialog.querySelector('.welcome-home-pause').hidden=true;});
+ dialog.dataset.welcomeReady='true';void refreshRelease();
 }
-function mount() {
-  if(dialog)return;
-  previousFocus=document.activeElement;
-  dialog=document.createElement('dialog');dialog.id='showave-welcome-overlay';dialog.className='showave-welcome-overlay';
-  dialog.setAttribute('aria-labelledby','showave-welcome-overlay-title');dialog.setAttribute('data-lenis-prevent','');
-  dialog.innerHTML='<div class="welcome-overlay-heading"><h2 id="showave-welcome-overlay-title">Welcome to SHOWAVE.</h2><button type="button" class="welcome-overlay-close" aria-label="Close welcome">×</button></div><div class="welcome-overlay-content" aria-busy="true"><p class="welcome-overlay-loading" role="status">Your creative workspace is opening.</p></div><footer class="welcome-overlay-footer"><label><input type="checkbox" data-welcome-overlay-startup> Show this welcome when I visit</label><button type="button" class="welcome-overlay-continue">Continue to website <span aria-hidden="true">→</span></button><p class="welcome-overlay-status" role="status"></p></footer>';
-  document.body.append(dialog);content=dialog.querySelector('.welcome-overlay-content');preference=dialog.querySelector('input');status=dialog.querySelector('.welcome-overlay-status');preference.checked=preferred();
-  dialog.querySelectorAll('.welcome-overlay-close,.welcome-overlay-continue').forEach(button=>button.addEventListener('click',closeWelcomeOverlay));
-  preference.addEventListener('change',savePreference);
-  dialog.addEventListener('cancel',event=>{event.preventDefault();closeWelcomeOverlay();});
-  dialog.addEventListener('keydown',event=>{
-    if(event.key!=='Tab')return;
-    const controls=[...dialog.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]')].filter(node=>node.getClientRects().length>0);
-    const first=controls[0],last=controls[controls.length-1];
-    if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
-    else if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
-  });
-  dialog.addEventListener('close',()=>{
-    document.documentElement.removeAttribute('data-welcome-overlay-open');
-    const target=previousFocus&&previousFocus!==document.body&&previousFocus.isConnected?previousFocus:
-      document.querySelector('.header-logo')||document.querySelector('.home-hero-btn')||document.querySelector('a[href]');
-    target?.focus({preventScroll:true});
-    window.dispatchEvent(new CustomEvent('showave:welcome-overlay',{detail:{open:false}}));
-  });
-  // Existing download handling remains the single download dialog. Close the
-  // welcome first so focus and keyboard controls never sit under another modal.
-  dialog.addEventListener('click',event=>{if(event.target.closest?.('[data-download]'))closeWelcomeOverlay();});
+export function closeWelcomeOverlay(){if(!dialog?.open)return;dialog.close();syncPortrait();}
+export function openWelcomeOverlay(){
+ mount();if(dialog.open)return;previousFocus=document.activeElement;savedScroll={html:document.documentElement.style.overflow,body:document.body.style.overflow};document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';dialog.showModal();document.documentElement.setAttribute('data-welcome-overlay-open','');dialog.querySelector('.welcome-overlay-close').focus({preventScroll:true});syncPortrait();window.dispatchEvent(new CustomEvent('showave:welcome-overlay',{detail:{open:true}}));
 }
-async function loadCard() {
-  if(loadPromise)return loadPromise;
-  loadPromise=(async()=>{
-    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),8000);
-    try {
-      const response=await fetch('/start/',{signal:controller.signal});if(!response.ok)throw Error('Welcome unavailable');
-      const parsed=new DOMParser().parseFromString(await response.text(),'text/html');
-      const card=parsed.querySelector('section.start-window');if(!card)throw Error('Welcome card unavailable');
-      card.querySelectorAll('script,iframe,object,embed').forEach(node=>node.remove());
-      card.querySelectorAll('*').forEach(node=>{[...node.attributes].forEach(attribute=>{if(/^on/i.test(attribute.name))node.removeAttribute(attribute.name);});});
-      card.querySelectorAll('a').forEach(link=>link.setAttribute('data-barba-prevent','all'));
-      content.replaceChildren(document.importNode(card,true));content.setAttribute('aria-busy','false');loaded=true;
-      // This module owns the same two portraits and published version labels.
-      // The standalone Start globe module is deliberately never imported here.
-      await import('./start-home.js?v=app-cover-4');
-      dialog.dataset.welcomeReady='true';
-    } catch {
-      content.setAttribute('aria-busy','false');
-      content.innerHTML='<p class="welcome-overlay-loading">Welcome to SHOWAVE. Explore the software, follow a guide, or continue to the website.</p><nav class="welcome-overlay-fallback" aria-label="Welcome links"><a data-barba-prevent="all" href="/software">Software family ↗</a><a data-barba-prevent="all" href="/manuals">Manuals ↗</a><a data-barba-prevent="all" href="/start/">Open the welcome page ↗</a></nav>';
-      dialog.dataset.welcomeReady='fallback';
-    } finally {clearTimeout(timer);}
-  })();return loadPromise;
-}
-export function closeWelcomeOverlay() {
-  if(!dialog?.open)return;
-  savePreference();markSeen();dialog.close();
-}
-export async function openWelcomeOverlay() {
-  mount();
-  await Promise.all([stylesheet('/showave-assets/start-home.css?v=app-cover-4'),stylesheet('/showave-assets/welcome-overlay.css?v=1')]);
-  if(!dialog.open){previousFocus=document.activeElement;preference.checked=preferred();dialog.showModal();document.documentElement.setAttribute('data-welcome-overlay-open','');markSeen();dialog.querySelector('.welcome-overlay-continue').focus({preventScroll:true});window.dispatchEvent(new CustomEvent('showave:welcome-overlay',{detail:{open:true}}));}
-  void loadCard();
-}
-export function installWelcomeOverlay() {
-  if(installed)return;installed=true;
-  // A homepage Start link reopens this same welcome. Other pages and direct
-  // visits to /start/ retain the standalone welcome route.
-  window.addEventListener('click',event=>{
-    const link=event.target.closest?.('a[href]');if(!link||event.defaultPrevented||(event.button??0)!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||link.target==='_blank')return;
-    const url=new URL(link.href,location.href);if(url.origin!==location.origin||!['/start','/start/'].includes(url.pathname)||link.closest('#showave-welcome-overlay'))return;
-    event.preventDefault();event.stopImmediatePropagation();void openWelcomeOverlay();
-  },true);
-  window.ShowaveWelcomeOverlay=Object.freeze({open:openWelcomeOverlay,close:closeWelcomeOverlay,state:()=>({open:!!dialog?.open,loaded,storageAvailable})});
-  if(preferred()&&!seen())void openWelcomeOverlay();
+export function installWelcomeOverlay(){
+ if(installed)return;installed=true;
+ window.ShowaveWelcomeOverlay=Object.freeze({open:openWelcomeOverlay,close:closeWelcomeOverlay,state:()=>({open:!!dialog?.open,loaded:!!dialog})});
+ // Each fresh visit welcomes the visitor. Dismissal never reloads or navigates;
+ // ordinary Start links retain their standalone route.
+ openWelcomeOverlay();
 }
