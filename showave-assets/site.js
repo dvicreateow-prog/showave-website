@@ -83,7 +83,7 @@
   };
   const dialog = $('#download-dialog');
   let selectedPlatform = /Android/i.test(navigator.userAgent) ? 'android' : /Linux/i.test(navigator.userAgent) ? 'linux' : 'windows';
-  let releases = { version: '0.1.0-preview.6', platforms: {} };
+  let releases = { version: 'Preview', platforms: {} };
   let releasePromise;
   const isLocalPreview = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
   function safeDownload(value) {
@@ -94,7 +94,7 @@
     if (releasePromise) return releasePromise;
     releasePromise = (async () => {
       try {
-        const response = await fetch('/showave-assets/release-config.json');
+        const response = await fetch('/showave-assets/release-config.json', { cache: 'no-cache' });
         if (response.ok) { const config = await response.json(); if (config.version && config.platforms) releases = config; }
       } catch { /* Keep the truthful unavailable state when offline. */ }
       if (isLocalPreview) {
@@ -168,7 +168,9 @@
   if ($('[data-platform-summary]')) loadReleases();
 
   const articleMount = $('#article-mount');
-  if (articleMount) {
+  // The manuals index owns its no-query hub; explicit guide URLs keep this reader.
+  const manualsIndex = document.body.classList.contains('manuals-page') && !new URLSearchParams(location.search).has('article');
+  if (articleMount && !manualsIndex) {
     const routeArticles = { '/plugins': 'plugins', '/api': 'api', '/developers': 'api', '/mcp': 'mcp', '/donate': 'donate', '/source': 'open-source', '/governance': 'governance', '/contribute': 'contribute', '/sponsors': 'sponsorship' };
     const key = new URLSearchParams(location.search).get('article') || routeArticles[location.pathname.replace(/\/$/, '') || '/'] || 'getting-started';
     const collection = window.SHOWAVE_CONTENT || {};

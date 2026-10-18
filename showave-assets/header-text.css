@@ -21,3 +21,19 @@
 .header .header-linkedin .txt {
   white-space: nowrap;
 }
+
+/* Group the desktop links closely while keeping each animated label intact. */
+@media (min-width: 768px) {
+  .header .header-menu-list {
+    row-gap: 0.8rem;
+  }
+
+  .header .header-link-wrap {
+    width: max-content;
+    flex: none;
+  }
+
+  .header .header-link {
+    max-width: none;
+  }
+}

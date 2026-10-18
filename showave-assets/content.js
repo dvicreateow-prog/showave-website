@@ -15,7 +15,7 @@
       intro: 'Install the preview, bring your own media, and learn the path from preparation to the audience picture.',
       body: `
         <h2>1. Choose your preview</h2>
-        <p>Current downloads are <strong>Windows 0.1.0-preview.6</strong> and <strong>Linux / Android 0.1.0-preview.6</strong>. On Windows x64, run the SHOWAVE Live Preview installer and open the application from its desktop or Start menu shortcut. Close an older preview before updating. The Windows build includes the players needed for supported PowerPoint, PDF, images, audio and video; a Microsoft Office installation is not required.</p>
+        <p>Find the latest available Windows preview in <a href="/downloads">Downloads</a>. The Linux / Android preview notes cover <strong>0.1.0-preview.6</strong>; check Downloads for current installer availability. On Windows x64, run the SHOWAVE Live Preview installer and open the application from its desktop or Start menu shortcut. Close an older preview before updating. The Windows build includes the players needed for supported PowerPoint, PDF, images, audio and video; a Microsoft Office installation is not required.</p>
         <p>Linux has a portable x64 testing build. Android has an offline interface and media-player review APK with a smaller set of capabilities. Read the <a href="/manuals?article=release-notes">platform notes</a> before choosing a build.</p>
         <h2>2. Bring one original file</h2>
         <p>Start with a small image, video, PDF or modern PowerPoint deck you know well. On desktop, drop it onto an empty Clip slot or use the file picker. Wait for the first real picture and loading indicator to complete. Loading prepares the content; it does not trigger the Show.</p>
@@ -43,6 +43,68 @@
         <h2>Finish with a rehearsal</h2>
         <p>Check the Programme picture, mixer levels and selected output. Taking a scene to Programme does not itself start a broadcast to an online platform; destinations and streaming have their own controls and account requirements. Reconnect live devices and original files after a session ends. The Android review build does not provide desktop capture or streaming services.</p>`
     },
+    'media-present': {
+      category: 'Manuals',
+      title: 'Clips, media and presentations.',
+      intro: 'Load an original file, prepare a slide and control the audience feed.',
+      body: `
+        <h2 id="load">Load one original</h2>
+        <p>In <strong>SHOWAVE Live</strong>, drop a familiar image, supported video, audio, PDF or modern PowerPoint file onto an empty Clip slot. The loading indicator follows preparation; wait for the first real picture before rehearsing. Loading a Clip does not trigger it. The original stays at its source location.</p>
+        <p>PowerPoint formats .pptx, .pptm, .ppsx and .ppsm use SHOWAVE’s independent player. Microsoft Office is not required. Legacy .ppt/.pps files and macros are unsupported. Review missing-font, layout and codec warnings with your actual file.</p>
+        <h2 id="present">Prepare, then take a slide</h2>
+        <p>Open <strong>Present → Use selected Clip</strong> to pin the intended deck. Changing the selected Clip afterward does not change that pin. First, Previous, Next, Last and the slide selector prepare navigation. <strong>Take slide</strong> commits the prepared slide to the pinned feed; <strong>Send to Show</strong> triggers the pinned Clip. Use the composed Show monitor to check the audience picture.</p>
+        <h2 id="broadcast-player">Control a Broadcast player</h2>
+        <p>In <strong>SHOWAVE Broadcast</strong>, choose <strong>Add Source → Present · PowerPoint / PDF</strong>, or add another supported media source. Its player controls select <strong>Preview</strong> or the independent <strong>Programme</strong> player after a Take. Choose Programme when advancing an on-air deck; changing Preview does not advance that deck.</p>
+        <p>PowerPoint embedded audio is currently unavailable in the Live Show mixer. Broadcast routes available presentation media through its own mixer. Check the real meters and listening route rather than assuming a visible video also has audio. See the <a href="/manuals?article=broadcast-guide">Broadcast guide</a> for composing and taking a scene.</p>`
+    },
+    'mapping-output': {
+      category: 'Manuals',
+      title: 'Plan the picture and its output.',
+      intro: 'Understand source placement, SHOWAVE Map, Grid Tool and Chaser before testing a display.',
+      body: `
+        <h2 id="source-placement">Start with the source</h2>
+        <p>In Broadcast, select a picture source. <strong>Input Selection</strong> chooses the rectangular part of the original to sample. <strong>Output Transformation</strong> places that picture inside the scene. Fit keeps the selection visible, Fill crops to fill the rectangle, and Stretch changes its proportions. These changes prepare Preview; <strong>Cut/Fade</strong> takes the scene to Programme.</p>
+        <h2 id="map">Map the audience picture</h2>
+        <p><strong>SHOWAVE Map</strong> is the output-mapping workspace. Its Input Selection and Output Transformation stages separate what a slice samples from where it appears. Start with one screen and a simple slice before building a larger arrangement. Check the workspace’s connection and frame indicators when a picture is missing; an editor view alone does not confirm that a physical display is receiving output.</p>
+        <h2 id="grid">Plan an LED wall</h2>
+        <p><strong>SHOWAVE Grid Tool</strong> provides Setup, Routing, Signal, Power and Pixelmapper views. Enter your cabinet dimensions, pixel dimensions, columns and rows first. Then inspect the cable route and port limits against the actual sending hardware. Power planning uses the values you supply; a diagram does not measure a connected rig.</p>
+        <h2 id="chaser">Give slices a rhythm</h2>
+        <p><strong>SHOWAVE Chaser</strong> separates Chase, Pixel Map and Envelopes. Start with a small selection of slices, preview a short sequence, then check its direction and steps per beat. Use the Map link when checking the relationship between that sequence and the output layout.</p>
+        <h2 id="rehearsal">Finish at the real display</h2>
+        <p>Rehearse the intended resolution, screen arrangement and content on your actual equipment. Confirm the output destination, then inspect the audience picture. Check projector alignment, network delivery and LED processor settings on the actual rig. Follow any unavailable or session-only notice shown by the current build.</p>`
+    },
+    'creative-control': {
+      category: 'Manuals',
+      title: 'Create and sequence with SHOWAVE.',
+      intro: 'Find the role of Timeline, Forge, Encode and GSL5 Lighting Library, with current preview limits.',
+      body: `
+        <h2 id="timeline">Sequence a show with Timeline</h2>
+        <p><strong>SHOWAVE Timeline</strong> organizes tracks and timed triggers. Begin with the Internal clock and a short range. Use <strong>Add Trigger</strong> to choose a target from the current show, then rehearse Play, Pause, Stop and GO with that small sequence. A Wait for Go point holds progress for an operator decision.</p>
+        <p>Keep SHOWAVE Live open for authoritative show output. If Timeline reports <strong>Local preview</strong>, its transport is previewing locally rather than confirming live execution. External clock choices require their actual input and platform support; a selected clock is not proof that timecode is arriving.</p>
+        <h2 id="forge">Explore a visual patch in Forge</h2>
+        <p><strong>SHOWAVE Forge</strong> is a node-creation preview. Browse or search the library, place nodes, and explore the patch layout. Its current monitor is a demonstration rather than a compiled result of your graph. Native plug-in compilation is not implemented in this preview.</p>
+        <h2 id="encode">Prepare media in Encode</h2>
+        <p><strong>SHOWAVE Encode</strong> lets you inspect clips, choose trim and conversion settings, and organize a queue. The current preview cannot save or export converted files. DXV, Motion JPEG and ProRes need a native encoder adapter.</p>
+        <h2 id="lighting">Build a lighting rehearsal</h2>
+        <p><strong>GSL5 Lighting Library</strong> has its own fixture personalities, patch, programmer, cues and playback. Begin in Preview with a small patch. Its starter personalities are vendor-neutral examples; match a real fixture’s profile and addresses before equipment testing. Selecting or editing a fixture does not arm physical output. <strong>ARM OUTPUT</strong> and its confirmation are separate actions inside GSL5, and Blackout stays latched until explicitly released.</p>
+        <p>The <a href="/manuals?article=product-family">software family overview</a> explains how these workspaces fit together. Available native services vary by platform and build.</p>`
+    },
+    troubleshooting: {
+      category: 'Manuals',
+      title: 'Rehearse, diagnose and report.',
+      intro: 'Check the selected file, active workspace, output and platform before sharing a reproducible issue.',
+      body: `
+        <h2 id="picture">A Clip is loaded, but there is no audience picture</h2>
+        <p>Wait for the first decoded picture and read any loading error. Check that the intended Clip was triggered and its Layer and Show picture gates are enabled. With a presentation, confirm the pinned Clip, committed Feed slide and composed Show monitor. Reconnect the original file if the session no longer has access to it.</p>
+        <h2 id="programme">Preview changed, but Programme did not</h2>
+        <p>This is the normal preparation boundary in Broadcast. Check the Preview scene and mixer, then use <strong>Cut/Fade</strong> deliberately. To control a presentation or video already on Programme, select its Programme player. Taking a scene does not by itself start an online stream.</p>
+        <h2 id="audio">There is a picture, but no sound</h2>
+        <p>Check the selected source’s audio state and actual mixer meters. Local listening mute or volume is separate from the Programme mix. Check Audio Preferences and the chosen output device; browser playback may need a user gesture. Imported PowerPoint in Live currently has no embedded-audio mixer route.</p>
+        <h2 id="availability">A device, output or save action is unavailable</h2>
+        <p>Read the visible permission or capability message for that build. Camera and screen selection need the platform’s real permission. Streaming destinations need working service support and credentials. Check any session-only restriction, missing native adapter or offline-platform message, and review <a href="/downloads">current platform availability</a> before comparing two devices.</p>
+        <h2 id="report">Make the next test reproducible</h2>
+        <p>Record the SHOWAVE version, operating system, workspace, source format and smallest steps that reproduce the result. Include the expected picture or behavior and the exact visible error. A cropped screenshot can help; remove stream keys, account tokens, private notes and personal paths. Share through your existing project review channel or prepare a <a href="/community#community-dashboard">local contribution draft</a>.</p>`
+    },
     'product-family': {
       category: 'Journal',
       title: 'One show. A family of instruments.',
@@ -55,8 +117,8 @@
         <p id="grid"><strong>SHOWAVE Grid Tool</strong> supports LED wall planning and signal mapping.</p>
         <p id="chaser"><strong>SHOWAVE Chaser</strong> handles slice sequencing and pixel maps. Each gives a different production job a focused workspace.</p>
         <h2>Create, prepare and sequence</h2>
-        <p id="forge"><strong>SHOWAVE Forge</strong> is the node-creation workspace, previously referred to as Wire. Explore nodes and visual patch layouts. The current monitor shows a demonstration; native plug-in compilation is not implemented in this preview.</p>
-        <p id="encode"><strong>SHOWAVE Encode</strong> is the media-conversion and preparation workspace, previously referred to as Alley. Preview clips, adjust trim and conversion settings, and manage the queue. The current session-only build does not save or export converted files. DXV, Motion JPEG and ProRes encoding require a native adapter.</p>
+        <p id="forge"><strong>SHOWAVE Forge</strong> is the node-creation workspace. Explore nodes and visual patch layouts. The current monitor shows a demonstration; native plug-in compilation is not implemented in this preview.</p>
+        <p id="encode"><strong>SHOWAVE Encode</strong> is the media-conversion and preparation workspace. Preview clips, adjust trim and conversion settings, and manage the queue. The current session-only build does not save or export converted files. DXV, Motion JPEG and ProRes encoding require a native adapter.</p>
         <p id="timeline"><strong>SHOWAVE Timeline</strong> organizes timecoded show automation. These names describe their roles in the product family; available tools and native capabilities vary in the preview.</p>
         <h2 id="gsl5">Give lighting its own home</h2>
         <p><strong>GSL5 Lighting Library</strong> is a linked, independent lighting product with its own fixture personalities, patch, programmer, cues, playback and output controls. Its starter personalities are vendor-neutral examples. A real rig needs appropriate fixture profiles and equipment testing. Physical output is explicitly armed inside GSL5.</p>
@@ -245,10 +307,10 @@
     'release-notes': {
       category: 'Journal',
       title: 'Inside the SHOWAVE preview.',
-      intro: 'Current downloads offer Windows 0.1.0-preview.6 and Linux / Android 0.1.0-preview.6. These notes introduce the preview workflows and platform limits.',
+      intro: 'Check Downloads for the latest available Windows preview. These notes introduce the preview workflows and platform limits, including Linux / Android 0.1.0-preview.6.',
       body: `
         <h2>Windows x64 · desktop preview</h2>
-        <p>The Windows package includes the SHOWAVE interface, local helper, presentation players and presenter support. Supported PowerPoint and PDF playback does not require Microsoft Office. The installer adds SHOWAVE Live Preview to the current user’s applications.</p>
+        <p>The Windows package includes the SHOWAVE interface, local helper, presentation players and presenter support. Supported PowerPoint and PDF playback does not require Microsoft Office. The installer adds SHOWAVE Live Preview with desktop and Start menu shortcuts.</p>
         <p>This is an unsigned testing build without an automatic updater. Playback and wrapper checks have been run; actual capture equipment, clickers, streaming destinations and long-duration productions need their own rehearsal.</p>
         <h2>Linux x64 · portable preview</h2>
         <p>The Linux archive includes its browser engine and Python runtime. Extract it and launch <code>./run-showave.sh</code> from a supported graphical x86_64 Linux environment. Required desktop libraries must be supplied by the Linux distribution.</p>
@@ -259,7 +321,7 @@
         <h2>iPhone, iPad and macOS</h2>
         <p>No native iOS installer or macOS build is available in this preview set. The review kit’s iOS folder contains delivery and testing instructions only.</p>
         <h2>Before your first review</h2>
-        <p>Use the platform version listed in the download centre; the earlier preview.1 package is superseded. Check the notes supplied with your platform build and keep a record of what you tested. Start with <a href="/manuals?article=getting-started">one original file and one production task</a>, then share a reproducible report through your existing team review channel.</p>`
+        <p>Use the platform version listed in <a href="/downloads">Downloads</a>; the earlier preview.1 package is superseded. Check the notes supplied with your platform build and keep a record of what you tested. Start with <a href="/manuals?article=getting-started">one original file and one production task</a>, then share a reproducible report through your existing team review channel.</p>`
     }
   };
 

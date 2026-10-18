@@ -160,3 +160,12 @@
     filter: none;
   }
 }
+
+/* Respect the site's existing Pause motion choice for logo motion too. */
+body.motion-paused .showave-brand-logo .showave-brand-entry-icon,
+body.motion-paused .showave-brand-logo .showave-brand-entry-word,
+body.motion-paused .showave-brand-logo .showave-brand-intro-wave { animation-play-state: paused !important; }
+body.motion-paused .showave-brand-logo .showave-brand-hover-icon,
+body.motion-paused .showave-brand-logo .showave-brand-hover-word,
+body.motion-paused .showave-brand-logo .showave-brand-hover-waves,
+body.motion-paused .showave-brand-logo .showave-brand-hover-line { transition: none !important; transform: none !important; filter: none !important; }

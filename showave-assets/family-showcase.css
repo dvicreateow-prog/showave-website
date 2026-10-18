@@ -1,4 +1,10 @@
-/* The product directory uses its own type and spacing; native scenes stay scoped outside it. */
+/* Match the software directory's official product grid inside the native home scene. */
+@font-face {
+  font-family: ShowaveFamilyDisplay;
+  src: url('/showave-assets/assets/reference-fonts/steinhart-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
 #showave-family {
   --family-ink: #171918;
   --family-muted: #626863;
@@ -27,36 +33,26 @@
 #showave-family .showave-family-intro a { display: inline-flex; align-items: center; gap: 26px; color: var(--family-ink); font-family: Arial, sans-serif; font-size: 13px; line-height: 1.5; font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--family-ink); padding: 0 0 5px; }
 #showave-family .showave-family-intro a span { font-size: 20px; line-height: 1; }
 #showave-family .home-partners-main { width: 100%; margin: 0; padding: 0; }
-#showave-family .showave-family-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1px; padding: 1px; background: var(--family-line); width: 100%; }
-#showave-family .showave-family-item { display: block; min-width: 0; width: auto; height: auto; padding: 0; aspect-ratio: auto; opacity: 1 !important; visibility: visible !important; transform: none !important; border: 0; background: var(--family-paper); }
-#showave-family .showave-family-card { display: flex; flex-direction: column; position: relative; height: 100%; min-height: 266px; padding: 24px 28px 22px; color: var(--family-ink); text-decoration: none; background: var(--family-paper); box-sizing: border-box; }
-#showave-family .showave-family-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-#showave-family .showave-family-symbol { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #f0f1eb; border: 1px solid #e7e8e1; border-radius: 8px; }
-#showave-family .showave-family-symbol svg { display: block; width: 30px; height: 30px; }
-#showave-family .showave-family-number { color: #767c76; font-family: Arial,sans-serif; font-size: 11px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: .06em; }
-#showave-family .showave-family-category { margin: 0 0 6px; color: var(--family-muted); font-family: Arial,sans-serif; font-size: 10px; line-height: 1.45; font-weight: 600; letter-spacing: .085em; text-transform: uppercase; }
-#showave-family .showave-family-card h3 { margin: 0 0 10px; font-family: Arial,sans-serif; font-size: 28px; line-height: 1.12; font-weight: 600; letter-spacing: -.035em; text-transform: none; }
-#showave-family .showave-family-description { max-width: 310px; margin: 0; font-family: Arial,sans-serif; color: var(--family-muted); font-size: 13px; line-height: 1.6; font-weight: 400; letter-spacing: 0; }
-#showave-family .showave-family-card-link { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: auto; padding-top: 22px; font-family: Arial,sans-serif; font-size: 11px; line-height: 1.4; font-weight: 600; }
-#showave-family .showave-family-card-link svg { display: block; width: 20px; height: 20px; flex: 0 0 auto; }
-#showave-family .showave-family-card:hover { background: #f1f2ec; }
-#showave-family .showave-family-card:hover .showave-family-symbol { color: var(--family-accent); background: #fbeee7; border-color: #ecd4c6; }
-#showave-family .showave-family-card:hover .showave-family-card-link svg { transform: translateX(4px); }
+#showave-family .eco-software-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); align-items: stretch; gap: 1px; background: #303640; border: 1px solid #303640; width: 100%; box-sizing: border-box; }
+#showave-family .eco-software-item { display: flex; gap: 20px; align-items: center; padding: 25px; background: #101319; min-width: 0; color: #f4f5f7; font-family: Arial,Helvetica,sans-serif; font-size: 16px; line-height: 1.45; text-decoration: none; box-sizing: border-box; }
+#showave-family .eco-software-item img { display: block; width: 72px; height: 72px; flex-shrink: 0; max-width: 100%; }
+#showave-family .eco-software-item h3 { font: 700 21px ShowaveFamilyDisplay,Arial,sans-serif; margin: 0 0 6px; letter-spacing: normal; text-transform: none; }
+#showave-family .eco-software-item p { margin: 0; font-size: 12px; line-height: 1.45; color: #a4abb8; }
 #showave-family a:focus-visible { outline: 2px solid var(--family-accent); outline-offset: -4px; border-radius: 2px; }
 #showave-family .showave-family-intro a:focus-visible { outline-offset: 5px; }
 #showave-family .showave-family-footer { display: flex; justify-content: space-between; gap: 16px; padding-top: 20px; font-family: Arial,sans-serif; font-size: 11px; line-height: 1.5; color: var(--family-muted); }
-@media (prefers-reduced-motion:no-preference) {
-  #showave-family .showave-family-card, #showave-family .showave-family-symbol, #showave-family .showave-family-card-link svg { transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease; }
-}
 @media (max-width:991px) {
   /* The header already links to SHOWAVE; the floating badge obscures narrow layouts. */
   #awwwards.awwwards-badge { display: none; }
   #showave-family .showave-family-container { width: calc(100% - 48px); }
   #showave-family .showave-family-heading { column-gap: 32px; }
-  #showave-family .showave-family-card { padding: 22px; }
-  #showave-family .showave-family-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  #showave-family .showave-family-item:last-child { grid-column: 1 / -1; }
-  #showave-family .showave-family-item:last-child .showave-family-card { min-height: 240px; }
+}
+@media (max-width:900px) {
+  #showave-family .eco-software-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:650px) {
+  #showave-family .eco-software-grid { grid-template-columns: minmax(0,1fr); }
+  #showave-family .eco-software-item { padding: 20px; }
 }
 @media (max-width:600px) {
   #showave-family .home-partners { padding: 42px 0 32px; }
@@ -65,11 +61,5 @@
   #showave-family .home-partners-cate { display: none; }
   #showave-family .showave-family-intro { align-self: stretch; max-width: none; }
   #showave-family .showave-family-intro p { font-size: 14px; margin-bottom: 16px; }
-  #showave-family .showave-family-list { grid-template-columns: minmax(0,1fr); }
-  #showave-family .showave-family-card { min-height: 0; padding: 22px; }
-  #showave-family .showave-family-card-top { margin-bottom: 18px; }
-  #showave-family .showave-family-description { max-width: none; font-size: 14px; }
-  #showave-family .showave-family-card h3 { font-size: 28px; }
-  #showave-family .showave-family-item:last-child .showave-family-card { min-height: 0; }
   #showave-family .showave-family-footer { flex-direction: column; gap: 6px; }
 }

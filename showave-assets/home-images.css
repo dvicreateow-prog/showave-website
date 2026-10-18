@@ -1,0 +1,19 @@
+/* Keep real app screenshots intact in both website appearances. */
+.home-ins-cms-thumb-inner:has(.showave-app-preview),
+.home-ins-cms-item-thumb-mb:has(.showave-app-preview),
+.footer-thumb-img:has(.showave-app-preview) {
+  background:#151a22;
+  border:1px solid #667080;
+  box-sizing:border-box;
+  overflow:hidden;
+}
+.home-ins-cms-thumb-inner .showave-app-preview,
+.home-ins-cms-item-thumb-mb .showave-app-preview,
+.footer-thumb-img .showave-app-preview {
+  object-fit:contain;
+  object-position:center;
+}
+.home-ins-cms-thumb-inner .showave-community-portrait,
+.home-ins-cms-item-thumb-mb .showave-community-portrait {
+  object-position:55% 35%;
+}
