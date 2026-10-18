@@ -22,6 +22,22 @@
   white-space: nowrap;
 }
 
+/* Keep keyboard focus clear without putting the wordmark inside a frame. */
+.header .showave-brand-logo:focus-visible {
+  outline: none;
+  outline-offset: 0;
+  border-radius: 0;
+  box-shadow: 0 3px 0 currentColor;
+}
+
+@media (forced-colors: active) {
+  .header .showave-brand-logo:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 6px;
+    box-shadow: none;
+  }
+}
+
 /* Group the desktop links closely while keeping each animated label intact. */
 @media (min-width: 768px) {
   .header .header-menu-list {

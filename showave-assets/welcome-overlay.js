@@ -18,7 +18,12 @@ const icon=name=>`<svg class="welcome-home-icon" viewBox="0 0 16 16" aria-hidden
 const workspaces=[['live','Live Show'],['broadcast','Broadcast'],['timeline','Timeline'],['forge','Forge (Preview)'],['map','Map'],['encode','Encode'],['grid','Grid Tool'],['chaser','Chaser'],['gsl5','GSL5 Lighting']];
 const guide=id=>id==='broadcast'?'/manuals?article=broadcast-guide':`/manuals?article=product-family#${id}`;
 const rows=list=>list.map(([id,label])=>`<a data-barba-prevent="all" href="${guide(id)}">${icon(id)}<span>${label}</span></a>`).join('');
-let dialog,previousFocus,coverTimer,savedScroll,motionObserver;
+const websiteLinks=[['/software','Software'],['/manuals','Manuals'],['/community','Community'],['/explore','Explore'],['/fund','Development fund'],['/downloads','Download']];
+function websiteMenuNodes(){
+ const paths=new Set(websiteLinks.map(([href])=>href));
+ return [...document.querySelectorAll('.header .header-menu-list,.header .header-dropdown a.header-dropdown-link')].filter(node=>node.matches('.header-menu-list')||paths.has(new URL(node.href,location.href).pathname.replace(/\/$/,'')));
+}
+let dialog,previousFocus,coverTimer,savedScroll,motionObserver,heroRevealTimer;
 let coverReady=false,coverFrame=0,coverPaused=false,installed=false;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 function syncPortrait(){
@@ -56,7 +61,7 @@ function mount(){
  <div id="welcome-home-more-workspaces" hidden><nav aria-label="More workspace guides">${rows(workspaces.slice(6))}</nav></div>
  <button class="welcome-home-more" type="button" aria-expanded="false" aria-controls="welcome-home-more-workspaces"><span>Show More</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6l3 3 3-3"/></svg></button></section>
  <section class="welcome-home-guides" aria-labelledby="welcome-home-guides-title"><div class="welcome-home-pitch"><p class="welcome-home-pitch-kicker">ONE FAMILY. ONE SHOW.</p><h3 id="welcome-home-guides-title" class="welcome-home-pitch-title">Every<br>part of<br>the show</h3><p class="welcome-home-pitch-intro">Live visuals, presentations and broadcast.<br>One creative workflow, powered by Afro Unity Group.</p></div><nav aria-label="Start creating"><a data-barba-prevent="all" class="welcome-home-start-show" href="/manuals?article=getting-started">Start your show <span aria-hidden="true">↗</span></a><a data-barba-prevent="all" href="/workflows">Production workflows <span aria-hidden="true">↗</span></a><a data-barba-prevent="all" href="/academy">Learn with SHOWAVE <span aria-hidden="true">↗</span></a></nav></section></div>
- <footer class="welcome-home-footer"><div><a data-barba-prevent="all" href="/downloads/">${icon('download')}<span>Get SHOWAVE</span></a><a data-barba-prevent="all" href="/manuals/">${icon('manual')}<span>Manuals</span></a></div><div><a data-barba-prevent="all" href="/downloads/#beta">${icon('news')}<span>What's New</span></a><a class="welcome-home-donate" data-barba-prevent="all" href="/fund" aria-label="Donate — support SHOWAVE development"><img src="${ART}showave-donate-animated.svg" alt="" width="112" height="23"></a></div></footer></div>
+ <footer class="welcome-home-footer"><div><span class="welcome-home-site-caption">Website</span><nav class="welcome-home-site-links" aria-label="SHOWAVE website">${websiteLinks.map(([href,label])=>`<a data-barba-prevent="all" href="${href}">${label}</a>`).join('')}</nav></div><div class="welcome-home-project-links"><a data-barba-prevent="all" href="/downloads/#beta">${icon('news')}<span>What's New</span></a><a class="welcome-home-donate" data-barba-prevent="all" href="/fund" aria-label="Donate — support SHOWAVE development"><img src="${ART}showave-donate-animated.svg" alt="" width="112" height="23"></a></div></footer></div>
  <div class="welcome-home-bottom"><button type="button" class="welcome-overlay-continue"><span>Continue to website</span><span aria-hidden="true">→</span></button></div>`;
  document.body.append(dialog);
  dialog.querySelectorAll('.welcome-overlay-close,.welcome-overlay-continue').forEach(button=>button.addEventListener('click',closeWelcomeOverlay));
@@ -69,7 +74,18 @@ function mount(){
  dialog.addEventListener('click',event=>{if(outsideStart&&event.target===dialog&&outside(event))closeWelcomeOverlay();outsideStart=false;});
  dialog.addEventListener('cancel',event=>{event.preventDefault();closeWelcomeOverlay();});
  dialog.addEventListener('keydown',event=>{if(event.key!=='Tab')return;const controls=[...dialog.querySelectorAll('a[href],button:not([disabled])')].filter(node=>node.getClientRects().length),first=controls[0],last=controls.at(-1);if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}else if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}});
- dialog.addEventListener('close',()=>{syncPortrait();document.documentElement.removeAttribute('data-welcome-overlay-open');document.documentElement.style.overflow=savedScroll.html;document.body.style.overflow=savedScroll.body;const target=previousFocus&&previousFocus!==document.body&&previousFocus.isConnected?previousFocus:document.querySelector('.header-logo')||document.querySelector('a[href]');target?.focus({preventScroll:true});window.dispatchEvent(new CustomEvent('showave:welcome-overlay',{detail:{open:false}}));});
+ dialog.addEventListener('close',()=>{
+  if(dialog.open)return;
+  syncPortrait();document.documentElement.removeAttribute('data-welcome-overlay-open');
+  document.documentElement.style.overflow=savedScroll.html;document.body.style.overflow=savedScroll.body;
+  // The original hero stayed in its native layout while its globe loaded.
+  // Reveal that same DOM once the compact welcome hands the visitor over.
+  const revealNodes=[document.querySelector('.home-hero-text-wrap'),...websiteMenuNodes()].filter(Boolean);
+  revealNodes.forEach(node=>node.classList.add('welcome-home-handoff'));clearTimeout(heroRevealTimer);
+  heroRevealTimer=setTimeout(()=>revealNodes.forEach(node=>node.classList.remove('welcome-home-handoff')),700);
+  const target=previousFocus&&previousFocus!==document.body&&previousFocus.isConnected?previousFocus:document.querySelector('.header-logo')||document.querySelector('a[href]');
+  target?.focus({preventScroll:true});window.dispatchEvent(new CustomEvent('showave:welcome-overlay',{detail:{open:false}}));
+ });
  reduced.addEventListener('change',syncPortrait);document.addEventListener('visibilitychange',syncPortrait);
  window.addEventListener('pagehide',()=>{clearTimeout(coverTimer);coverTimer=null;});
  window.addEventListener('pageshow',()=>{syncPortrait();if(dialog.open)void refreshRelease();});
@@ -79,7 +95,15 @@ function mount(){
 }
 export function closeWelcomeOverlay(){if(!dialog?.open)return;dialog.close();syncPortrait();}
 export function openWelcomeOverlay(){
- mount();if(dialog.open)return;previousFocus=document.activeElement;savedScroll={html:document.documentElement.style.overflow,body:document.body.style.overflow};document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';dialog.showModal();document.documentElement.setAttribute('data-welcome-overlay-open','');dialog.querySelector('.welcome-overlay-close').focus({preventScroll:true});syncPortrait();window.dispatchEvent(new CustomEvent('showave:welcome-overlay',{detail:{open:true}}));
+ mount();if(dialog.open)return;
+ // Failed or unsupported dialogs must leave the homepage visible and usable.
+ if(typeof dialog.showModal!=='function')return;
+ previousFocus=document.activeElement;savedScroll={html:document.documentElement.style.overflow,body:document.body.style.overflow};
+ try{dialog.showModal();}catch{return;}
+ clearTimeout(heroRevealTimer);document.querySelectorAll('.welcome-home-handoff').forEach(node=>node.classList.remove('welcome-home-handoff'));
+ websiteMenuNodes().forEach(node=>node.classList.add('welcome-home-website-menu'));
+ document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';document.documentElement.setAttribute('data-welcome-overlay-open','');
+ dialog.querySelector('.welcome-overlay-close').focus({preventScroll:true});syncPortrait();window.dispatchEvent(new CustomEvent('showave:welcome-overlay',{detail:{open:true}}));
 }
 export function installWelcomeOverlay(){
  if(installed)return;installed=true;
