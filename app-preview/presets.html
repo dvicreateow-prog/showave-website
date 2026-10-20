@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<title>Manage Presets: SHOWAVE</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="showave-brand.js"></script>
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+  /* ---------------------------------------------------------------------
+     Page-specific only. Everything with a shared vocabulary — .win-root,
+     .win-title, .win-toolbar, .win-tabs, .win-content, .formrow, .formgroup,
+     .tb-btn, .tb-select, .datatable, .statusline, .dropdown/.dd-item — is
+     left to arena.css + nocturne.css + windows.css. Nothing below re-declares
+     one of those; it only adds the shapes this window needs.
+     --------------------------------------------------------------------- */
+
+  .p-main{ flex:1; display:flex; min-height:0; }
+
+  /* the preset list column */
+  .p-list{ flex:0 0 300px; width:300px; min-height:0; background:var(--panel);
+    border-right:1px solid var(--line); display:flex; flex-direction:column; }
+  .p-list .tree{ flex:1; overflow-y:auto; }
+  .p-list .foot{ flex:0 0 auto; border-top:1px solid var(--line); background:var(--strip);
+    padding:var(--space-2); display:flex; align-items:center; gap:var(--space-1); }
+
+  /* a menu group header — arena.css has no class for one, so this mirrors
+     the shape advanced-output.css uses for .ao-mgroup */
+  /* CASING. Resolume shouts in the string, never with a stylesheet: of the 878
+     keys in reference/docs/gui/English.txt exactly 25 are all-caps, and each is a
+     compact transport/action button (RECORD, STOP, TAP, RESYNC, LINK, PAUSE,
+     METRONOME, PICK, ADD), an alarm (LOW MEMORY!!) or an acronym. Section
+     headers, menu group headings, tab labels, column headers and state chips are
+     Title Case throughout the string table and all 83 manual pages. The blanket
+     text-transform rules in this window were removed for that reason and the
+     caps-tuned tracking relaxed with them; nocturne.css and windows.css, which
+     this window also loads, no longer shout their equivalents, so leaving these
+     would paint one class of element in two conventions in one window. */
+  .dd-group{ padding:3px 22px 3px 24px; font-size:9.5px; letter-spacing:.01em; color:var(--n700); cursor:default; white-space:nowrap; }
+  /* arena.css predates the accent wash, so its hover tick colour is unreadable
+     against it; this is the only correction made to a shared menu rule */
+  .dd-item:hover .chk{ color:var(--a200); }
+
+  /* ---- Color parameter: the mode bar and its panes -------------------- */
+  .modebar{ display:flex; align-items:center; gap:var(--space-2); flex-wrap:wrap; }
+  .modepane{ display:none; margin-top:var(--space-3); padding-top:var(--space-3);
+    border-top:1px solid var(--line); }
+  .modepane.on{ display:block; }
+
+  /* ---- Palette -------------------------------------------------------- */
+  .paletterow{ display:flex; align-items:flex-start; gap:var(--space-3); }
+  .swatchrow{ display:flex; gap:var(--space-3); flex-wrap:wrap; flex:1;
+    margin-bottom:var(--space-5); }
+  .swatchrow i{ position:relative; display:block; width:44px; height:44px; cursor:pointer;
+    border:1px solid var(--n800); border-radius:var(--radius-sm); }
+  .swatchrow i:hover{ box-shadow:0 0 0 1px var(--a400); }
+  .swatchrow i.sel{ box-shadow:0 0 0 1px var(--color-accent), 0 0 14px -4px var(--color-accent); }
+  .swatchrow i span{ position:absolute; bottom:-14px; left:0; font-size:9.5px;
+    letter-spacing:.01em; color:var(--n600);
+    font-variant-numeric:tabular-nums; }
+  .swatchrow i.empty{ border-style:dashed; background:var(--inset); }
+  .swatchrow i.empty::after{ content:'+'; position:absolute; inset:0; display:grid;
+    place-items:center; color:var(--n700); font-size:15px; }
+  .swatchrow i.over{ border-color:var(--a400);
+    box-shadow:0 0 0 1px var(--a400), 0 0 18px -6px var(--color-accent); }
+  /* "you can access them via the little P dropdown on the far right" */
+  .pbtn{ flex:0 0 auto; margin-left:auto; }
+  .preview{ width:44px; height:44px; cursor:grab; border:1px solid var(--n800);
+    border-radius:var(--radius-sm); }
+  .preview:active{ cursor:grabbing; }
+  .pickrow{ display:flex; align-items:center; gap:var(--space-3); }
+  .pickrow input[type=color]{ width:56px; height:30px; padding:0; background:var(--inset);
+    border:1px solid var(--n800); border-radius:var(--radius-sm); cursor:pointer; }
+  .hexread{ font-size:11px; color:var(--n400); font-variant-numeric:tabular-nums;
+    letter-spacing:.04em; }
+  .formrow .cfield{ flex:0 0 110px; min-width:110px; font-variant-numeric:tabular-nums; }
+  .formrow i.chip{ flex:0 0 auto; width:22px; height:22px; display:inline-block;
+    border:1px solid var(--n800); border-radius:var(--radius-sm); }
+
+  /* ---- envelope curve -------------------------------------------------- */
+  .curve{ background:var(--inset); border:1px solid var(--n800);
+    border-radius:var(--radius-sm); max-width:100%; }
+
+  /* ---- parameter rows -------------------------------------------------- */
+  .formrow .num{ flex:0 0 66px; min-width:66px; text-align:right; padding:1px var(--space-2);
+    font-size:11px; color:var(--n200); background:var(--inset);
+    border:1px solid var(--n800); border-radius:var(--radius-sm);
+    font-variant-numeric:tabular-nums; cursor:text; }
+  .formrow input.num{ cursor:text; }
+  .formrow.sub label{ font-size:11px; color:var(--n600); }
+  .formrow label.compound{ cursor:pointer; }
+  .radiogroup{ display:flex; gap:var(--space-1); }
+  .togglebox{ display:flex; align-items:center; gap:var(--space-2); }
+  .filepath{ font-size:11px; color:var(--n600); }
+  .rowset{ margin-top:var(--space-3); }
+
+  /* Dingetje — the drag-time value gizmo */
+  .dingetje{ position:fixed; z-index:1200; display:none; align-items:center;
+    gap:var(--space-1); padding:var(--space-1) var(--space-2);
+    background:var(--color-surface); border:1px solid var(--n800);
+    border-radius:var(--radius-md); box-shadow:var(--shadow-md);
+    font-size:11px; color:var(--n200); }
+  .dingetje.show{ display:flex; }
+  .dingetje b{ min-width:58px; text-align:center; font-weight:500;
+    font-variant-numeric:tabular-nums; }
+  .dingetje i{ font-style:normal; cursor:pointer; color:var(--n500);
+    padding:0 var(--space-2); border-radius:var(--radius-sm); }
+  .dingetje i:hover{ color:var(--a200);
+    background:color-mix(in srgb,var(--color-accent) 18%,transparent); }
+</style>
+</head>
+<body>
+<div class="win-root">
+
+  <div class="win-title"><span class="showave-brand-lockup--title" data-showave-brand="live"></span> Manage Presets
+    <span class="sp"><a class="plainlink" href="index.html">← back to SHOWAVE Live</a></span></div>
+
+  <!-- ===== TOP LEFT — the preset dropdown ==============================
+       advanced-output.htm, Saving and sharing Presets: "Using the dropdown
+       in the top left of SHOWAVE Map, you can save and select
+       different setups."  So the dropdown is the first control of the first
+       strip under the title bar, and it carries Save, Save As... and
+       "Reveal in Finder or Explorer". ================================== -->
+  <div class="win-toolbar">
+    <button class="tb-btn" id="presetBtn"
+      title="Save and select presets">Presets ▾</button>
+    <span class="tb-sep"></span>
+    <span class="tb-label" id="kindLabel">Video Effects</span>
+    <span class="tb-sp"></span>
+    <span class="win-chip" id="shareChip"
+      title="Sharing presets also works between Mac and PC!">share between computers</span>
+  </div>
+
+  <div class="win-tabs" id="kindTabs">
+    <div class="win-tab active" data-kind="Video Effects">Video Effects</div>
+    <div class="win-tab" data-kind="Sources">Sources</div>
+    <div class="win-tab" data-kind="Animation">Animation</div>
+    <div class="win-tab" data-kind="Envelopes">Envelopes</div>
+    <div class="win-tab" data-kind="Color Palettes">Color Palettes</div>
+    <div class="win-tab" data-kind="Render and Record">Render and Record</div>
+    <div class="win-tab" data-kind="Interface">Interface</div>
+  </div>
+
+  <div class="p-main">
+    <div class="p-list">
+      <div class="browser-tools"><input type="text" id="pSearch" placeholder="Search presets…"></div>
+      <div class="tree" id="plist"></div>
+      <div class="foot">
+        <button class="tb-btn small" type="button" id="bSave">Save...</button>
+        <button class="tb-btn small" type="button" id="bRename">Rename...</button>
+        <button class="tb-btn small" type="button" id="bDup">Duplicate</button>
+        <button class="tb-btn small" type="button" id="bDel">Delete</button>
+        <span class="tb-sp"></span>
+        <button class="tb-btn small" type="button" id="bReveal"
+          title="Reveal in Finder or Explorer">📁</button>
+      </div>
+    </div>
+
+    <div class="win-content" id="detail"></div>
+  </div>
+
+  <div class="statusline">
+    <span id="pathHint">Documents\Resolume Arena\Presets\</span>
+    <span class="tb-sp"></span>
+    <span id="note">Factory-compatible presets and SHOWAVE Forge Patches are read-only here.</span>
+  </div>
+</div>
+
+<!-- Dingetje lives outside the scrolling pane so it can sit over anything -->
+<div class="dingetje" id="ding"><i data-d="-1">◀</i><b>0.0</b><i data-d="1">▶</i></div>
+
+<script src="arena-data.js"></script>
+<script src="arena-wire-presets.js"></script>
+<script src="arena-presets.js"></script>
+<script>
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const CSS=getComputedStyle(document.documentElement);
+const tok=n=>CSS.getPropertyValue(n).trim();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------------------------------------------------------------------------
+   PALETTE CONTENT.  These hex values are the page's subject matter, not its
+   chrome: a palette named "Fire" has to be able to show red. They are the only
+   literal colours in this file, they never touch the interface, and they obey
+   the house rule against pure black and pure white — the two palettes that
+   used those now sit on the neutral ramp instead.
+   --------------------------------------------------------------------------- */
+const PALETTES = {
+  'Teal Orange':['#ff8c42','#ffb085','#4ecdc4','#2c7873'],
+  'Infrared':['#cc2266','#dd8833','#882244','#ffaa66'],
+  'Blood Moon':['#8b0000','#cc3300','#ff6600','#441111'],
+  'Golden Hour':['#ffb627','#ff9505','#e2711d','#ffd166'],
+  'Deep Ocean':['#003d5b','#00688b','#5f9ea0','#4ecdc4'],
+  'Arctic Aurora':['#43b581','#7cffc4','#a29bfe','#74b9ff'],
+  'Sunset':['#ff6b35','#ff3333','#ffaa00','#ff6699'],
+  'Neon Night':['#ff00ff','#00ff99','#ffff00','#00ffff'],
+  'Digital Max':['#ff00ff','#00ff87','#ffe600','#00e5ff'],
+  'Copper Patina':['#b87333','#da8a67','#77b5a0','#f4c780'],
+  'Midnight':['#5c7aff','#8b5cf6','#a78bfa','#7dd3fc'],
+  'Fire':['#ff0000','#ff4500','#ff8c00','#ffd700'],
+  'Volcanic':['#ff4500','#ff6347','#ff8c00','#cc5500'],
+  'Monochrome':['#f3f5fe','#cfd3e5','#75798c','#3f424d'],
+  'Neon Noir':['#f72585','#7209b7','#4cc9f0','#4361ee'],
+  'Synthwave':['#ff0090','#00ffff','#ff1493','#8c1eff'],
+  'Bleach Bypass':['#c4c4c4','#a8b8c8','#d4a574','#8899aa'],
+  'Cyberpunk':['#ff2079','#00f0ff','#7b2d8e','#39ff14'],
+  'Acid':['#00cc00','#cc00cc','#cccc00','#00cccc'],
+  'Laser Green':['#00ff44','#00cc33','#009922','#003311'],
+  'Toxic':['#39ff14','#ccff00','#1a1a00','#0d0d0d'],
+  'Chrome':['#c0c0c0','#d8d8d8','#a8c0d0','#e8e8f0'],
+  'Holographic':['#ff6ad5','#c774e8','#ad8cff','#94d0ff'],
+  'Iridescent':['#c77dff','#48bfe3','#64dfdf','#f72585'],
+  'Gold and Black':['#d4af37','#ffd700','#f5e6cc','#1a1a1a'],
+  'Earth':['#8b4513','#2e8b57','#cd853f','#556b2f'],
+  'Tropical':['#ff6b6b','#ffe66d','#4ecdc4','#88d8b0'],
+  'Vapor':['#ff71ce','#01cdfe','#05ffa1','#b967ff'],
+  'Sepia':['#e8d5a3','#c4a35a','#a67b3d','#704214'],
+  'Brutalist':['#f3f5fe','#12141f','#cf8080','#3f424d'],
+  'Duotone Shadow':['#7f01d3','#01cdfe'],
+  'Duotone Warm':['#36200c','#ff9738']
+};
+/* kept aside so "Load Default Palette" has something to load */
+const PALETTES_FACTORY = JSON.parse(JSON.stringify(PALETTES));
+
+const DEFAULT_NOTE='Factory-compatible presets and SHOWAVE Forge Patches are read-only here.';
+let kind='Video Effects', sel=null;
+let curColor=tok('--color-accent');   /* the "current color" the swatch menu updates from */
+let swatchSel=-1;                 /* which swatch was last right-clicked / picked */
+const modeOn={ pick:true, eye:false, rgb:false, hsb:false, palette:true };
+const pvals={};                   /* per-preset parameter values, kept for the session */
+const compoundOpen={};            /* which compound sliders are expanded */
+const ctxState={ radio:{}, chk:{} };
+
+/* ======================= dropdown engine ==================================
+   Uses arena.css's own .dropdown / .dd-item / .dd-sep / .chk, which
+   nocturne.css themes, so these menus are the main window's menus.
+   ========================================================================= */
+let ddEls=[];
+function closeDD(n=0){ while(ddEls.length>n) ddEls.pop().remove(); }
+function openDD(items,x,y,lvl=0){
+  closeDD(lvl);
+  const d=document.createElement('div'); d.className='dropdown';
+  items.forEach(it=>{
+    if(it.sep){ const s=document.createElement('div'); s.className='dd-sep'; d.appendChild(s); return; }
+    if(it.group!==undefined){ const g=document.createElement('div'); g.className='dd-group';
+      g.textContent=it.group; d.appendChild(g); return; }
+    const e=document.createElement('div');
+    e.className='dd-item'+(it.dis?' disabled':'');
+    e.innerHTML='<span class="chk">'+(it.on?'✓':'')+'</span><span class="lb"></span>'+
+      (it.k?'<span class="kbd">'+esc(it.k)+'</span>':'')+
+      (it.sub?'<span class="arrow">▸</span>':'');
+    e.querySelector('.lb').textContent=it.l;
+    if(it.sub){
+      e.addEventListener('mouseenter',()=>{ const r=e.getBoundingClientRect();
+        openDD(it.sub,r.right-2,r.top-3,lvl+1); });
+    } else {
+      e.addEventListener('mouseenter',()=>closeDD(lvl+1));
+      e.addEventListener('click',()=>{ if(it.dis) return; closeDD(); if(it.act) it.act(); });
+    }
+    d.appendChild(e);
+  });
+  document.body.appendChild(d);
+  const r=d.getBoundingClientRect();
+  d.style.left=Math.max(4,Math.min(x,innerWidth-r.width-6))+'px';
+  d.style.top =Math.max(4,Math.min(y,innerHeight-r.height-6))+'px';
+  ddEls.push(d); return d;
+}
+addEventListener('mousedown',e=>{ if(!e.target.closest('.dropdown')) closeDD(); });
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeDD(); hideDing(); stopEyedropper(); }});
+
+/* the shared CTX_PARAM list from arena-data.js, mapped onto this page's
+   menu item shape (it carries radio / chk / sub / act fields) */
+function mapCtx(list, onAct){
+  return (list||[]).map(it=>{
+    if(it.sep) return {sep:1};
+    const on = (it.chk && ctxState.chk[it.chk]) ||
+               (it.radio && ctxState.radio[it.radio]===it.l);
+    return { l:it.l, on:!!on, sub: it.sub?mapCtx(it.sub,onAct):null,
+      act:()=>{ if(it.chk) ctxState.chk[it.chk]=!ctxState.chk[it.chk];
+                if(it.radio) ctxState.radio[it.radio]=it.l;
+                if(onAct) onAct(it); } };
+  });
+}
+
+function note(t){ $('#note').textContent=t; clearTimeout(note._t);
+  note._t=setTimeout(()=>{ $('#note').textContent=DEFAULT_NOTE; },6000); }
+
+/* ======================= preset store ====================================
+   Effect and Source rows come from ArenaPresets, including the browser-local
+   user layer. When framed by index.html, use its ArenaPresets instance so the
+   main window and this manager share one live store. */
+function presetHost(){
+  try{ if(parent!==window && parent.ArenaPresets) return parent; }catch(_error){}
+  try{ if(opener && !opener.closed && opener.ArenaPresets) return opener; }catch(_error){}
+  return window;
+}
+function presetAPI(){ return presetHost().ArenaPresets || window.ArenaPresets || null; }
+
+/* MANAGED_PRESET_MODEL_START -- pure model, covered by the focused test. */
+function managedKindSpec(k){
+  if(k==='Video Effects') return {role:'effect',tracks:['video','audio']};
+  if(k==='Sources') return {role:'source',tracks:['video']};
+  return null;
+}
+function managedGroupLabel(role,track,parentName){
+  return role==='effect' && track==='audio' ? parentName+' (Audio)' : parentName;
+}
+function managedEntryKey(entry,role,track,parentName){
+  const user=entry && entry.userPreset===true;
+  const identity=user ? (entry.presetId || entry.id || entry.name)
+    : (entry.file || entry.id || entry.name);
+  return [role,track,parentName,user?'user':'factory',identity].join('|');
+}
+function managedItem(entry,role,track,parentName){
+  const user=entry && entry.userPreset===true;
+  return {
+    name:String(entry && entry.name || ''), role, track, pluginName:parentName,
+    entry, userPreset:user, readOnly:!user,
+    id:user ? (entry.presetId || entry.id || entry.name) : null,
+    key:managedEntryKey(entry,role,track,parentName)
+  };
+}
+function managedInventory(api,k){
+  const spec=managedKindSpec(k); if(!spec || !api || typeof api.presetsFor!=='function') return [];
+  const groups=[];
+  spec.tracks.forEach(track=>{
+    const byParent=new Map();
+    (api.presetsFor(spec.role,undefined,track)||[]).forEach(entry=>{
+      const parentName=String(entry && (entry.pluginName || entry.parent || entry.plugin) || '').trim();
+      const name=String(entry && entry.name || '').trim();
+      if(!parentName || !name) return;
+      let group=byParent.get(parentName);
+      if(!group){
+        group={group:managedGroupLabel(spec.role,track,parentName),
+          groupKey:[spec.role,track,parentName].join('|'), role:spec.role,track,
+          pluginName:parentName,items:[]};
+        byParent.set(parentName,group); groups.push(group);
+      }
+      group.items.push(managedItem(entry,spec.role,track,parentName));
+    });
+  });
+  return groups;
+}
+/* MANAGED_PRESET_MODEL_END */
+
+function isManagedKind(k=kind){ return !!managedKindSpec(k); }
+function managedGroupsFor(k=kind){ return managedInventory(presetAPI(),k); }
+function groupsFor(k){
+  if(isManagedKind(k)) return managedGroupsFor(k);
+  if(k==='Color Palettes') return [{group:'Palettes', items:Object.keys(PALETTES)}];
+  return [{group:k, items:(typeof PRESETS!=='undefined'&&PRESETS[k])||[]}];
+}
+function itemsOf(_g){
+  if(isManagedKind()) return [];
+  if(kind==='Color Palettes') return Object.keys(PALETTES);
+  return (typeof PRESETS!=='undefined'&&PRESETS[kind])||[];
+}
+function itemName(item){ return item && typeof item==='object' ? item.name : String(item); }
+function itemOrigin(item){ return item && typeof item==='object' ? (item.userPreset?'User':'Factory') : ''; }
+function itemListLabel(item){
+  const name=itemName(item);
+  return item && typeof item==='object' ? name+'  ['+itemOrigin(item)+']' : name;
+}
+function selectionMatches(group,item){
+  if(!sel || sel.g!==group) return false;
+  if(item && typeof item==='object') return !!sel.item && sel.item.key===item.key;
+  return sel.i===item;
+}
+function managedSelection(){ return isManagedKind() && sel && sel.item ? sel : null; }
+function managedPathHint(){
+  const current=managedSelection(); if(!current) return kind;
+  const item=current.item;
+  if(item.userPreset) return 'Browser preset storage - '+item.track+' '+item.role+'s - '+item.pluginName;
+  if(item.entry && item.entry.file) return String(item.entry.file).replace(/\//g,'\\');
+  return 'Arena / Wire - '+item.pluginName;
+}
+function presetPath(){
+  return isManagedKind() ? managedPathHint() : 'Documents\\Resolume Arena\\Presets\\'+kind+'\\';
+}
+function presetFile(){
+  const current=managedSelection();
+  if(current) return current.item.userPreset ? '' : String(current.item.entry.file || '');
+  return sel? sel.i+'.xml' : '';
+}
+function updateActionState(){
+  const current=managedSelection(), managed=isManagedKind();
+  $('#bSave').textContent=managed?'Save as...':'Save...';
+  if(!managed){ ['bSave','bRename','bDup','bDel','bReveal'].forEach(id=>$('#'+id).disabled=false); return; }
+  $('#bSave').disabled=!current;
+  $('#bDup').disabled=!current;
+  $('#bRename').disabled=!current || !current.item.userPreset;
+  $('#bDel').disabled=!current || !current.item.userPreset;
+  $('#bReveal').disabled=!current;
+}
+
+/* ======================= the list column ================================= */
+function buildList(){
+  const q=$('#pSearch').value.toLowerCase();
+  const el=$('#plist'); el.innerHTML='';
+  groupsFor(kind).forEach(g=>{
+    const kids=g.items.filter(i=>!q||(g.group+' '+itemName(i)+' '+itemOrigin(i)).toLowerCase().includes(q));
+    if(!kids.length) return;
+    const h=document.createElement('div'); h.className='tgroup'; h.textContent=g.group; el.appendChild(h);
+    const nodes=[];
+    kids.forEach(i=>{
+      const d=document.createElement('div'); d.className='titem'; d.textContent=itemListLabel(i);
+      if(i && typeof i==='object'){
+        d.dataset.origin=i.userPreset?'user':'factory';
+        d.title=i.userPreset ? 'User preset' : 'Factory preset - read-only';
+        d.setAttribute('aria-label',i.name+', '+(i.userPreset?'user preset':'factory preset, read-only'));
+      }
+      if(selectionMatches(g.group,i)) d.classList.add('sel');
+      d.addEventListener('click',()=>selectPreset(g.group,i));
+      el.appendChild(d); nodes.push(d);
+    });
+    h.addEventListener('click',()=>nodes.forEach(n=>n.style.display=n.style.display==='none'?'':'none'));
+  });
+  if(!el.children.length && isManagedKind()){
+    const empty=document.createElement('div'); empty.className='hint';
+    empty.textContent='No '+(kind==='Sources'?'Source':'Effect')+' presets found.'; el.appendChild(empty);
+  }
+  $('#pathHint').textContent=presetPath();
+  $('#kindLabel').textContent=kind;
+  $('#presetBtn').textContent=(sel? sel.i : kind)+' ▾';
+  updateActionState();
+}
+function selectPreset(g,i){
+  sel={g,i:itemName(i),item:i&&typeof i==='object'?i:null};
+  swatchSel=-1; buildList(); detail();
+}
+function selectManagedEntry(entry){
+  const role=entry.kind==='source'?'source':'effect';
+  const track=role==='source'?'video':String(entry.track||'video').toLowerCase();
+  const pluginName=String(entry.pluginName || entry.parent || entry.plugin || '');
+  selectPreset(managedGroupLabel(role,track,pluginName),managedItem(entry,role,track,pluginName));
+}
+
+/* ======================= the top-left preset dropdown ====================
+   advanced-output.htm: "Using the dropdown in the top left ... you can save
+   and select different setups", and "Choose Reveal in Finder or Explorer from
+   the dropdown and you will be taken right to the correct file".
+   ========================================================================= */
+function presetMenu(){
+  const items=[{group:kind}];
+  groupsFor(kind).forEach(g=>g.items.forEach(i=>{
+    const name=itemName(i), shown=itemListLabel(i);
+    const flat = (g.group===kind||g.group==='Palettes') ? shown : g.group+': '+shown;
+    items.push({ l:flat, on:selectionMatches(g.group,i),
+      act:()=>{ selectPreset(g.group,i);
+        note(isManagedKind() ? 'Selected “'+name+'”.'
+          : 'Loaded “'+name+'”. Loading a preset via the dropdown copies it to the correct folder in Documents.'); }});
+  }));
+  const current=managedSelection();
+  items.push({sep:1},
+    {l:'Save', dis:!sel || (!!current && !current.item.userPreset), act:doSave},
+    {l:isManagedKind()?'Save as...':'Save As...', dis:isManagedKind()&&!current, act:doSaveAs},
+    {sep:1},
+    {l:'Reveal in Finder or Explorer', dis:isManagedKind()&&!current, act:doReveal});
+  return items;
+}
+$('#presetBtn').addEventListener('click',e=>{
+  e.stopPropagation(); const r=e.currentTarget.getBoundingClientRect();
+  openDD(presetMenu(), r.left, r.bottom+2);
+});
+
+async function managedRecordFor(current){
+  current=current||managedSelection();
+  const api=presetAPI();
+  if(!current || !api || typeof api.loadPreset!=='function') throw new Error('Preset data is unavailable.');
+  return api.loadPreset(current.item.entry);
+}
+function managedNameCollision(current,name){
+  const api=presetAPI();
+  const matches=(api.presetsFor(current.item.role,current.item.pluginName,current.item.track)||[])
+    .filter(entry=>String(entry.name||'').toLocaleLowerCase()===name.toLocaleLowerCase());
+  return matches.find(entry=>entry.userPreset===true) || matches[0];
+}
+async function managedSaveCopy(name){
+  const current=managedSelection(); if(!current) return note('Select a preset first.');
+  const collision=managedNameCollision(current,name);
+  if(collision){
+    const question=collision.userPreset
+      ? 'A user preset named “'+name+'” already exists. Replace it?'
+      : 'A factory preset named “'+name+'” already exists. Save a separate user preset with the same name?';
+    if(!confirm(question)) return;
+  }
+  try{
+    const record=await managedRecordFor(current), api=presetAPI();
+    const saved=api.saveUserPreset({kind:current.item.role,track:current.item.track,
+      pluginName:current.item.pluginName,name,record});
+    selectManagedEntry(saved);
+    note('Saved “'+saved.name+'”'+(saved.persistent===false?' for this browser session only.':'.'));
+  }catch(error){ note('Preset could not be saved: '+error.message); }
+}
+async function doSave(){
+  if(!sel) return note('Select a preset first.');
+  const current=managedSelection();
+  if(current){
+    if(!current.item.userPreset) return note('Factory presets are read-only. Use Save as... to make a user preset.');
+    try{
+      const record=await managedRecordFor(current), api=presetAPI();
+      const saved=api.saveUserPreset({kind:current.item.role,track:current.item.track,
+        pluginName:current.item.pluginName,name:current.item.name,id:current.item.id,record});
+      selectManagedEntry(saved); note('Saved “'+saved.name+'”.');
+    }catch(error){ note('Preset could not be saved: '+error.message); }
+    return;
+  }
+  note('Saved “'+sel.i+'” to '+presetPath()+presetFile());
+}
+function doSaveAs(){
+  const current=managedSelection();
+  if(isManagedKind()&&!current) return note('Select a preset first.');
+  const suggested=current ? current.i+' copy' : (sel?sel.i:'New Preset');
+  const n=prompt('Save preset as',suggested);
+  if(!n) return;
+  const name=n.trim(); if(!name) return;
+  if(current){ managedSaveCopy(name); return; }
+  const g = sel? sel.g : groupsFor(kind)[0].group;
+  const arr=itemsOf(g);
+  if(arr && !arr.includes(name)) arr.push(name);
+  if(kind==='Color Palettes' && !PALETTES[name]) PALETTES[name]=curPalette().slice();
+  selectPreset(g,name);
+  note('Saved “'+name+'” as '+presetPath()+name+'.xml');
+}
+function doReveal(){
+  const current=managedSelection();
+  if(current){
+    if(current.item.userPreset) return note('User presets are stored in this browser, not in an XML file.');
+    const file=current.item.entry && current.item.entry.file;
+    if(!file) return note('This Wire preset is supplied by Arena and has no local XML file to reveal.');
+    const msg='A browser cannot open Finder or Explorer: the factory file is '+file;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(file).then(()=>note(msg+'  (path copied to the clipboard)'),()=>note(msg));
+    }else note(msg);
+    return;
+  }
+  /* honest: a web page cannot open Finder or Explorer, so it hands over the
+     path instead of pretending it launched a file manager */
+  const p=presetPath()+presetFile();
+  const msg='A browser cannot open Finder or Explorer: the file lives in '+p;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(p).then(
+      ()=>note(msg+'  (path copied to the clipboard)'), ()=>note(msg));
+  } else note(msg);
+}
+$('#bSave')  .addEventListener('click',doSaveAs);
+$('#bReveal').addEventListener('click',doReveal);
+$('#bRename').addEventListener('click',()=>{
+  if(!sel) return note('Select a preset first.');
+  const current=managedSelection();
+  if(current){
+    if(!current.item.userPreset) return note('Factory presets are read-only.');
+    const n=prompt('Rename preset',current.i); if(!n||!n.trim()) return;
+    try{
+      const renamed=presetAPI().renameUserPreset(current.item.role,current.item.pluginName,
+        current.item.id,n.trim(),current.item.track);
+      selectManagedEntry(renamed); note('Renamed to “'+renamed.name+'”.');
+    }catch(error){ note('Preset could not be renamed: '+error.message); }
+    return;
+  }
+  const n=prompt('Rename preset', sel.i); if(!n||!n.trim()) return;
+  const name=n.trim(), arr=itemsOf(sel.g), k=arr.indexOf(sel.i);
+  if(k>=0) arr[k]=name;
+  if(kind==='Color Palettes'){ PALETTES[name]=PALETTES[sel.i]; delete PALETTES[sel.i]; }
+  selectPreset(sel.g,name); note('Renamed to “'+name+'”.');
+});
+$('#bDup').addEventListener('click',async()=>{
+  if(!sel) return note('Select a preset first.');
+  const current=managedSelection();
+  if(current){
+    const names=(presetAPI().presetsFor(current.item.role,current.item.pluginName,current.item.track)||[])
+      .map(entry=>String(entry.name||'').toLocaleLowerCase());
+    let name=current.i+' copy', n=2;
+    while(names.includes(name.toLocaleLowerCase())) name=current.i+' copy '+(n++);
+    await managedSaveCopy(name); return;
+  }
+  const arr=itemsOf(sel.g); let name=sel.i+' copy', n=2;
+  while(arr.includes(name)) name=sel.i+' copy '+(n++);
+  arr.splice(arr.indexOf(sel.i)+1,0,name);
+  if(kind==='Color Palettes') PALETTES[name]=PALETTES[sel.i].slice();
+  selectPreset(sel.g,name); note('Duplicated as “'+name+'”.');
+});
+$('#bDel').addEventListener('click',()=>{
+  if(!sel) return note('Select a preset first.');
+  const current=managedSelection();
+  if(current){
+    if(!current.item.userPreset) return note('Factory presets are read-only.');
+    if(!confirm('Delete “'+current.i+'”?')) return;
+    try{
+      if(!presetAPI().removeUserPreset(current.item.role,current.item.pluginName,
+          current.item.id,current.item.track)) return note('Preset was not found.');
+      const gone=current.i; sel=null; buildList(); detail(); note('Deleted “'+gone+'”.');
+    }catch(error){ note('Preset could not be deleted: '+error.message); }
+    return;
+  }
+  const arr=itemsOf(sel.g), k=arr.indexOf(sel.i); if(k<0) return;
+  arr.splice(k,1);
+  if(kind==='Color Palettes') delete PALETTES[sel.i];
+  const gone=sel.i; sel=null; buildList(); detail(); note('Deleted “'+gone+'”.');
+});
+$('#shareChip').addEventListener('click',()=>note(isManagedKind()
+  ? 'Factory presets are XML or Arena/Wire data. User presets are stored in this browser profile.'
+  : 'Copy the .xml to the same folder on the other computer and load it from the dropdown. Sharing presets also works between Mac and PC.'));
+
+/* ======================= colour maths ==================================== */
+function hex2rgb(h){ h=h.replace('#','');
+  if(h.length===3) h=h.split('').map(c=>c+c).join('');
+  return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+function rgb2hex(r,g,b){ const c=v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0');
+  return '#'+c(r)+c(g)+c(b); }
+function rgb2hsb(r,g,b){ r/=255;g/=255;b/=255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn; let h=0;
+  if(d){ if(mx===r) h=((g-b)/d)%6; else if(mx===g) h=(b-r)/d+2; else h=(r-g)/d+4; h*=60; if(h<0)h+=360; }
+  return [h, mx? d/mx*100 : 0, mx*100]; }
+function hsb2rgb(h,s,v){ s/=100; v/=100; const c=v*s, x=c*(1-Math.abs((h/60)%2-1)), m=v-c;
+  let r=0,g=0,b=0; const k=Math.floor(h/60)%6;
+  if(k===0){r=c;g=x;} else if(k===1){r=x;g=c;} else if(k===2){g=c;b=x;}
+  else if(k===3){g=x;b=c;} else if(k===4){r=x;b=c;} else {r=c;b=x;}
+  return [(r+m)*255,(g+m)*255,(b+m)*255]; }
+
+/* ======================= the detail pane ================================= */
+function curPalette(){ return (sel && PALETTES[sel.i]) || []; }
+
+let managedDetailRequest=0;
+function managedText(tag,className,text){
+  const node=document.createElement(tag);
+  if(className) node.className=className;
+  node.textContent=text==null?'':String(text);
+  return node;
+}
+function managedExactValue(value){
+  if(value===undefined) return 'N/A';
+  if(value===null) return 'null';
+  if(typeof value==='string' || typeof value==='number' || typeof value==='boolean') return String(value);
+  try{ return JSON.stringify(value); }catch(_error){ return String(value); }
+}
+function managedRow(label,value){
+  const row=managedText('div','formrow','');
+  row.appendChild(managedText('label','',label));
+  row.appendChild(managedText('span','filepath',managedExactValue(value)));
+  return row;
+}
+function managedGroup(title,rows){
+  const group=managedText('div','formgroup','');
+  group.appendChild(managedText('h3','',title));
+  rows.forEach(row=>group.appendChild(row));
+  return group;
+}
+function managedParamValue(param){
+  const fields={};
+  Object.keys(param||{}).forEach(key=>{
+    if(key!=='name' && key!=='label' && key!=='altName') fields[key]=param[key];
+  });
+  const keys=Object.keys(fields);
+  if(keys.length===1 && keys[0]==='value') return fields.value;
+  return keys.map(key=>key+': '+managedExactValue(fields[key])).join(' · ');
+}
+function managedDecodedRows(record){
+  const rows=[];
+  if(record && record.source){
+    if(Object.prototype.hasOwnProperty.call(record.source,'width')) rows.push(managedRow('Width',record.source.width));
+    if(Object.prototype.hasOwnProperty.call(record.source,'height')) rows.push(managedRow('Height',record.source.height));
+  }
+  Object.entries(record && record.wrapper || {}).forEach(([name,value])=>
+    rows.push(managedRow('Wrapper · '+name,value)));
+  Object.entries(record && record.mixer || {}).forEach(([name,value])=>
+    rows.push(managedRow('Mixer · '+name,value)));
+  const params=Array.isArray(record && record.params) ? record.params : [];
+  params.forEach((param,index)=>{
+    const name=String(param && (param.name || param.label || param.altName) || 'Parameter '+(index+1));
+    rows.push(managedRow(name,managedParamValue(param||{})));
+  });
+  if(!params.length) Object.entries(record && record.values || {}).forEach(([name,value])=>
+    rows.push(managedRow(name,value)));
+  (record && record.animations || []).forEach((animation,index)=>{
+    const name=String(animation && (animation.param || animation.name) || 'Animation '+(index+1));
+    rows.push(managedRow('Animation · '+name,animation));
+  });
+  if(record && record.unsupported) rows.push(managedRow('Unavailable resources',record.unsupported));
+  return rows;
+}
+function renderManagedDecoded(d,current,record){
+  d.textContent='';
+  d.appendChild(managedText('h2','',current.item.pluginName+': '+current.i));
+  const role=current.item.role==='source' ? 'Source'
+    : (current.item.track==='audio'?'Audio Effect':'Video Effect');
+  const origin=current.item.userPreset ? 'User preset' : 'Factory preset: read-only';
+  const location=current.item.userPreset
+    ? (current.item.entry.persistent===false?'Browser session storage':'Browser preset storage')
+    : (current.item.entry.file || 'Arena / Wire');
+  d.appendChild(managedGroup('Preset',[
+    managedRow('Name',current.i), managedRow('Applies to',current.item.pluginName),
+    managedRow('Role',role), managedRow('Origin',origin), managedRow('File / Storage',location)
+  ]));
+  const rows=managedDecodedRows(record);
+  if(rows.length) d.appendChild(managedGroup('Stored Parameters',rows));
+  else{
+    const empty=managedText('div','hint','');
+    empty.textContent=current.item.entry.transportOnly
+      ? 'This Wire preset is available through a live Arena connection only; no local saved values are available.'
+      : 'This preset contains no decoded saved parameter values.';
+    d.appendChild(empty);
+  }
+  d.appendChild(managedText('div','hint',
+    'Selecting a preset copies these saved values once. It is not a live link to an applied Effect or Source.'));
+}
+function renderManagedPreset(d){
+  const current=managedSelection();
+  if(!current){ d.textContent=''; d.appendChild(managedText('div','hint','Select a preset.')); return; }
+  const request=++managedDetailRequest, key=current.item.key;
+  d.textContent=''; d.appendChild(managedText('div','hint','Loading saved values...'));
+  managedRecordFor(current).then(record=>{
+    const latest=managedSelection();
+    if(request!==managedDetailRequest || !latest || latest.item.key!==key) return;
+    renderManagedDecoded(d,latest,record);
+  }).catch(error=>{
+    const latest=managedSelection();
+    if(request!==managedDetailRequest || !latest || latest.item.key!==key) return;
+    d.textContent=''; d.appendChild(managedText('div','hint','Could not load this preset: '+error.message));
+  });
+}
+
+function detail(){
+  const d=$('#detail');
+  if(!sel){ d.innerHTML='<div class="hint">Select a preset.</div>';
+    $('#presetBtn').textContent=kind+' ▾'; return; }
+  if(isManagedKind()){ renderManagedPreset(d); return; }
+  if(kind==='Color Palettes'){ renderPalette(d); return; }
+  if(kind==='Envelopes'){ renderEnvelope(d); return; }
+  renderPreset(d);
+}
+
+/* ---- Color parameter ------------------------------------------------------
+   parameters.htm, Color: the default view is a standard color picker, there is
+   also an eyedropper, RGB / HSB sliders, and a Palette. "Does the UI feel
+   cluttered with all those controls? Just click any of the modes to hide them."
+   -------------------------------------------------------------------------- */
+function renderPalette(d){
+  d.innerHTML=`
+    <h2>${esc(sel.i)}</h2>
+    <div class="formgroup"><h3>Color</h3>
+      <div class="modebar" id="modebar">
+        <button class="tb-btn small" type="button" data-mode="pick">PICK</button>
+        <button class="tb-btn small" type="button" data-mode="eye">Eyedropper</button>
+        <button class="tb-btn small" type="button" data-mode="rgb">RGB</button>
+        <button class="tb-btn small" type="button" data-mode="hsb">HSB</button>
+        <button class="tb-btn small" type="button" data-mode="palette">Palette</button>
+      </div>
+      <div class="hint">Click any of the modes to hide them. You can even click off all of them
+        for the ultimate minimalism.</div>
+
+      <div class="modepane" data-pane="pick">
+        <div class="pickrow">
+          <input type="color" id="cpick" value="${esc(curColor)}" title="Color Picker">
+          <div class="preview" id="cprev" draggable="true"
+            title="Drag this preview onto an empty swatch to add it to the Palette"></div>
+          <span class="hexread" id="chex"></span>
+        </div>
+      </div>
+
+      <div class="modepane" data-pane="rgb">
+        <div class="formrow"><label>Red</label><input type="range" class="crgb" data-c="0" min="0" max="255"><span class="num" data-c="0">0</span></div>
+        <div class="formrow"><label>Green</label><input type="range" class="crgb" data-c="1" min="0" max="255"><span class="num" data-c="1">0</span></div>
+        <div class="formrow"><label>Blue</label><input type="range" class="crgb" data-c="2" min="0" max="255"><span class="num" data-c="2">0</span></div>
+        <div class="formrow"><label>Alpha</label><input type="range" id="calpha" min="0" max="255" value="255"><span class="num" id="calphaN">255</span></div>
+      </div>
+
+      <div class="modepane" data-pane="hsb">
+        <div class="formrow"><label>Hue</label><input type="range" class="chsb" data-c="0" min="0" max="360"><span class="num" data-c="0">0</span></div>
+        <div class="formrow"><label>Saturation</label><input type="range" class="chsb" data-c="1" min="0" max="100"><span class="num" data-c="1">0</span></div>
+        <div class="formrow"><label>Brightness</label><input type="range" class="chsb" data-c="2" min="0" max="100"><span class="num" data-c="2">0</span></div>
+      </div>
+
+      <div class="modepane" data-pane="palette">
+        <div class="paletterow">
+          <div class="swatchrow" id="swrow"></div>
+          <button class="tb-btn small pbtn" type="button" id="pPresets"
+            title="Palette Presets">P ▾</button>
+        </div>
+        <div class="hint">Drag a color from its preview to an empty swatch to add it.
+          Right-click a swatch for more options.</div>
+      </div>
+    </div>
+
+    <div class="formgroup"><h3>Colors</h3>
+      <div id="colorRows"></div>
+      <div class="formrow"><button class="tb-btn" type="button" id="addColor">+ Add Color</button>
+        <button class="tb-btn" type="button" id="remColor">Remove</button></div>
+    </div>
+
+    <div class="formgroup"><h3>Palette</h3>
+      <div class="formrow"><label>Name</label><input type="text" id="palName" value="${esc(sel.i)}"></div>
+      <div class="formrow"><label>Swatches</label><span class="filepath" id="palCount"></span></div>
+      <div class="formrow"><label>File</label><span class="filepath">${esc(sel.i)}.xml</span></div>
+    </div>
+    <div class="hint">Applied via Colorize, Recolor, Gradient and Threshold. At composition level,
+      Colorize tints the whole output. Set the Colorize Mode parameter to Palette and sort the
+      palette by Brightness for an Colorama-style look.</div>`;
+
+  $('#palName').addEventListener('change',ev=>{
+    const n=ev.target.value.trim(); if(!n||n===sel.i) return;
+    PALETTES[n]=PALETTES[sel.i]; delete PALETTES[sel.i];
+    selectPreset('Palettes',n); note('Renamed to “'+n+'”.');
+  });
+
+  $('#addColor').addEventListener('click',()=>{ curPalette().push(curColor);
+    drawSwatches(); drawColorRows(); note('Added '+curColor.toUpperCase()+' to the Palette.'); });
+  $('#remColor').addEventListener('click',()=>{ const c=curPalette();
+    if(!c.length) return; c.splice(swatchSel>=0&&swatchSel<c.length?swatchSel:c.length-1,1);
+    swatchSel=-1; drawSwatches(); drawColorRows(); });
+
+  wireModes(); wireColorControls(); drawSwatches(); drawColorRows(); syncColor();
+}
+
+/* the editable colour list — each swatch as a hex+alpha field and a chip */
+function drawColorRows(){
+  const host=$('#colorRows'); if(!host) return;
+  const cols=curPalette();
+  host.innerHTML = cols.length
+    ? cols.map((c,n)=>`<div class="formrow" data-ci="${n}"><label>Color ${n+1}</label>
+        <input type="text" class="cfield" value="${esc(c)}ff">
+        <i class="chip"></i></div>`).join('')
+    : '<div class="hint">No swatches. Drag a color onto the empty swatch, or press + Add Color.</div>';
+  host.querySelectorAll('.formrow').forEach(r=>{
+    const n=+r.dataset.ci;
+    r.querySelector('.chip').style.background=cols[n];
+    r.querySelector('.cfield').addEventListener('change',ev=>{
+      const v=ev.target.value.trim().replace(/^([0-9a-f]{6,8})$/i,'#$1');
+      if(!/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(v)){ note('“'+ev.target.value+'” is not a color.');
+        ev.target.value=cols[n]+'ff'; return; }
+      cols[n]=v.slice(0,7).toLowerCase(); drawSwatches();
+    });
+  });
+  countSwatches();
+}
+
+function paintModes(){
+  const bar=$('#modebar'); if(!bar) return;
+  bar.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('on',!!modeOn[b.dataset.mode]));
+  $$('#detail .modepane').forEach(p=>p.classList.toggle('on',!!modeOn[p.dataset.pane]));
+}
+function wireModes(){
+  const bar=$('#modebar'); if(!bar) return;
+  bar.addEventListener('click',e=>{
+    const b=e.target.closest('[data-mode]'); if(!b) return;
+    const m=b.dataset.mode;
+    if(m==='eye'){ modeOn.eye?stopEyedropper():startEyedropper(); paintModes(); return; }
+    modeOn[m]=!modeOn[m]; paintModes();
+  });
+  paintModes();
+}
+
+/* the eyedropper is real where the browser has the API, and honestly
+   unavailable where it does not — no fake sampling */
+function startEyedropper(){
+  if(typeof window.EyeDropper!=='function'){
+    note('This browser has no eyedropper API, so sampling from the screen is not possible here.');
+    modeOn.eye=false; return;
+  }
+  modeOn.eye=true; note('Eyedropper: pick a pixel. Hit ESC to exit eyedropper mode.');
+  new window.EyeDropper().open().then(r=>{ curColor=r.sRGBHex; modeOn.eye=false;
+    syncColor(); paintModes(); note('Sampled '+curColor); })
+   .catch(()=>{ modeOn.eye=false; paintModes(); });
+}
+function stopEyedropper(){ if(modeOn.eye){ modeOn.eye=false; paintModes(); } }
+
+function wireColorControls(){
+  const pick=$('#cpick'); if(!pick) return;
+  pick.addEventListener('input',()=>{ curColor=pick.value; syncColor(); });
+  $$('#detail .crgb').forEach(s=>s.addEventListener('input',()=>{
+    const rgb=hex2rgb(curColor); rgb[+s.dataset.c]=+s.value;
+    curColor=rgb2hex(rgb[0],rgb[1],rgb[2]); syncColor(); }));
+  $$('#detail .chsb').forEach(s=>s.addEventListener('input',()=>{
+    const hsb=rgb2hsb(...hex2rgb(curColor)); hsb[+s.dataset.c]=+s.value;
+    const rgb=hsb2rgb(hsb[0],hsb[1],hsb[2]);
+    curColor=rgb2hex(rgb[0],rgb[1],rgb[2]); syncColor(); }));
+  const al=$('#calpha'); if(al) al.addEventListener('input',()=>$('#calphaN').textContent=al.value);
+
+  const prev=$('#cprev');
+  prev.addEventListener('dragstart',ev=>ev.dataTransfer.setData('text/plain',curColor));
+
+  $('#pPresets').addEventListener('click',ev=>{
+    ev.stopPropagation(); const r=ev.currentTarget.getBoundingClientRect();
+    openDD(palettePresetMenu(), r.right-200, r.bottom+2);
+  });
+}
+function syncColor(){
+  const prev=$('#cprev'); if(!prev) return;
+  prev.style.background=curColor;
+  $('#chex').textContent=curColor.toUpperCase();
+  const pick=$('#cpick'); if(pick) pick.value=curColor;
+  const rgb=hex2rgb(curColor), hsb=rgb2hsb(...rgb);
+  $$('#detail .crgb').forEach(s=>{ s.value=rgb[+s.dataset.c];
+    s.parentElement.querySelector('.num').textContent=Math.round(rgb[+s.dataset.c]); });
+  $$('#detail .chsb').forEach(s=>{ s.value=Math.round(hsb[+s.dataset.c]);
+    s.parentElement.querySelector('.num').textContent=Math.round(hsb[+s.dataset.c]); });
+}
+
+/* ---- the Palette itself ---------------------------------------------------
+   parameters.htm: "On a Palette, you can keep a range of your favorite colors."
+   "If you want to add a color to the Palette, simply drag it from its preview
+   to an empty swatch on the Palette."  "By right-clicking on a swatch, you get
+   even more options!"
+   -------------------------------------------------------------------------- */
+function drawSwatches(){
+  const row=$('#swrow'); if(!row) return;
+  const cols=curPalette(); row.innerHTML='';
+  const put=(c,idx,empty)=>{
+    const i=document.createElement('i');
+    if(empty){ i.className='empty'; i.title='Drag Color here...'; }
+    else { i.style.background=c; i.innerHTML='<span></span>';
+      i.firstChild.textContent=c.replace('#',''); i.title=c; }
+    if(idx===swatchSel) i.classList.add('sel');
+    i.dataset.i=idx;
+    i.addEventListener('click',()=>{ if(!empty){ curColor=c; swatchSel=idx; syncColor(); drawSwatches(); } });
+    i.addEventListener('contextmenu',ev=>{ ev.preventDefault(); swatchSel=idx; drawSwatches();
+      openDD(swatchMenu(idx,empty), ev.clientX, ev.clientY); });
+    i.addEventListener('dragover',ev=>{ ev.preventDefault(); i.classList.add('over'); });
+    i.addEventListener('dragleave',()=>i.classList.remove('over'));
+    i.addEventListener('drop',ev=>{ ev.preventDefault(); i.classList.remove('over');
+      const c2=(ev.dataTransfer.getData('text/plain')||curColor).trim();
+      if(!/^#[0-9a-f]{6}$/i.test(c2)) return note('That is not a color.');
+      if(empty) cols.push(c2); else cols[idx]=c2;
+      drawSwatches(); countSwatches(); note('Added '+c2.toUpperCase()+' to the Palette.'); });
+    row.appendChild(i);
+  };
+  cols.forEach((c,n)=>put(c,n,false));
+  put(null,cols.length,true);   /* the empty swatch you drag a color onto */
+  drawColorRows();
+}
+function countSwatches(){ const el=$('#palCount'); if(el) el.textContent=curPalette().length+' swatches'; }
+
+/* the right-click contextual menu, in the manual's own order and Arena's own
+   wording: update with the current color, get rid of it, remove all, replace
+   them with the default ones, then Sort and Flip */
+function swatchMenu(idx,empty){
+  const cols=curPalette();
+  const sortBy=(f)=>{
+    const key={ Hue:c=>rgb2hsb(...hex2rgb(c))[0], Saturation:c=>rgb2hsb(...hex2rgb(c))[1],
+      Brightness:c=>rgb2hsb(...hex2rgb(c))[2], Red:c=>hex2rgb(c)[0],
+      Green:c=>hex2rgb(c)[1], Blue:c=>hex2rgb(c)[2] }[f];
+    cols.sort((a,b)=>key(a)-key(b)); drawSwatches(); note('Sorted by '+f+'.');
+  };
+  return [
+    {group:'Swatch'},
+    {l:'Update with Current Color', dis:empty, act:()=>{ cols[idx]=curColor; drawSwatches();
+      note('Swatch updated with '+curColor.toUpperCase()+'.'); }},
+    {l:'Remove This', dis:empty, act:()=>{ cols.splice(idx,1); swatchSel=-1; drawSwatches(); }},
+    {sep:1},
+    {l:'Remove All', act:()=>{ cols.length=0; swatchSel=-1; drawSwatches(); note('Palette cleared.'); }},
+    {l:'Load Default Palette', act:()=>{ const f=PALETTES_FACTORY[sel.i];
+      cols.length=0; (f||[]).forEach(c=>cols.push(c)); swatchSel=-1; drawSwatches();
+      note(f? 'Default swatches restored.' : 'This palette has no factory default.'); }},
+    {sep:1},
+    {l:'Sort', sub:['Hue','Saturation','Brightness','Red','Green','Blue']
+      .map(f=>({l:f, act:()=>sortBy(f)}))},
+    {l:'Flip', act:()=>{ cols.reverse(); drawSwatches(); note('Swatches flipped.'); }}
+  ];
+}
+
+/* "The Palette comes with its own set of presets. You can access them via the
+   little P dropdown on the far right. Of course you can add your own via the
+   Save and Manage... options on the bottom." */
+function palettePresetMenu(){
+  const items=[{group:'Palette Presets'}];
+  Object.keys(PALETTES).forEach(n=>items.push({ l:n, on:!!(sel&&sel.i===n), act:()=>{
+    const cols=curPalette(); cols.length=0; PALETTES[n].forEach(c=>cols.push(c));
+    drawSwatches(); note('Loaded the “'+n+'” palette preset.'); }}));
+  items.push({sep:1},
+    {l:'Save...', act:()=>{ const n=prompt('Save palette preset as', sel?sel.i:'New Palette');
+      if(!n||!n.trim()) return; PALETTES[n.trim()]=curPalette().slice();
+      buildList(); note('Saved the “'+n.trim()+'” palette preset.'); }},
+    {l:'Manage...', act:()=>{ setKind('Color Palettes'); $('#pSearch').focus();
+      note('Manage your presets.'); }});
+  return items;
+}
+
+/* ---- Envelope preset ---------------------------------------------------- */
+function renderEnvelope(d){
+  d.innerHTML=`<h2>${esc(sel.i)}</h2>
+    <canvas id="env" class="curve" width="520" height="200"></canvas>
+    <div class="formgroup rowset"><h3>Envelope</h3>
+      <div class="formrow"><label>Interpolation</label>
+        <select class="tb-select" id="interp"><option>Linear</option><option>Smooth</option><option>Hold</option><option>Bezier</option></select></div>
+      <div class="formrow"><label>Loop</label>
+        <span class="radiogroup" data-radio="loop">
+          <button class="tb-btn small on" type="button" data-v="Loop">Loop</button>
+          <button class="tb-btn small" type="button" data-v="Once">Once</button>
+          <button class="tb-btn small" type="button" data-v="Bounce">Bounce</button>
+        </span></div>
+      <div class="formrow"><label>Keyframes</label><span class="filepath">4</span></div>
+      <div class="formrow"><label>File</label><span class="filepath">${esc(sel.i)}.xml</span></div>
+    </div>
+    <div class="hint">Open the full editor for keyframe editing:
+      <a class="plainlink" href="envelope-editor.html">Envelope Editor →</a></div>`;
+  drawEnv();
+}
+/* parameters.htm, Radio Buttons: "A group of radio buttons can only have one
+   button active at a time. When you click one of the options, the others will
+   automatically be deselected." */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.radiogroup [data-v]'); if(!b) return;
+  const g=b.closest('.radiogroup');
+  g.querySelectorAll('[data-v]').forEach(x=>x.classList.toggle('on',x===b));
+  note(g.dataset.radio+': '+b.dataset.v);
+});
+
+function drawEnv(){
+  const c=document.getElementById('env'); if(!c) return;
+  const x=c.getContext('2d'), w=c.width, h=c.height;
+  x.fillStyle=tok('--inset'); x.fillRect(0,0,w,h);
+  x.strokeStyle=tok('--n900'); x.lineWidth=1;
+  for(let i=1;i<8;i++){ x.beginPath(); x.moveTo(w*i/8,0); x.lineTo(w*i/8,h); x.stroke(); }
+  for(let i=1;i<4;i++){ x.beginPath(); x.moveTo(0,h*i/4); x.lineTo(w,h*i/4); x.stroke(); }
+  const pts=[[0,h*0.9],[w*0.2,h*0.1],[w*0.5,h*0.55],[w*0.75,h*0.2],[w,h*0.85]];
+  x.strokeStyle=tok('--color-accent'); x.lineWidth=2; x.beginPath();
+  pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])); x.stroke();
+  x.fillStyle=tok('--a300'); pts.forEach(p=>x.fillRect(p[0]-3,p[1]-3,6,6));
+}
+
+/* ---- ordinary preset: the stored parameters -------------------------------
+   parameters.htm drives every control below: sliders with a typed numeric
+   value that does math, Dingetje while dragging, compound sliders that expand,
+   toggles, event buttons, dropdowns, and reset on right-click.
+   -------------------------------------------------------------------------- */
+const PARAM_DEFAULTS={ Opacity:100, Amount:50, Speed:50, Size:50, Rotation:0,
+  'Rotation X':0, 'Rotation Y':0, 'Rotation Z':0 };
+const COMPOUND={ Rotation:['Rotation X','Rotation Y','Rotation Z'] };
+
+function hash(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return Math.abs(h); }
+function pkey(p){ return kind+'/'+sel.g+'/'+sel.i+'/'+p; }
+function pget(p){ const k=pkey(p);
+  if(!(k in pvals)) pvals[k]= p in PARAM_DEFAULTS && p!=='Opacity'
+    ? 20+hash(k)%70 : (PARAM_DEFAULTS[p]!==undefined?PARAM_DEFAULTS[p]:50);
+  return pvals[k]; }
+function pset(p,v){ pvals[pkey(p)]=Math.max(0,Math.min(100,v)); }
+
+function sliderRow(p,sub){
+  return `<div class="formrow${sub?' sub':''}" data-p="${esc(p)}">
+    <label${COMPOUND[p]?' class="compound"':''}>${COMPOUND[p]?(compoundOpen[p]?'▾ ':'▸ '):''}${esc(p)}</label>
+    <input type="range" min="0" max="100" step="0.1" value="${pget(p)}">
+    <span class="num">${(+pget(p)).toFixed(1)}</span></div>`;
+}
+function renderPreset(d){
+  const blends=(typeof BLEND_MODES!=='undefined'&&BLEND_MODES.length)?BLEND_MODES
+    :['Add','Alpha','Cut','Darken','Difference','Lighten','Multiply','Screen','Subtract'];
+  let rows='';
+  ['Opacity'].forEach(p=>rows+=sliderRow(p));
+  /* parameters.htm, Dropdowns: "The Blend on each layer is a dropdown with a
+     huge list of choices. Like, crazy long." — a dropdown of values, so a
+     themed select is the right control */
+  rows+=`<div class="formrow" data-p="Blend Mode"><label>Blend Mode</label>
+    <select class="tb-select" id="blend">${blends.map(b=>'<option>'+esc(b)+'</option>').join('')}</select></div>`;
+  ['Amount','Speed','Size'].forEach(p=>rows+=sliderRow(p));
+  rows+=sliderRow('Rotation');
+  if(compoundOpen['Rotation']) COMPOUND['Rotation'].forEach(p=>rows+=sliderRow(p,true));
+
+  /* "the Flip effect has toggles for Horizontal and Vertical, which control
+     which axes the image is flipped across" */
+  let extra='';
+  if(sel.g==='Flip') extra+=`
+    <div class="formrow"><label>Horizontal</label>
+      <span class="togglebox"><input type="checkbox" id="flipH" checked><span class="filepath">flip across the vertical axis</span></span></div>
+    <div class="formrow"><label>Vertical</label>
+      <span class="togglebox"><input type="checkbox" id="flipV"><span class="filepath">flip across the horizontal axis</span></span></div>`;
+  /* "the Cube Tiles effect has an event called Randomize, which randomly
+     re-arranges how the tiles are distributed across the cube" */
+  if(sel.g==='Cube Tiles') extra+=`
+    <div class="formrow"><label>Randomize</label>
+      <button class="tb-btn" type="button" id="evRandom">Randomize</button></div>`;
+
+  d.innerHTML=`<h2>${esc(sel.g)}: ${esc(sel.i)}</h2>
+    <div class="formgroup"><h3>Preset</h3>
+      <div class="formrow"><label>Name</label><input type="text" id="pName" value="${esc(sel.i)}"></div>
+      <div class="formrow"><label>Applies to</label><span class="filepath">${esc(sel.g)}</span></div>
+      <div class="formrow"><label>File</label><span class="filepath">${esc(sel.i)}.xml</span></div>
+    </div>
+    <div class="formgroup"><h3>Stored Parameters</h3>
+      ${rows}${extra}
+      <div class="hint">Click a value, type a new one and hit return. You can do math, so
+        “1920 / 3” works. Right-click a slider or a parameter name to reset it.</div>
+      <div class="hint">A preset sets every parameter at once. It is not a live link. Updating the
+        preset later does not change effects that already used it.</div>
+    </div>
+    <div class="formrow"><button class="tb-btn on" type="button" id="bApply">Apply To Selection</button>
+      <button class="tb-btn" type="button" id="bUpdate">Update From Selection</button></div>`;
+
+  $('#pName').addEventListener('change',ev=>{
+    const n=ev.target.value.trim(); if(!n||n===sel.i) return;
+    const arr=itemsOf(sel.g), k=arr.indexOf(sel.i); if(k>=0) arr[k]=n;
+    selectPreset(sel.g,n); note('Renamed to “'+n+'”.');
+  });
+  $('#bApply').addEventListener('click',()=>note('Applied “'+sel.i+'” to the selection.'));
+  $('#bUpdate').addEventListener('click',()=>note('“'+sel.i+'” updated from the selection.'));
+  const rnd=$('#evRandom');
+  if(rnd) rnd.addEventListener('click',()=>note('Randomize: tiles re-arranged across the cube.'));
+  $$('#detail label.compound').forEach(l=>l.addEventListener('click',()=>{
+    const p=l.closest('.formrow').dataset.p; compoundOpen[p]=!compoundOpen[p]; detail(); }));
+}
+
+/* ---- slider behaviour: Dingetje, typed values with math, reset ----------- */
+const ding=$('#ding');
+let dingRow=null;
+function showDing(row){
+  dingRow=row; const r=row.getBoundingClientRect();
+  ding.querySelector('b').textContent=(+row.querySelector('input[type=range]').value).toFixed(1);
+  ding.classList.add('show');
+  const w=ding.getBoundingClientRect().width;
+  ding.style.left=Math.max(4,Math.min(r.right-w, innerWidth-w-6))+'px';
+  ding.style.top =Math.max(4,r.top-30)+'px';
+}
+function hideDing(){ ding.classList.remove('show'); dingRow=null; }
+function bumpDing(dir){
+  if(!dingRow) return;
+  const s=dingRow.querySelector('input[type=range]');
+  s.value=Math.max(+s.min,Math.min(+s.max,+s.value+dir));
+  s.dispatchEvent(new Event('input',{bubbles:true}));
+  ding.querySelector('b').textContent=(+s.value).toFixed(1);
+}
+ding.addEventListener('click',e=>{ const i=e.target.closest('[data-d]'); if(i) bumpDing(+i.dataset.d); });
+addEventListener('mousedown',e=>{ if(!e.target.closest('.dingetje') &&
+  !e.target.closest('.formrow input[type=range]')) hideDing(); });
+
+const detailEl=$('#detail');
+detailEl.addEventListener('pointerdown',e=>{
+  const s=e.target.closest('.formrow input[type=range]'); if(!s) return;
+  const row=s.closest('.formrow'); if(row.dataset.p) showDing(row);
+});
+detailEl.addEventListener('input',e=>{
+  const s=e.target.closest('.formrow input[type=range]'); if(!s) return;
+  const row=s.closest('.formrow'), n=row.querySelector('.num');
+  if(row.dataset.p && !row.querySelector('.crgb') && !row.querySelector('.chsb')){
+    pset(row.dataset.p,+s.value);
+    if(n && !n.matches('input')) n.textContent=(+s.value).toFixed(1);
+    if(dingRow===row) ding.querySelector('b').textContent=(+s.value).toFixed(1);
+  }
+});
+
+/* "If you want to set a parameter to a specific value, click the numerical
+   value, type in the new value and hit return."  Plus: "You can also do math
+   when typing values." */
+function evalNum(t){
+  t=String(t).trim();
+  if(!/^[-+*/(). 0-9]+$/.test(t)) return NaN;
+  try{ const v=Function('"use strict";return ('+t+')')();
+    return (typeof v==='number'&&isFinite(v))?v:NaN; }catch(err){ return NaN; }
+}
+detailEl.addEventListener('click',e=>{
+  const n=e.target.closest('span.num'); if(!n) return;
+  const row=n.closest('.formrow'), s=row.querySelector('input[type=range]');
+  const box=document.createElement('input');
+  box.type='text'; box.className='num'; box.value=n.textContent;
+  n.replaceWith(box); box.focus(); box.select();
+  let done=false;
+  const commit=ok=>{
+    if(done) return; done=true;
+    const v=ok?evalNum(box.value):NaN;
+    if(ok && isNaN(v)) note('“'+box.value+'” is not a number or a sum.');
+    const span=document.createElement('span'); span.className='num';
+    if(!isNaN(v) && s){ s.value=Math.max(+s.min,Math.min(+s.max,v));
+      s.dispatchEvent(new Event('input',{bubbles:true})); }
+    span.textContent = s ? (+s.value).toFixed(row.classList.contains('sub')||row.dataset.p?1:0)
+                         : (isNaN(v)?box.value:v);
+    if(s && (row.querySelector('.crgb')||row.querySelector('.chsb')))
+      span.textContent=Math.round(+s.value);
+    box.replaceWith(span);
+  };
+  box.addEventListener('keydown',ev=>{ if(ev.key==='Enter') commit(true);
+    else if(ev.key==='Escape') commit(false); });
+  box.addEventListener('blur',()=>commit(true));
+});
+
+/* "You can set a slider back to its default value, simply right clicking on
+   the slider or parameter name."  Arena opens its parameter menu there, so
+   this window opens the same one, with Reset to default at the top. */
+detailEl.addEventListener('contextmenu',e=>{
+  const row=e.target.closest('.formrow[data-p]'); if(!row) return;
+  if(!e.target.closest('label') && !e.target.closest('input[type=range]') &&
+     !e.target.closest('span.num')) return;
+  e.preventDefault();
+  const p=row.dataset.p;
+  const reset={ l:'Reset to default', act:()=>{
+    const dv=PARAM_DEFAULTS[p]!==undefined?PARAM_DEFAULTS[p]:0;
+    pset(p,dv);
+    const s=row.querySelector('input[type=range]'), sl=row.querySelector('select');
+    if(s){ s.value=dv; s.dispatchEvent(new Event('input',{bubbles:true})); }
+    if(sl) sl.selectedIndex=0;
+    note(p+' reset to its default value.'); }};
+  const rest = (typeof CTX_PARAM!=='undefined')
+    ? [{sep:1}].concat(mapCtx(CTX_PARAM, it=>note(p+': '+it.l))) : [];
+  openDD([{group:p},reset].concat(rest), e.clientX, e.clientY);
+});
+
+/* ======================= tabs, search, boot ============================== */
+function setKind(k){
+  kind=k; sel=null; managedDetailRequest++;
+  $$('#kindTabs .win-tab').forEach(x=>x.classList.toggle('active',x.dataset.kind===k));
+  buildList(); detail();
+}
+function reconcileManagedStore(){
+  if(!isManagedKind()) return;
+  const current=managedSelection();
+  if(current){
+    let found=null, groupName='';
+    managedGroupsFor().some(group=>{
+      const item=group.items.find(candidate=>candidate.key===current.item.key);
+      if(!item) return false;
+      found=item; groupName=group.group; return true;
+    });
+    if(found) sel={g:groupName,i:found.name,item:found}; else sel=null;
+  }
+  buildList(); detail();
+}
+try{
+  const api=presetAPI(), host=presetHost();
+  if(api && api.USER_PRESETS_CHANGED_EVENT && host && host.addEventListener)
+    host.addEventListener(api.USER_PRESETS_CHANGED_EVENT,()=>Promise.resolve().then(reconcileManagedStore));
+}catch(_error){}
+$('#kindTabs').addEventListener('click',e=>{
+  const t=e.target.closest('.win-tab'); if(!t) return; setKind(t.dataset.kind);
+});
+$('#pSearch').addEventListener('input',buildList);
+buildList(); detail();
+</script>
+</body>
+</html>

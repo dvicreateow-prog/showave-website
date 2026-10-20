@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en" data-openlive-static-header>
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#161826">
+<meta name="color-scheme" content="dark light">
+<title>GSL5 Lighting Library</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<script src="showave-brand.js"></script>
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=liquid-glass-4">
+<link rel="stylesheet" href="gsl5.css?v=gsl5-authoring-7">
+</head>
+<body>
+<div id="gsl5Root" data-workspace="library">
+  <section class="gsl-library-shell network-speed-window" id="gslLibraryShell" aria-labelledby="gslLibraryTitle">
+    <header class="gsl-library-titlebar network-speed-titlebar">
+      <div class="gsl-library-identity">
+        <span class="showave-brand-lockup--title" data-showave-brand="lighting"></span>
+        <strong class="network-speed-title" id="gslLibraryTitle">Lighting Library: <span id="gslLibraryShowName">New GSL5 Show</span></strong>
+      </div>
+      <span class="gsl-library-window-state network-speed-status" id="gslLibraryWindowState" role="status" title="Kept for this session. Saving files is disabled.">Session only</span>
+      <button type="button" class="gsl-library-mapper tb-btn small" id="gslLibraryOpenShow" title="Open a GSL5 show file">Open&hellip;</button>
+      <button type="button" class="gsl-library-mapper tb-btn small" id="gslLibrarySaveShow" title="Saving files is disabled in this session. Shows stay in memory." disabled>Save</button>
+      <button type="button" class="gsl-library-mapper tb-btn small" id="gslLibraryOpenMapper">Mapper&hellip;</button>
+      <button type="button" class="gsl-library-close audio-mixer-window-button" id="gslLibraryClose"
+        title="Close GSL5 Lighting Library" aria-label="Close GSL5 Lighting Library">&times;</button>
+    </header>
+
+    <nav class="gsl-catalog-tabs win-tabs" id="gslLibraryTabs" role="tablist" aria-label="Lighting Library sections">
+      <button type="button" class="win-tab" role="tab" data-library-tab="lights" aria-selected="true" aria-controls="gslLibraryRows">Lights</button>
+      <button type="button" class="win-tab" role="tab" data-library-tab="fixtures" aria-selected="false" aria-controls="gslLibraryRows">Fixtures</button>
+      <button type="button" class="win-tab" role="tab" data-library-tab="groups" aria-selected="false" aria-controls="gslLibraryRows">Groups</button>
+      <button type="button" class="win-tab" role="tab" data-library-tab="sources" aria-selected="false" aria-controls="gslLibraryRows">Sources</button>
+      <button type="button" class="win-tab" role="tab" data-library-tab="effects" aria-selected="false" aria-controls="gslLibraryRows">Effects</button>
+      <button type="button" class="win-tab" role="tab" data-library-tab="cues" aria-selected="false" aria-controls="gslLibraryRows">Cues</button>
+      <button type="button" class="win-tab" role="tab" data-library-tab="output" aria-selected="false" aria-controls="gslLibraryRows">Output</button>
+    </nav>
+
+    <label class="gsl-library-search">
+      <span aria-hidden="true">&#9906;</span>
+      <input id="gslLibrarySearch" type="search" autocomplete="off" aria-label="Search Lighting Library" placeholder="Search lighting&hellip;">
+      <button type="button" id="gslLibraryClearSearch" title="Clear search" aria-label="Clear Lighting Library search" disabled>&times;</button>
+    </label>
+
+    <div class="gsl-library-actions audio-mixer-toolbar" id="gslLibraryActions">
+      <button type="button" class="tb-btn small" id="gslLibraryBuildPersonality" data-library-light-action>BUILD PERSONALITY&hellip;</button>
+      <button type="button" class="tb-btn small" id="gslLibraryImportD4" data-library-light-action>ADD / IMPORT .D4 / .R20&hellip;</button>
+      <button type="button" class="tb-btn small" id="gslLibraryImportD4Folder" data-library-light-action>ADD / IMPORT CUSTOM FOLDER&hellip;</button>
+      <a class="tb-btn small" href="https://personalities.avolites.com/" target="_blank" rel="noopener noreferrer" data-library-light-action>AVOLITES REFERENCE &#8599;</a>
+      <button type="button" class="tb-btn small" id="gslLibraryPreviewLight" disabled>Preview selected</button>
+      <button type="button" class="tb-btn small" id="gslLibraryInspect" hidden>Inspect selected</button>
+      <button type="button" class="tb-btn small" id="gslLibraryCreateEffect" hidden>FX / Phasers&hellip;</button>
+      <span id="gslLibrarySummary">Loading local lights&hellip;</span>
+    </div>
+
+    <div class="gsl-library-content audio-mixer-rows" id="gslLibraryRows" role="list" aria-label="Lights" aria-live="polite" aria-busy="true">
+      <div class="gsl-library-state">Loading local lights&hellip;</div>
+    </div>
+
+    <footer class="gsl-library-footer audio-mixer-footer">
+      <span id="gslLibraryFooterMessage">Drag a Light to a SHOWAVE Clip Slot. Configuration remains in Mapper.</span>
+      <output id="gslLibraryFooterCount">Loading&hellip;</output>
+    </footer>
+  </section>
+
+  <header id="menubar" class="gsl-menubar" data-openlive-chrome>
+    <div class="showave-brand-lockup--nav" data-showave-brand="lighting"></div>
+    <strong class="gsl-product-name">Lighting Library</strong>
+    <nav id="menus" class="gsl-menus" aria-label="GSL5 menus">
+      <button type="button" class="menu-top" id="gslMenuFileButton" data-gsl-menu="file" aria-haspopup="menu" aria-controls="gslMenuFile" aria-expanded="false">File</button>
+      <button type="button" class="menu-top" id="gslMenuEditButton" data-gsl-menu="edit" aria-haspopup="menu" aria-controls="gslMenuEdit" aria-expanded="false">Edit</button>
+      <button type="button" class="menu-top" id="gslMenuShowButton" data-gsl-menu="show" aria-haspopup="menu" aria-controls="gslMenuShow" aria-expanded="false">Show</button>
+      <button type="button" class="menu-top" id="gslMenuToolsButton" data-gsl-menu="tools" aria-haspopup="menu" aria-controls="gslMenuTools" aria-expanded="false">Tools</button>
+    </nav>
+    <div class="gsl-header-status mb-right" aria-label="GSL5 Lighting Library status">
+      <span class="gsl-status-chip linked" id="gslHubStatus" title="OpenLiveHub link status"><i></i>SHOWAVE linked</span>
+      <span class="gsl-status-chip" id="gslBridgeStatus"><i></i>Bridge checking</span>
+      <span class="gsl-status-chip preview" id="gslOutputStatus"><i></i>PREVIEW</span>
+      <span class="gsl-clock" id="gslClock" aria-label="Current time">--:--:--</span>
+    </div>
+  </header>
+
+  <section class="gsl-commandbar" aria-label="Programmer command bar">
+    <div class="gsl-history" role="group" aria-label="History">
+      <button type="button" class="gsl-key compact" id="gslUndo" title="Undo (Ctrl+Z)">&#8630;</button>
+      <button type="button" class="gsl-key compact" id="gslRedo" title="Redo (Ctrl+Shift+Z)">&#8631;</button>
+    </div>
+    <div class="gsl-commandline" id="gslCommandLine" role="status" aria-live="polite">
+      <strong>GSL5</strong><span>Ready: select fixtures to begin</span>
+    </div>
+    <button type="button" class="gsl-key" id="gslLocate" aria-pressed="false">LOCATE</button>
+    <button type="button" class="gsl-key" id="gslHighlight" aria-pressed="false" title="Apply each selected personality's own per-channel Highlight values to the output. A personality that declares none cannot be highlighted, and the key says so instead of engaging.">HIGHLIGHT</button>
+    <button type="button" class="gsl-key" id="gslBlind" aria-pressed="false">BLIND</button>
+    <button type="button" class="gsl-key record" id="gslRecord">RECORD</button>
+    <button type="button" class="gsl-key update" id="gslUpdate">UPDATE</button>
+    <button type="button" class="gsl-key clear" id="gslClear">CLEAR</button>
+    <button type="button" class="gsl-key blackout" id="gslBlackout" aria-pressed="false">BLACKOUT</button>
+    <button type="button" class="gsl-key output" id="gslArmOutput" aria-pressed="false">ARM OUTPUT</button>
+  </section>
+
+  <main class="gsl-main">
+    <aside class="gsl-sidebar" aria-label="Lighting show browser">
+      <div class="gsl-show-summary">
+        <div><small>SHOW FILE</small><strong id="gslShowName">New GSL5 Show</strong></div>
+        <span id="gslSaveState" title="Kept for this session. Saving files is disabled."><i></i>Session only</span>
+      </div>
+
+      <nav class="gsl-workspace-nav" aria-label="Lighting workspaces">
+        <button type="button" data-workspace="library" class="gsl-library-return"><span aria-hidden="true">&#9776;</span> Lighting Library</button>
+        <button type="button" data-workspace="mapper" class="on" aria-current="page"><span aria-hidden="true">&#9638;</span> Mapper</button>
+        <button type="button" data-workspace="live"><span aria-hidden="true">&#9673;</span> Cue Launcher</button>
+        <button type="button" data-workspace="programmer"><span aria-hidden="true">&#9783;</span> Programmer</button>
+        <button type="button" data-workspace="patch"><span aria-hidden="true">&#8862;</span> Patch</button>
+        <button type="button" data-workspace="cues"><span aria-hidden="true">&#9655;</span> Cue Stacks</button>
+        <button type="button" data-workspace="fx"><span aria-hidden="true">&#8767;</span> FX / Phasers</button>
+        <button type="button" data-workspace="network"><span aria-hidden="true">&#8644;</span> Network</button>
+      </nav>
+
+      <section class="gsl-browser-section">
+        <div class="gsl-section-title"><span>GROUPS</span><button type="button" id="gslAddGroup" title="Store selected fixtures as a group">+</button></div>
+        <div class="gsl-group-list" id="gslGroupList" role="listbox" aria-label="Fixture groups"></div>
+      </section>
+      <section class="gsl-browser-section fixture-browser">
+        <div class="gsl-section-title"><span>FIXTURES</span><output id="gslFixtureCount">0</output></div>
+        <label class="gsl-search"><span aria-hidden="true">&#9906;</span><input id="gslFixtureSearch" type="search" placeholder="Search fixtures"></label>
+        <div class="gsl-fixture-list" id="gslFixtureList" role="listbox" aria-label="Patched fixtures" aria-multiselectable="true"></div>
+      </section>
+      <div class="gsl-selection-summary" id="gslSelectionSummary">No fixtures selected</div>
+    </aside>
+
+    <section class="gsl-workarea">
+      <div class="gsl-workspace-head">
+        <div>
+          <small id="gslWorkspaceKicker">LIGHTING PROCESSOR</small>
+          <h1 id="gslWorkspaceTitle">Fixture &amp; Panel Mapper</h1>
+        </div>
+        <div class="gsl-workspace-tools">
+          <label>BPM <input id="gslBpm" type="number" min="20" max="300" value="120"></label>
+          <button type="button" class="gsl-tool" id="gslTapTempo">TAP</button>
+          <label class="gsl-grand-master">GRAND MASTER
+            <input id="gslGrandMaster" type="range" min="0" max="100" value="100">
+            <output id="gslGrandMasterValue">100%</output>
+          </label>
+        </div>
+      </div>
+
+      <section class="gsl-pane on" id="gslPaneMapper" data-pane="mapper" aria-label="Fixture and lighting panel mapper workspace">
+        <div class="gsl-mapper">
+          <header class="gsl-mapper-pipeline" aria-label="Lighting processor workflow">
+            <button type="button" class="gsl-pipeline-step" id="gslMapperFixtures" data-step="1">
+              <span>1</span><strong>DEFINE</strong><small>fixtures &amp; panels</small>
+            </button>
+            <i aria-hidden="true"></i>
+            <button type="button" class="gsl-pipeline-step" id="gslMapperPatch" data-step="2">
+              <span>2</span><strong>PATCH</strong><small>DMX addresses</small>
+            </button>
+            <i aria-hidden="true"></i>
+            <button type="button" class="gsl-pipeline-step active" id="gslMapperMap" data-step="3" aria-current="step">
+              <span>3</span><strong>MAP</strong><small>stage positions</small>
+            </button>
+            <i aria-hidden="true"></i>
+            <button type="button" class="gsl-pipeline-step" id="gslMapperRoute" data-step="4">
+              <span>4</span><strong>ROUTE</strong><small>Art-Net / sACN</small>
+            </button>
+            <i aria-hidden="true"></i>
+            <button type="button" class="gsl-pipeline-step run" id="gslMapperShowave" data-step="5">
+              <span>5</span><strong>RUN IN SHOWAVE</strong><small>layers · cues · clips</small>
+            </button>
+          </header>
+
+          <div class="gsl-mapper-layout">
+            <section class="gsl-mapper-stage-card" aria-labelledby="gslMapperStageTitle">
+              <header>
+                <div><small>SPATIAL PATCH</small><strong id="gslMapperStageTitle">Lighting Stage</strong></div>
+                <div class="gsl-map-view" role="group" aria-label="Stage mapping tools">
+                  <button type="button" id="gslMapperAutoLayout">AUTO LAYOUT</button>
+                  <button type="button" id="gslMapperCenter">CENTER SELECTED</button>
+                </div>
+              </header>
+              <div class="gsl-mapper-stage-wrap">
+                <div class="gsl-mapper-stage" id="gslMapperStage" role="application" aria-label="Lighting fixture position map. Drag fixtures to position them on stage.">
+                  <div class="gsl-stage-axis x"><span>STAGE LEFT</span><b>0</b><span>STAGE RIGHT</span></div>
+                  <div class="gsl-stage-axis y"><span>UPSTAGE</span><b>0</b><span>DOWNSTAGE</span></div>
+                  <div class="gsl-stage-origin" aria-hidden="true"></div>
+                  <div class="gsl-mapper-fixtures" id="gslMapperFixturesLayer"></div>
+                  <div class="gsl-mapper-empty" id="gslMapperEmpty" hidden>
+                    <span aria-hidden="true">&#9638;</span>
+                    <strong>Start with the lighting hardware</strong>
+                    <p>Define a fixture or LED light panel, patch its DMX address, then arrange it here.</p>
+                    <button type="button" id="gslMapperEmptyAdd">DEFINE FIRST FIXTURE</button>
+                  </div>
+                </div>
+              </div>
+              <footer>
+                <span><kbd>DRAG</kbd> place fixture</span><span><kbd>CLICK</kbd> select</span><span><kbd>SHIFT</kbd> add to selection</span>
+                <output id="gslMapperCoordinates">Stage range X −10…10 · Y −6…6</output>
+              </footer>
+            </section>
+
+            <aside class="gsl-mapper-inspector" aria-label="Mapping status and processor links">
+              <section class="gsl-map-health">
+                <header><div><small>PROCESSOR READINESS</small><strong>Mapping Health</strong></div><span id="gslMapperHealthState">SETUP</span></header>
+                <div class="gsl-map-metrics" id="gslMapperMetrics"></div>
+                <div class="gsl-map-checks" id="gslMapperChecks"></div>
+              </section>
+              <section class="gsl-map-selected">
+                <header><div><small>STAGE OBJECT</small><strong>Selected Fixture</strong></div><span id="gslMapperSelectionCount">0 selected</span></header>
+                <div id="gslMapperInspector"></div>
+              </section>
+              <section class="gsl-processor-links">
+                <header><div><small>CONNECTED SYSTEMS</small><strong>Processor Tools</strong></div></header>
+                <div>
+                  <button type="button" id="gslMapperAdvancedOutput"><span aria-hidden="true">&#9638;</span><strong>Advanced Output</strong><small>screen &amp; stage routing</small></button>
+                  <button type="button" id="gslMapperCueLauncher"><span aria-hidden="true">&#9655;</span><strong>Cue Launcher</strong><small>secondary GSL playback</small></button>
+                  <button type="button" id="gslMapperNetwork"><span aria-hidden="true">&#8644;</span><strong>Lighting Network</strong><small>nodes &amp; universes</small></button>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="gsl-pane" id="gslPaneLive" data-pane="live" aria-label="Lighting Composer workspace" hidden>
+        <div class="gsl-composer">
+          <header class="gsl-composer-toolbar">
+            <div class="gsl-composer-identity">
+              <span class="gsl-composer-orbit" aria-hidden="true"><i></i></span>
+              <div><small>SHOWAVE-NATIVE LIGHTING</small><strong>Lighting Composer</strong></div>
+              <span class="gsl-composer-mode"><i></i>PREVIEW SAFE</span>
+            </div>
+            <div class="gsl-composer-transport" role="group" aria-label="Lighting cue transport">
+              <button type="button" id="gslComposerPrev" title="Previous lighting cue" aria-label="Previous lighting cue">&#9664;</button>
+              <button type="button" id="gslComposerStop" class="stop" title="Release all composer layers">STOP ALL</button>
+              <button type="button" id="gslComposerNext" title="Next lighting cue" aria-label="Next lighting cue">&#9654;</button>
+            </div>
+            <div class="gsl-composer-create">
+              <button type="button" id="gslComposerAddLayer">+ LAYER</button>
+              <button type="button" id="gslComposerAddCue" class="gsl-primary">+ CUE</button>
+            </div>
+          </header>
+
+          <div class="gsl-composer-body">
+            <aside class="gsl-composer-library" aria-label="Lighting source and effect library">
+              <header>
+                <div><small>DRAG INTO A CLIP</small><strong>Light Library</strong></div>
+                <output id="gslComposerLibraryCount">0</output>
+              </header>
+              <div class="gsl-library-tabs" role="tablist" aria-label="Lighting library filters">
+                <button type="button" role="tab" data-library-filter="all" class="on" aria-selected="true">ALL</button>
+                <button type="button" role="tab" data-library-filter="sources" aria-selected="false">SOURCES</button>
+                <button type="button" role="tab" data-library-filter="looks" aria-selected="false">LOOKS</button>
+                <button type="button" role="tab" data-library-filter="fx" aria-selected="false">FX</button>
+              </div>
+              <div class="gsl-library-scroll" id="gslComposerLibrary">
+                <section class="gsl-library-section gsl-pool-panel group-pool" data-library-section="sources">
+                  <header><div><small>TARGETS + GENERATORS</small><strong>Lighting Sources</strong></div><span>drag</span></header>
+                  <div class="gsl-library-assets" id="gslLiveGroups"></div>
+                </section>
+                <section class="gsl-library-section gsl-pool-panel intensity-pool" data-library-section="looks">
+                  <header><div><small>PALETTES</small><strong>Intensity</strong></div><button type="button" data-store-palette="intensity">STORE</button></header>
+                  <div class="gsl-library-assets" id="gslIntensityPalettes"></div>
+                </section>
+                <section class="gsl-library-section gsl-pool-panel color-pool" data-library-section="looks">
+                  <header><div><small>PALETTES</small><strong>Colour</strong></div><button type="button" data-store-palette="color">STORE</button></header>
+                  <div class="gsl-library-assets color" id="gslColorPalettes"></div>
+                </section>
+                <section class="gsl-library-section gsl-pool-panel position-pool" data-library-section="looks">
+                  <header><div><small>PALETTES</small><strong>Position</strong></div><button type="button" data-store-palette="position">STORE</button></header>
+                  <div class="gsl-library-assets" id="gslPositionPalettes"></div>
+                </section>
+                <section class="gsl-library-section gsl-pool-panel beam-pool" data-library-section="looks">
+                  <header><div><small>PALETTES</small><strong>Beam</strong></div><button type="button" data-store-palette="beam">STORE</button></header>
+                  <div class="gsl-library-assets" id="gslBeamPalettes"></div>
+                </section>
+                <section class="gsl-library-section cue-pool" data-library-section="looks">
+                  <header><div><small>RECORDED LOOKS</small><strong>Lighting Cues</strong></div><span>linked</span></header>
+                  <div class="gsl-library-assets" id="gslComposerCues"></div>
+                </section>
+                <section class="gsl-library-section gsl-pool-panel fx-pool" data-library-section="fx">
+                  <header><div><small>MODULATION</small><strong>Effects</strong></div><button type="button" data-open-workspace="fx">EDIT</button></header>
+                  <div class="gsl-library-assets" id="gslEffectPool"></div>
+                </section>
+              </div>
+            </aside>
+
+            <section class="gsl-composer-stage" aria-label="Lighting cue and layer launcher">
+              <div class="gsl-composer-grid" id="gslComposerGrid" role="grid" aria-label="Lighting layers by cue" aria-rowcount="4" aria-colcount="8">
+                <div class="gsl-composer-cue-head" id="gslComposerCueHeaders" role="row"></div>
+                <div class="gsl-composer-layers" id="gslComposerLayers"></div>
+              </div>
+              <div class="gsl-composer-empty" id="gslComposerEmpty" hidden>
+                <span aria-hidden="true">&#10022;</span><strong>Build your light show spatially</strong>
+                <p>Patch fixtures, then drag a group, lighting source, look, cue or effect into any clip.</p>
+              </div>
+            </section>
+          </div>
+
+          <footer class="gsl-composer-footer">
+            <div id="gslComposerInspector"><strong>READY</strong><span>Select a library item, then click a clip, or drag it directly.</span></div>
+            <div class="gsl-composer-legend" aria-label="Composer interaction legend"><span><kbd>CLICK</kbd> trigger</span><span><kbd>DRAG</kbd> move</span><span><kbd>CTRL</kbd> copy</span><span><kbd>DEL</kbd> clear</span></div>
+          </footer>
+        </div>
+      </section>
+
+      <section class="gsl-pane" id="gslPaneProgrammer" data-pane="programmer" aria-label="Programmer workspace" hidden>
+        <div class="gsl-programmer-layout">
+          <section class="gsl-sheet-panel">
+            <header><div><small>LIVE VALUES</small><strong>Fixture Sheet</strong></div><span id="gslProgrammerSource">Programmer priority</span></header>
+            <div class="gsl-sheet-wrap"><table class="gsl-sheet"><thead id="gslProgrammerHead"></thead><tbody id="gslProgrammerBody"></tbody></table></div>
+          </section>
+          <aside class="gsl-encoder-panel">
+            <div class="gsl-feature-tabs" role="tablist" aria-label="Attribute feature groups">
+              <button type="button" role="tab" class="on" data-feature="intensity" aria-selected="true">Intensity</button>
+              <button type="button" role="tab" data-feature="position" aria-selected="false">Position</button>
+              <button type="button" role="tab" data-feature="color" aria-selected="false">Colour</button>
+              <button type="button" role="tab" data-feature="beam" aria-selected="false">Beam</button>
+            </div>
+            <div class="gsl-encoders" id="gslEncoders"></div>
+            <div class="gsl-encoder-actions">
+              <button type="button" id="gslFan">FAN</button><button type="button" id="gslOddEven" aria-pressed="false" title="Cycle the selection: odd, then even, then all.">ODD / EVEN</button>
+              <button type="button" id="gslReverseSelection">REVERSE</button><button type="button" id="gslClearFeature">CLEAR FEATURE</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="gsl-pane" id="gslPanePatch" data-pane="patch" aria-label="Patch workspace" hidden>
+        <div class="gsl-patch-toolbar">
+          <label>Profile<select id="gslPatchProfile"></select></label>
+          <label>Quantity<input id="gslPatchQuantity" type="number" min="1" max="512" value="1"></label>
+          <label>Fixture ID<input id="gslPatchFixtureId" type="number" min="1" value="1"></label>
+          <label>Universe<input id="gslPatchUniverse" type="number" min="1" max="63999" value="1"></label>
+          <label>Address<input id="gslPatchAddress" type="number" min="1" max="512" value="1"></label>
+          <label>Name<input id="gslPatchName" type="text" maxlength="64" placeholder="Fixture"></label>
+          <button type="button" class="gsl-primary" id="gslPatchAdd">PATCH</button>
+          <button type="button" id="gslPatchRemove">UNPATCH</button>
+          <button type="button" id="gslOpenPersonalityLibrary">SAMPLE LIBRARY&hellip;</button>
+          <button type="button" id="gslOpenPersonalityBuilder">FIXTURE BUILDER&hellip;</button>
+          <button type="button" id="gslOpenFixtureEditor">PIXEL FIXTURES…</button>
+        </div>
+        <div class="gsl-patch-summary" id="gslPatchSummary"></div>
+        <div class="gsl-sheet-wrap patch-sheet-wrap">
+          <table class="gsl-sheet patch-sheet">
+            <thead><tr><th></th><th>FID</th><th>Name</th><th>Profile / Mode</th><th>Universe</th><th>Address</th><th>Footprint</th><th>Stage X</th><th>Stage Y</th><th>Status</th></tr></thead>
+            <tbody id="gslPatchBody"></tbody>
+          </table>
+        </div>
+        <aside class="gsl-personality-library" id="gslPersonalityLibrary" aria-label="GSL5 local fixture sample library" hidden>
+          <header>
+            <div><small>GSL5 / OFFLINE</small><strong>Local Fixture Sample Library</strong></div>
+            <button type="button" id="gslClosePersonalityLibrary" aria-label="Close personality library">&times;</button>
+          </header>
+          <p class="gsl-personality-note"><strong>Original SHOWAVE samples are ready now</strong> for PARs, movers, pixels, matrices, theatre, architectural and FX fixtures. They are generic templates: verify the real fixture's DMX chart before arming output. Custom D4 import is optional.</p>
+          <figure class="gsl-personality-preview">
+            <canvas id="gslPersonalityPreview" width="560" height="150" aria-label="Selected fixture sample preview monitor"></canvas>
+            <figcaption><span id="gslPersonalityPreviewName">Select a fixture sample</span><span>PREVIEW ONLY</span></figcaption>
+          </figure>
+          <div class="gsl-personality-actions">
+            <button type="button" class="gsl-primary" id="gslNewPersonality">NEW PERSONALITY</button>
+            <button type="button" id="gslEditPersonality" disabled>EDIT / COPY SELECTED</button>
+            <button type="button" id="gslImportD4Files">IMPORT .D4 / .R20</button>
+            <button type="button" id="gslImportD4Folder">IMPORT CUSTOM FOLDER</button>
+            <a href="https://personalities.avolites.com/" target="_blank" rel="noopener noreferrer">AVOLITES REFERENCE &#8599;</a>
+            <button type="button" id="gslClearD4Library">CLEAR IMPORTS</button>
+          </div>
+          <label class="gsl-personality-search">Search fixture family, mode, category or custom filename
+            <input id="gslPersonalitySearch" type="search" autocomplete="off" placeholder="e.g. 4 LED PARs, moving head, RGBW, 8 &times; 8 matrix&hellip;">
+          </label>
+          <div class="gsl-personality-results" id="gslPersonalityResults" role="listbox" aria-label="Local and custom fixture personality modes"></div>
+          <footer><span id="gslPersonalityStats">Loading local samples&hellip;</span><output id="gslPersonalityStatus" role="status" aria-live="polite">Ready</output></footer>
+          <!-- Both Avolites formats, matching index.html and app.js. .R20 is the
+               plain-text Titan/Pearl personality a manufacturer download unzips to;
+               accepting only .d4 here made this window refuse files the main SHOWAVE
+               window imported happily. -->
+          <input id="gslD4Files" type="file" accept=".d4,.r20,.R20,application/xml,text/xml,text/plain" multiple hidden>
+          <input id="gslD4Folder" type="file" accept=".d4,.r20,.R20,application/xml,text/xml,text/plain" webkitdirectory directory multiple hidden>
+
+          <form class="gsl-personality-builder" id="gslPersonalityBuilder" aria-labelledby="gslBuilderTitle" novalidate hidden>
+            <header class="gsl-builder-header">
+              <div><small>GSL5 / FIXTURE BUILDER</small><strong id="gslBuilderTitle">New Fixture Personality</strong></div>
+              <output id="gslBuilderStatus" role="status" aria-live="polite">Unsaved</output>
+              <button type="button" id="gslBuilderBack">BACK TO LIBRARY</button>
+            </header>
+            <div class="gsl-builder-body">
+              <div class="gsl-builder-work">
+                <fieldset class="gsl-builder-section">
+                  <legend>Fixture identity</legend>
+                  <div class="gsl-builder-fields">
+                    <label>Manufacturer<input id="gslBuilderManufacturer" maxlength="80" value="GSL5 User" required></label>
+                    <label>Fixture name<input id="gslBuilderName" maxlength="96" placeholder="My LED PAR" required></label>
+                    <label>Mode<input id="gslBuilderMode" maxlength="96" placeholder="Extended · 8 channel" required></label>
+                    <label>Category<select id="gslBuilderCategory"></select></label>
+                    <label>Footprint<input id="gslBuilderFootprint" type="number" min="1" max="512" value="1" required></label>
+                    <label>Safety<select id="gslBuilderSafety">
+                      <option value="verify-fixture-manual">Verify fixture manual</option>
+                      <option value="manual-verification-required">Manual verification required</option>
+                      <option value="hazardous-manual-verification-required">Hazardous device</option>
+                      <option value="diagnostic-only">Diagnostic only</option>
+                    </select></label>
+                    <label class="gsl-builder-wide">Description<textarea id="gslBuilderDescription" rows="2" maxlength="280" placeholder="Notes about the real fixture and mode"></textarea></label>
+                  </div>
+                </fieldset>
+
+                <fieldset class="gsl-builder-section gsl-builder-templates">
+                  <legend>Start from a capability set</legend>
+                  <button type="button" data-builder-preset="dimmer">DIMMER</button>
+                  <button type="button" data-builder-preset="rgb">DIM + RGB</button>
+                  <button type="button" data-builder-preset="rgbw">DIM + RGBW</button>
+                  <button type="button" data-builder-preset="mover">16-BIT MOVER + RGBW</button>
+                </fieldset>
+
+                <fieldset class="gsl-builder-section">
+                  <legend>DMX channel map</legend>
+                  <div class="gsl-builder-channel-tools">
+                    <button type="button" id="gslBuilderAddChannel">+ CHANNEL</button>
+                    <button type="button" id="gslBuilderFitFootprint">FIT FOOTPRINT</button>
+                    <span>Addresses shown here are 1-based. GSL5 stores the compiled mode safely as 0-based offsets.</span>
+                  </div>
+                  <div class="gsl-builder-table-wrap">
+                    <table class="gsl-builder-table" id="gslBuilderChannelTable">
+                      <thead><tr><th>#</th><th>Coarse</th><th>Fine</th><th>Attribute ID</th><th>Semantic</th><th>Feature</th><th>Bits</th><th>Mix</th><th>Default %</th><th>Locate %</th><th>Highlight %</th><th>Cell</th><th>X</th><th>Y</th><th>Functions</th><th></th></tr></thead>
+                      <tbody id="gslBuilderChannelBody"></tbody>
+                    </table>
+                  </div>
+                </fieldset>
+
+                <fieldset class="gsl-builder-section">
+                  <legend>Pixel / cell generator</legend>
+                  <div class="gsl-builder-cell-tools">
+                    <label>Cells<input id="gslBuilderCellCount" type="number" min="1" max="128" value="4"></label>
+                    <label>Columns<input id="gslBuilderCellColumns" type="number" min="1" max="32" value="4"></label>
+                    <label>Emitters<select id="gslBuilderCellEmitters"><option value="rgb">RGB</option><option value="rgbw">RGBW</option><option value="white">White</option><option value="cct">Cold + warm white</option></select></label>
+                    <label>Start DMX<input id="gslBuilderCellStart" type="number" min="1" max="512" value="1"></label>
+                    <button type="button" id="gslBuilderGenerateCells">GENERATE CELLS</button>
+                  </div>
+                  <p>Generation adds explicit channels and coordinates. Every cell remains editable in the map above.</p>
+                </fieldset>
+              </div>
+
+              <aside class="gsl-builder-inspector">
+                <figure class="gsl-builder-preview">
+                  <canvas id="gslBuilderPreview" width="560" height="280" aria-label="GSL5 Fixture Builder preview monitor; no DMX output"></canvas>
+                  <figcaption><span id="gslBuilderPreviewName">New personality</span><span>PREVIEW ONLY · NO DMX</span></figcaption>
+                </figure>
+                <div class="gsl-builder-metrics" id="gslBuilderMetrics"></div>
+                <section class="gsl-builder-state-preview" aria-labelledby="gslBuilderStatePreviewTitle">
+                  <h3 id="gslBuilderStatePreviewTitle">Selected attribute state</h3>
+                  <div id="gslBuilderStatePreview"></div>
+                </section>
+                <section class="gsl-builder-validation" aria-labelledby="gslBuilderValidationTitle">
+                  <h3 id="gslBuilderValidationTitle">Validation</h3>
+                  <div id="gslBuilderValidation" role="status" aria-live="polite"></div>
+                </section>
+              </aside>
+            </div>
+            <footer class="gsl-builder-footer">
+              <button type="button" id="gslBuilderDelete" hidden>DELETE LOCAL</button>
+              <button type="button" id="gslBuilderExport" title="Saving files is disabled in this session." disabled>EXPORT JSON</button>
+              <span></span>
+              <button type="button" id="gslBuilderCancel">CANCEL</button>
+              <button type="submit" id="gslBuilderSave">KEEP FOR SESSION</button>
+              <button type="button" class="gsl-primary" id="gslBuilderPatch">KEEP &amp; USE IN PATCH</button>
+            </footer>
+          </form>
+        </aside>
+      </section>
+
+      <section class="gsl-pane" id="gslPaneCues" data-pane="cues" aria-label="Cue stack workspace" hidden>
+        <div class="gsl-cue-layout">
+          <aside class="gsl-sequence-browser">
+            <header><strong>Sequences</strong><button type="button" id="gslAddSequence" aria-label="Add sequence" title="Add sequence">+</button></header>
+            <div id="gslSequenceList" role="listbox"></div>
+          </aside>
+          <section class="gsl-cue-sheet">
+            <header>
+              <div><small>ACTIVE SEQUENCE</small><strong id="gslSequenceName">Main Cue List</strong></div>
+              <div class="gsl-cue-actions"><button type="button" id="gslCueRecord">RECORD CUE</button><button type="button" id="gslCueGo">GO</button><button type="button" id="gslCueBack">BACK</button><button type="button" id="gslCueRelease">RELEASE</button><button type="button" id="gslCueTimeline">ADD TO TIMELINE</button></div>
+            </header>
+            <div class="gsl-sheet-wrap"><table class="gsl-sheet"><thead><tr><th>Status</th><th>Cue</th><th>Name</th><th title="One fade time, applied to the whole cue. Separate In and Out fades are not modelled yet.">Fade</th><th>Delay</th><th title="Not modelled yet: every cue waits for Go.">Follow</th><th>Tracking</th><th>Values</th></tr></thead><tbody id="gslCueBody"></tbody></table></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="gsl-pane" id="gslPaneFx" data-pane="fx" aria-label="Effects and phasers workspace" hidden>
+        <div class="gsl-fx-layout">
+          <aside class="gsl-fx-library">
+            <header><strong>FX Library</strong><button type="button" id="gslAddEffect" aria-label="Add effect" title="Add effect">+</button></header>
+            <div id="gslFxList" role="listbox"></div>
+            <button type="button" class="gsl-link-action" id="gslImportChaser">Import active SHOWAVE Chaser sequence…</button>
+          </aside>
+          <section class="gsl-fx-editor">
+            <header><div><small>GENERAL MODULATOR</small><strong id="gslFxName">Select an effect</strong></div><span>absolute / relative · phase · spread</span></header>
+            <div class="gsl-fx-form">
+              <label>Name<input id="gslFxLabel" type="text" maxlength="64"></label>
+              <label>Attribute<select id="gslFxAttribute"><option value="dimmer">Dimmer</option><option value="pan">Pan</option><option value="tilt">Tilt</option><option value="red">Red</option><option value="green">Green</option><option value="blue">Blue</option><option value="zoom">Zoom</option></select></label>
+              <label>Waveform<select id="gslFxWave"><option value="sine">Sine</option><option value="triangle">Triangle</option><option value="saw">Saw</option><option value="square">Square</option><option value="chase">Chase</option></select></label>
+              <label>Mode<select id="gslFxMode"><option value="relative">Relative</option><option value="absolute">Absolute</option></select></label>
+              <label>Size<input id="gslFxSize" type="range" min="-100" max="100" value="50"><output>50%</output></label>
+              <label>Speed<input id="gslFxSpeed" type="range" min="1" max="800" value="100"><output>1.00 Hz</output></label>
+              <label>Phase<input id="gslFxPhase" type="range" min="0" max="360" value="0"><output>0°</output></label>
+              <label>Spread<input id="gslFxSpread" type="range" min="0" max="360" value="360"><output>360°</output></label>
+              <label>Direction<select id="gslFxDirection"><option value="forward">Forward</option><option value="reverse">Reverse</option><option value="bounce">Bounce</option></select></label>
+              <label>Rate source<select id="gslFxRateSource"><option value="hz">Hertz</option><option value="bpm">Show BPM</option></select></label>
+            </div>
+            <canvas id="gslFxCanvas" width="960" height="240" aria-label="Effect waveform preview, two cycles"></canvas>
+            <div class="gsl-fx-footer">
+              <button type="button" id="gslFxApply">CREATE EFFECT</button>
+              <button type="button" id="gslFxStart" disabled>START</button>
+              <button type="button" id="gslFxStop" disabled>STOP</button>
+              <button type="button" id="gslFxDuplicate" disabled>DUPLICATE</button>
+              <button type="button" id="gslFxDelete" disabled>DELETE</button>
+              <span id="gslFxTarget">No fixture targets</span>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="gsl-pane" id="gslPaneNetwork" data-pane="network" aria-label="Lighting network workspace" hidden>
+        <div class="gsl-network-grid">
+          <section class="gsl-network-card route-card">
+            <header><div><small>OUTPUT ROUTE</small><strong>DMX over Ethernet</strong></div><span id="gslNetworkRouteState">Preview only</span></header>
+            <div class="gsl-network-form">
+              <label>Protocol<select id="gslProtocol"><option value="artnet">Art-Net 4</option><option value="sacn">sACN / E1.31</option></select></label>
+              <label>Network adapter<select id="gslAdapter"><option value="0.0.0.0">Automatic</option></select></label>
+              <label>Destination mode<select id="gslDestinationMode"><option value="discovered_unicast">Discovered node (unicast)</option><option value="manual_unicast">Manual IP (unicast)</option><option value="multicast">sACN multicast</option><option value="legacy_directed_broadcast">Legacy directed broadcast</option></select></label>
+              <label>Target IP<input id="gslTargetIp" type="text" inputmode="decimal" value="127.0.0.1"></label>
+              <label>Output rate<input id="gslOutputFps" type="number" min="1" max="44" value="40"><span>fps</span></label>
+              <label>sACN priority<input id="gslSacnPriority" type="number" min="0" max="200" value="100"></label>
+              <label class="gsl-check"><input id="gslArtSync" type="checkbox"><span>ArtSync after each frame</span></label>
+              <label class="gsl-check"><input id="gslHoldLast" type="checkbox"><span>Hold last look when output stops</span></label>
+            </div>
+            <div class="gsl-route-warning" id="gslRouteWarning">Output is disarmed. No UDP lighting packets are leaving this computer.</div>
+          </section>
+          <section class="gsl-network-card nodes-card">
+            <header><div><small>ART-NET DISCOVERY</small><strong>Nodes</strong></div><button type="button" id="gslDiscoverNodes">POLL NETWORK</button></header>
+            <div class="gsl-node-list" id="gslNodeList"><div class="gsl-empty">No Art-Net nodes discovered yet.</div></div>
+          </section>
+          <section class="gsl-network-card universes-card">
+            <header><div><small>OUTPUT MONITOR</small><strong>Universes</strong></div><span id="gslPacketStats">0 packets</span></header>
+            <div class="gsl-universe-list" id="gslUniverseList"></div>
+          </section>
+          <section class="gsl-network-card compatibility-card">
+            <header><div><small>INTEROPERABILITY</small><strong>Compatibility Profile</strong></div></header>
+            <ul>
+              <li><strong>Art-Net 4</strong><span>ArtPoll/Reply, manual or discovered unicast, ArtDMX, optional ArtSync.</span></li>
+              <li><strong>Low-cost nodes</strong><span>Full 512-slot packets and manual-IP fallback for incomplete discovery.</span></li>
+              <li><strong>sACN E1.31</strong><span>Multicast or manual unicast, per-universe sequence and priority.</span></li>
+              <li><strong>Safety</strong><span>Output requires explicit arming; Blackout is acknowledged by the native bridge.</span></li>
+            </ul>
+          </section>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <section class="gsl-playbacks" aria-label="Playback faders">
+    <div class="gsl-playback-master">
+      <small>PLAYBACK PAGE</small>
+      <div><button type="button" id="gslPlaybackPrev" aria-label="Previous playback page" title="Previous playback page">&#9664;</button><strong id="gslPlaybackPage">1</strong><button type="button" id="gslPlaybackNext" aria-label="Next playback page" title="Next playback page">&#9654;</button></div>
+      <span>8 executors</span>
+    </div>
+    <div class="gsl-playback-bank" id="gslPlaybackBank"></div>
+    <div class="gsl-go-section">
+      <button type="button" id="gslMasterBack">BACK</button>
+      <button type="button" class="go" id="gslMasterGo">GO</button>
+      <button type="button" id="gslMasterPause">PAUSE</button>
+    </div>
+  </section>
+
+  <footer class="gsl-footer statusline">
+    <span id="gslFooterMessage">GSL5 is ready in Preview mode.</span>
+    <span id="gslFooterMetrics">0 fixtures · 0 universes · 0 packets/s</span>
+  </footer>
+</div>
+
+<div class="gsl-menu dropdown" id="gslMenuFile" role="menu" hidden>
+  <button type="button" class="dd-item" role="menuitem" data-action="new-show">New Show</button>
+  <button type="button" class="dd-item" role="menuitem" data-action="save-show" title="Saving files is disabled in this session. Shows stay in memory." disabled>Save Show As…</button>
+  <button type="button" class="dd-item" role="menuitem" data-action="load-show">Open Show…</button>
+  <div class="sep dd-sep" role="separator"></div>
+  <button type="button" class="dd-item" role="menuitem" data-action="export-patch" title="Saving files is disabled in this session. Shows stay in memory." disabled>Export Patch CSV…</button>
+</div>
+<div class="gsl-menu dropdown" id="gslMenuEdit" role="menu" hidden>
+  <button type="button" class="dd-item" role="menuitem" data-action="undo">Undo</button>
+  <button type="button" class="dd-item" role="menuitem" data-action="redo">Redo</button>
+  <div class="sep dd-sep" role="separator"></div>
+  <button type="button" class="dd-item" role="menuitem" data-action="clear">Clear Programmer</button>
+</div>
+<div class="gsl-menu dropdown" id="gslMenuShow" role="menu" hidden>
+  <button type="button" class="dd-item" role="menuitem" data-action="record-cue">Record Cue…</button>
+  <button type="button" class="dd-item" role="menuitem" data-action="go">Go</button>
+  <button type="button" class="dd-item" role="menuitem" data-action="back">Back</button>
+  <button type="button" class="dd-item" role="menuitem" data-action="release">Release</button>
+  <div class="sep dd-sep" role="separator"></div>
+  <button type="button" class="dd-item" role="menuitem" data-action="blackout">Blackout</button>
+</div>
+<div class="gsl-menu dropdown" id="gslMenuTools" role="menu" hidden>
+  <button type="button" class="dd-item" role="menuitem" data-action="open-chaser">SHOWAVE Chaser…</button>
+  <button type="button" class="dd-item" role="menuitem" data-action="open-timeline">SHOWAVE Timeline…</button>
+  <button type="button" class="dd-item" role="menuitem" data-action="open-fixture-editor">Pixel Fixture Editor…</button>
+  <button type="button" class="dd-item" role="menuitem" data-action="network">Lighting Network…</button>
+</div>
+
+<div class="gsl-modal" id="gslRecordDialog" role="presentation" hidden>
+  <form class="gsl-dialog dialog" role="dialog" aria-modal="true" aria-labelledby="gslRecordTitle">
+    <header class="fw-title" id="gslRecordTitle">Record Lighting Cue</header>
+    <div class="gsl-dialog-body">
+      <label>Cue number<input id="gslRecordNumber" type="text" value="1" maxlength="16"></label>
+      <label>Name<input id="gslRecordName" type="text" value="Look 1" maxlength="96"></label>
+      <label>Sequence<select id="gslRecordSequence"></select></label>
+      <label>Fade in<input id="gslRecordFadeIn" type="number" min="0" max="3600" step="0.1" value="1"><span>seconds</span></label>
+      <label>Fade out<input id="gslRecordFadeOut" type="number" min="0" max="3600" step="0.1" value="1"><span>seconds</span></label>
+      <label class="gsl-check"><input id="gslRecordTracking" type="checkbox" checked><span>Track unchanged values from previous cue</span></label>
+    </div>
+    <footer class="btnrow"><button type="button" class="btn" data-close-dialog>Cancel</button><button type="submit" class="btn gsl-primary">Record</button></footer>
+  </form>
+</div>
+
+<div class="gsl-modal" id="gslArmDialog" role="presentation" hidden>
+  <form class="gsl-dialog dialog danger" role="alertdialog" aria-modal="true" aria-labelledby="gslArmTitle">
+    <header class="fw-title" id="gslArmTitle">Arm Physical Lighting Output?</header>
+    <div class="gsl-dialog-body">
+      <p>This will transmit live DMX values from GSL5 over the selected network adapter. Confirm fixture addresses, destination and Grand Master before continuing.</p>
+      <dl><div><dt>Protocol</dt><dd id="gslArmProtocol">Art-Net 4</dd></div><div><dt>Destination</dt><dd id="gslArmDestination">Manual unicast</dd></div><div><dt>Target</dt><dd id="gslArmTarget">127.0.0.1</dd></div></dl>
+      <label class="gsl-check"><input id="gslArmBlackoutFirst" type="checkbox" checked><span>Arm in Blackout (recommended)</span></label>
+    </div>
+    <footer class="btnrow"><button type="button" class="btn" data-close-dialog>Cancel</button><button type="submit" class="btn gsl-danger-primary">ARM OUTPUT</button></footer>
+  </form>
+</div>
+
+<input id="gslLoadFile" type="file" accept="application/json,.json" hidden>
+<script src="openlive-hub.js"></script>
+<script src="gsl5-engine.js?v=gsl5-authoring-4"></script>
+<script src="gsl5-bridge.js?v=gsl5-2"></script>
+<script src="gsl5-samples.js?v=gsl5-1"></script>
+<script src="gsl5-preview.js?v=gsl5-1"></script>
+<script src="gsl5-personalities.js?v=gsl5-2"></script>
+<script src="openlive-timeline.js"></script>
+<script src="gsl5-ui.js?v=gsl5-authoring-5"></script>
+<script src="openlive-integrations.js"></script>
+</body>
+</html>

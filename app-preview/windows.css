@@ -1,0 +1,205 @@
+/* ===========================================================================
+   windows.css — the secondary windows, in the main window's skin.
+   ---------------------------------------------------------------------------
+   Load order:  arena.css → nocturne.css → windows.css  → (page sheet)
+
+   arena.css carries a second, older vocabulary for the windows that are not
+   the deck — .win-title, .side-tab, .tb-btn, .formgroup, .datatable and the
+   rest. nocturne.css never touched any of it, so those windows kept the
+   Resolume mint-and-grey identity while the deck moved to Nocturne. This
+   sheet retires that split: every legacy class is mapped onto the same
+   tokens and the same type scale index.html uses, so a preference pane and
+   the deck read as one application.
+
+   The mapping, class for class:
+
+     .win-title    ≡  #menubar        22px, #1b1d2b, 11.5px, --n300
+     .side-tab     ≡  .ptab / .titem  11.5px, accent wash + accent edge when on
+     .win-content  ≡  the panel well  --bg ground, --panel groups
+     .formgroup    ≡  .fx             hairline card, radius-md
+     .formgroup h3 ≡  a section head  10px uppercase .08em, --a300
+     .formrow      ≡  .prow           right-aligned label, boxed inset field
+     .tb-btn       ≡  .btn            outlined, accent border + glow when on
+     .tb-select    ≡  select          inset, --n800 hairline, radius-sm
+     .datatable th ≡  .sect > h3      10px uppercase .08em over --head
+     .statusline   ≡  #status         20px, #1b1d2b, 10.5px, --n600
+
+   House rules from the design base are kept: no pure black or white, the
+   accent is an edge or a mark and never a flood, elevation is a hairline
+   plus ambient darkness, focus is the accent ring nocturne.css already sets.
+   =========================================================================== */
+
+/* the design base stops at --space-4; windows need two more steps on the same
+   0.70x scale, so they continue it rather than inventing new numbers */
+:root{ --space-5:14px; --space-6:16.8px; }
+
+/* ---- window shell -------------------------------------------------------- */
+.win-root{ display:flex; flex-direction:column; height:100vh; overflow:hidden;
+  background:var(--bg); color:var(--txt); font:var(--font); }
+
+/* the title strip is the menu bar's twin: same height, ground and type */
+.win-title{ flex:0 0 auto; height:22px; background:#1b1d2b;
+  border-bottom:1px solid var(--line); display:flex; align-items:center;
+  padding:0 var(--space-4); font-size:11.5px; color:var(--n300); gap:var(--space-3); }
+.win-title .rlogo{ color:var(--color-accent); font-weight:600; letter-spacing:-.015em; }
+/* anything pushed to the right of the title strip */
+.win-title .sp{ margin-left:auto; }
+
+.win-main{ flex:1; display:flex; min-height:0; }
+
+/* ---- side tabs ----------------------------------------------------------
+   The main window's .ptab, turned on its side: a wash plus an accent edge,
+   never a filled block. */
+.side-tabs{ flex:0 0 150px; width:150px; background:var(--panel);
+  border-right:1px solid var(--line); overflow-y:auto; }
+.side-tab{ padding:5px var(--space-4); font-size:11.5px; color:var(--n400);
+  cursor:pointer; border-bottom:1px solid var(--line); }
+.side-tab:hover{ color:var(--n200);
+  background:color-mix(in srgb,var(--color-accent) 12%,transparent); }
+.side-tab.active{ color:var(--a200); font-weight:500;
+  background:color-mix(in srgb,var(--color-accent) 20%,transparent);
+  box-shadow:inset 3px 0 0 var(--color-accent); }
+/* CASING. Resolume shouts in the string, never with a stylesheet: of the 878
+   keys in reference/docs/gui/English.txt exactly 25 are all-caps, and every one
+   is a compact transport/action button (RECORD, STOP, TAP, RESYNC, LINK, PAUSE,
+   METRONOME, PICK, ADD), an alarm (LOW MEMORY!!) or an acronym. No panel
+   header, tab, group heading, column header or state chip is ever uppercased,
+   anywhere in the shipped table or in the 83 manual pages. The blanket
+   text-transform rules below were removed for that reason, and the caps-tuned
+   tracking relaxed with them.
+   This sheet is the reason the nocturne.css de-shout was a no-op: windows.css
+   loads AFTER arena.css in all fourteen windows that use it and `.formgroup h3`
+   is the same (0,1,1) specificity, so the later sheet won. */
+/* a group heading inside the tab rail */
+.side-tabs .side-group{ padding:5px var(--space-4) 3px; font-size:10px;
+  letter-spacing:.01em; color:var(--n600);
+  background:var(--head); border-bottom:1px solid var(--line); cursor:default; }
+
+/* ---- content well -------------------------------------------------------- */
+.win-content{ flex:1; min-width:0; overflow-y:auto; padding:var(--space-4) var(--space-6);
+  background:var(--bg); }
+.win-content h2{ font-size:13px; color:var(--n200); font-weight:500;
+  letter-spacing:-.015em; margin-bottom:var(--space-3); }
+.win-content > p, .win-content .lead{ font-size:11.5px; color:var(--n500);
+  max-width:660px; margin-bottom:var(--space-3); }
+
+/* ---- form rows — the .prow shape, at window scale ----------------------- */
+.formrow{ display:flex; align-items:center; gap:var(--space-3);
+  margin:3px 0; max-width:600px; min-height:20px; }
+.formrow label{ flex:0 0 190px; width:190px; min-width:190px; text-align:right;
+  font-size:11.5px; color:var(--n500); }
+.formrow select, .formrow input[type=text], .formrow input[type=number]{
+  flex:1; min-width:0; background:var(--inset); border:1px solid var(--n800);
+  color:var(--n200); padding:2px var(--space-2); border-radius:var(--radius-sm);
+  font-size:11.5px; }
+.formrow select:hover, .formrow input:hover{ border-color:var(--n700); }
+.formrow input[type=number]{ font-variant-numeric:tabular-nums; }
+.formrow input[type=checkbox]{ accent-color:var(--color-accent); }
+.formrow input[type=range]{ flex:1; min-width:0; accent-color:var(--color-accent); }
+/* a trailing unit or read-back, right of the field */
+.formrow .unit{ flex:0 0 auto; font-size:10.5px; color:var(--n600);
+  font-variant-numeric:tabular-nums; }
+
+/* ---- form groups — the effect rack's card, reused ----------------------- */
+.formgroup{ border:1px solid var(--n800); background:#1e2130;
+  border-radius:var(--radius-md); padding:var(--space-3) var(--space-4);
+  margin-bottom:var(--space-4); max-width:660px; }
+.formgroup h3{ font-size:10px; letter-spacing:.01em;
+  color:var(--a300); font-weight:500; margin-bottom:var(--space-2); }
+.formgroup .hint{ padding:var(--space-1) 0 0; }
+
+/* ---- status line ≡ #status ---------------------------------------------- */
+.statusline{ flex:0 0 auto; height:20px; background:#1b1d2b;
+  border-top:1px solid var(--line); display:flex; align-items:center;
+  padding:0 var(--space-4); font-size:10.5px; color:var(--n600); gap:var(--space-6); }
+.statusline .v{ color:var(--n300); font-variant-numeric:tabular-nums; }
+
+/* ---- data tables --------------------------------------------------------- */
+table.datatable{ border-collapse:collapse; width:100%; font-size:11.5px; }
+table.datatable th{ text-align:left; background:var(--head); color:var(--n500);
+  padding:3px var(--space-3); border-bottom:1px solid var(--line);
+  font-size:10px; font-weight:500; letter-spacing:.01em;
+  position:sticky; top:0; z-index:1; }
+table.datatable td{ padding:3px var(--space-3); border-bottom:1px solid var(--line);
+  color:var(--n300); }
+table.datatable tr:hover td{ background:color-mix(in srgb,var(--color-accent) 10%,transparent); }
+table.datatable tr.sel td, table.datatable tr.selected td{
+  background:color-mix(in srgb,var(--color-accent) 20%,transparent); color:var(--n100); }
+table.datatable tr.missing td{ color:var(--red); }
+table.datatable td.num, table.datatable th.num{ text-align:right;
+  font-variant-numeric:tabular-nums; }
+
+/* ---- toolbar vocabulary ≡ .btn / select --------------------------------- */
+.tb-btn{ background:transparent; border:1px solid var(--n800); color:var(--n300);
+  padding:2px var(--space-3); cursor:pointer; border-radius:var(--radius-sm);
+  font-size:11px; white-space:nowrap; }
+.tb-btn:hover{ background:color-mix(in srgb,var(--color-accent) 12%,transparent);
+  border-color:var(--a600); }
+.tb-btn:active{ background:color-mix(in srgb,var(--color-accent) 20%,transparent);
+  border-color:var(--a400); }
+.tb-btn.on{ background:transparent; color:var(--a200); border-color:var(--color-accent);
+  box-shadow:0 0 0 1px var(--color-accent), 0 0 10px -3px var(--color-accent); }
+.tb-btn.danger:hover{ background:color-mix(in srgb,var(--red) 14%,transparent);
+  border-color:var(--red); color:#f0cccc; }
+.tb-btn.small{ padding:1px var(--space-2); font-size:10.5px; }
+.tb-btn.big{ padding:5px var(--space-4); }
+.tb-btn[disabled]{ opacity:.45; cursor:default; }
+
+.tb-select{ background:var(--inset); border:1px solid var(--n800); color:var(--n200);
+  padding:1px var(--space-2); border-radius:var(--radius-sm); font-size:11px; }
+.tb-select:hover{ border-color:var(--n700); }
+.tb-label{ font-size:10px; color:var(--n500); letter-spacing:.01em;
+  white-space:nowrap; }
+.tb-sep{ width:1px; height:18px; background:var(--line);
+  box-shadow:1px 0 0 var(--n900); margin:0 var(--space-1); }
+.tb-sp{ flex:1; }
+
+/* a toolbar strip — the shape .p-toolbar and .ao-bar already share */
+.win-toolbar, .browser-tools{ display:flex; align-items:center; gap:var(--space-2);
+  flex:0 0 auto; padding:var(--space-2) var(--space-3); background:var(--strip);
+  border-bottom:1px solid var(--line); }
+.browser-tools input[type=text], .win-toolbar input[type=text]{ flex:1; min-width:0;
+  background:var(--inset); border:1px solid var(--n800); color:var(--n200);
+  padding:2px var(--space-2); border-radius:var(--radius-sm); font-size:11px; }
+
+/* a boxed read-out ≡ .prow .val */
+.pval{ background:var(--inset); border:1px solid var(--n800); padding:1px var(--space-2);
+  border-radius:var(--radius-sm); font-size:10.5px; color:var(--n200);
+  font-variant-numeric:tabular-nums; }
+
+/* ---- chips and pills — the house shape, shared with .ws-chip / .conn ---- */
+.win-chip{ display:inline-flex; align-items:center; gap:5px; padding:1px 9px;
+  font-size:9.5px; letter-spacing:.01em;
+  border:1px solid var(--n800); border-radius:999px; color:var(--n600); cursor:pointer; }
+.win-chip:hover{ border-color:var(--a600); color:var(--n300); }
+.win-chip.on{ color:var(--a200); border-color:var(--color-accent);
+  box-shadow:0 0 0 1px var(--color-accent); }
+
+/* ---- tab strips across the top of a pane ≡ .ptab ------------------------ */
+.win-tabs{ display:flex; align-items:stretch; flex:0 0 auto; background:var(--head);
+  border-bottom:1px solid var(--line); overflow-x:auto; }
+.win-tab{ padding:3px var(--space-4); font-size:11px; color:var(--n500);
+  cursor:pointer; border-right:1px solid var(--line); white-space:nowrap; }
+.win-tab:hover{ color:var(--n300); }
+.win-tab.active, .win-tab.on{ color:var(--a200);
+  box-shadow:inset 0 -2px 0 var(--color-accent);
+  background:color-mix(in srgb,var(--color-accent) 12%,transparent); }
+
+/* ---- misc ---------------------------------------------------------------- */
+.pane{ display:none; } .pane.active{ display:block; }
+.sect-body{ padding:var(--space-2) var(--space-3); }
+.bigclock{ font:24px/1.1 Consolas, "SF Mono", monospace; color:var(--n200);
+  text-align:center; padding:var(--space-2) var(--space-4);
+  font-variant-numeric:tabular-nums; }
+.bigclock small{ display:block; font-size:10px; color:var(--n600);
+  font-family:"Inter", system-ui, sans-serif; letter-spacing:.01em; }
+.win-empty{ display:grid; place-items:center; align-content:center; gap:4px;
+  height:100%; color:var(--n700); font-size:11px; text-align:center;
+  padding:var(--space-4); }
+.win-empty b{ color:var(--n500); font-weight:500; font-size:12px; }
+
+/* a drop target, same feedback the dock and the clip grid give */
+.win-drop{ border:1px dashed var(--n800); border-radius:var(--radius-md);
+  color:var(--n600); text-align:center; padding:var(--space-4); font-size:10.5px; }
+.win-drop.over{ border-color:var(--a400); color:var(--a200);
+  box-shadow:0 0 0 1px var(--a400), 0 0 18px -6px var(--color-accent); }

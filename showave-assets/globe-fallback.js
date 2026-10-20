@@ -1,6 +1,8 @@
 /* Canvas 2D keeps the Kampala globe visible when a browser cannot use WebGL. */
 import { AFRICA_PHI, ORIGIN, DESTINATIONS } from './globe-routes.js';
-import { landPoints } from './globe-land-points.js';
+import { denseWorldLandPointsDesktop } from './globe-land-dense.js?v=africa-mark-9';
+import * as afroUnityArtwork from './afro-unity-land.js?v=africa-mark-9';
+import { createRouteSparkField, ROUTE_SPARK_PALETTE, ROUTE_PULSE_TAIL } from './globe-route-sparks.js?v=africa-mark-9';
 
 const TAU = Math.PI * 2;
 const RAD = Math.PI / 180;
@@ -9,19 +11,47 @@ const FRAME_TOLERANCE = FRAME_MS / 4;
 const MAX_PIXELS = 1000000;
 const MIN_PIXELS = 600000;
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
-const projectedPoint = () => ({ x: 0, y: 0, front: false, depth: 0 });
+const projectedPoint = () => ({ x: 0, y: 0, front: false, depth: 0, radius: 0 });
 
 function vector(longitude, latitude) {
   const cos = Math.cos(latitude * RAD);
   return [cos * Math.cos(longitude * RAD), Math.sin(latitude * RAD), -cos * Math.sin(longitude * RAD)];
 }
 
-const land = landPoints.map(([longitude, latitude]) => vector(longitude, latitude));
+const { afroUnityLandPoints } = afroUnityArtwork;
+const hasArtworkColors = Array.isArray(afroUnityArtwork.afroUnityLandPalette) &&
+  afroUnityArtwork.afroUnityLandPalette.length > 0 &&
+  afroUnityArtwork.afroUnityLandPalette.every(color => /^#[0-9a-f]{6}$/i.test(color)) &&
+  afroUnityArtwork.afroUnityLandColorIndices?.length === afroUnityLandPoints.length &&
+  afroUnityArtwork.afroUnityLandColorIndices.every(index => Number.isInteger(index) && index >= 0 && index < afroUnityArtwork.afroUnityLandPalette.length);
+const artworkPalette = hasArtworkColors ? afroUnityArtwork.afroUnityLandPalette : ['#f5d58b'];
+const artworkColorIndices = hasArtworkColors ? afroUnityArtwork.afroUnityLandColorIndices : null;
+// Resolve the current artwork's halo once; the bundled world table may predate it.
+// Native and compatibility renderers use the same canonical 0.6-degree world key.
+const logoClearanceKeys = new Set(afroUnityArtwork.afroUnityClearanceKeys || []);
+function worldCellKey(longitude, latitude) {
+  const canonicalLongitude = ((longitude + 540) % 360) - 180;
+  return Math.round((latitude + 90) / 0.6) * 601 +
+    Math.round((canonicalLongitude + 180) / 0.6);
+}
+// The logo is drawn in the world's own dots: same size, colour and depth shading as land.
+const land = denseWorldLandPointsDesktop
+  .filter(([longitude, latitude]) => !logoClearanceKeys.has(worldCellKey(longitude, latitude)))
+  .concat(afroUnityLandPoints)
+  .map(([longitude, latitude]) => vector(longitude, latitude));
+const brandedLand = [];
+function gridNeighbors(point) {
+  const longitude = Math.atan2(-point[2], point[0]) / RAD;
+  const latitude = Math.asin(clamp(point[1], -1, 1)) / RAD;
+  return [vector(longitude + 0.6, latitude), vector(longitude, latitude + 0.6)];
+}
+const landNeighbors = land.map(gridNeighbors);
+const brandedNeighbors = brandedLand.map(gridNeighbors);
 const origin = vector(ORIGIN.lng, ORIGIN.lat);
 const destinations = DESTINATIONS.map(point => ({ ...point, vector: vector(point.lng, point.lat) }));
 const routes = destinations.map((point, index) => {
-  const distance = Math.hypot(...point.vector.map((value, axis) => value - origin[axis]));
-  const altitude = 0.035 + Math.min(0.5, distance * 0.09);
+  const distance = 1.002 * Math.hypot(...point.vector.map((value, axis) => value - origin[axis]));
+  const altitude = 0.025 + Math.min(0.5, distance * 0.045);
   return {
     phase: index * 0.6180339887 % 1,
     points: Array.from({ length: 65 }, (_, step) => {
@@ -34,6 +64,7 @@ const routes = destinations.map((point, index) => {
 });
 
 export function createFallbackGlobe(sourceCanvas, options = {}) {
+  const landSpacingDegrees = 0.6;
   let source = sourceCanvas;
   let destroyed = false;
   let attached = true;
@@ -42,6 +73,7 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
   let height = 0;
   let dpr = 1;
   let elapsed = 0;
+  let motionEnabled = options.motionEnabled !== false;
   let lastDraw = -Infinity;
   let phi = AFRICA_PHI;
   let needsDraw = true;
@@ -58,10 +90,35 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
   const tiltZ = Number.isFinite(options.globeRotationZ) ? options.globeRotationZ : 0.05;
   let xCos = 1, xSin = 0, zCos = 1, zSin = 0;
   const projectedLand = land.map(projectedPoint);
+  const projectedBrandedLand = brandedLand.map(projectedPoint);
+  const neighborProjection = [projectedPoint(), projectedPoint()];
   const projectedRoutes = routes.map(route => ({ ...route, projected: route.points.map(projectedPoint) }));
   const pins = destinations.map((point, index) => ({ ...point, projected: projectedPoint(), index }));
   pins.push({ ...ORIGIN, vector: origin, projected: projectedPoint(), index: -1 });
-  const buckets = [[], [], [], []];
+  const landHeads = new Int32Array(4);
+  const landNext = new Int32Array(land.length);
+  const landColors = ['rgba(237,244,255,.126)', 'rgba(237,244,255,.216)',
+    'rgba(237,244,255,.306)', 'rgba(237,244,255,.396)'];
+  const brandedHeads = new Int32Array(artworkPalette.length * 4);
+  const brandedNext = new Int32Array(brandedLand.length);
+  const brandedColors = artworkPalette.flatMap(color => {
+    const rgb = Number.parseInt(color.slice(1), 16);
+    return [0.34, 0.54, 0.74, 0.94].map(alpha => `rgba(${rgb >> 16 & 255},${rgb >> 8 & 255},${rgb & 255},${alpha})`);
+  });
+  const sparkCurves = routes.map(route => new Float32Array(route.points.flat()));
+  const sparkField = createRouteSparkField(sparkCurves);
+  const projectedSparks = Array.from({ length: sparkField.count }, projectedPoint);
+  const sparkVector = new Float32Array(3);
+  const sparkHeads = new Int32Array(ROUTE_SPARK_PALETTE.length * 8);
+  const sparkNext = new Int32Array(sparkField.count);
+  const sparkColors = ROUTE_SPARK_PALETTE.flatMap(color => {
+    const rgb = Number.parseInt(color.slice(1), 16);
+    return Array.from({ length: 8 }, (_, index) =>
+      `rgba(${rgb >> 16 & 255},${rgb >> 8 & 255},${rgb & 255},${(index + 1) / 8})`);
+  });
+  const pulseGlowColors = Array.from({ length: 16 }, (_, index) => `rgba(255,155,48,${(index + 1) / 16 * 0.24})`);
+  const pulseCoreColors = Array.from({ length: 16 }, (_, index) => `rgba(255,188,88,${(index + 1) / 16 * 0.95})`);
+  const pulseWhiteColors = Array.from({ length: 16 }, (_, index) => `rgba(255,244,215,${(index + 1) / 16 * 0.9})`);
   const overlay = document.createElement('canvas');
   overlay.className = 'showave-globe-fallback';
   overlay.setAttribute('aria-hidden', 'true');
@@ -90,6 +147,15 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     projected.front = z * cameraZ > scale;
     projected.depth = z;
     return projected;
+  }
+
+  function outlinedRadius(point, neighbors, sine, cosine, baseRadius) {
+    const longitude = project(neighbors[0], sine, cosine, neighborProjection[0]);
+    const latitude = project(neighbors[1], sine, cosine, neighborProjection[1]);
+    const spacing = Math.min(Math.hypot(longitude.x - point.x, longitude.y - point.y),
+      Math.hypot(latitude.x - point.x, latitude.y - point.y));
+    // Add the same source-colored one-pixel edge, capped before circles merge.
+    return Math.max(0.05, Math.min(baseRadius + 1, spacing * 0.4));
   }
 
   function makeSphere() {
@@ -216,47 +282,122 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     ctx.clearRect(0, 0, width, height);
     ctx.drawImage(sphere, 0, 0, width, height);
     const pointRadius = clamp(radius * 0.0015, 0.5, 1);
-    for (const bucket of buckets) bucket.length = 0;
+    landHeads.fill(-1);
     for (let index = 0; index < land.length; index++) {
       const p = project(land[index], sine, cosine, projectedLand[index]);
-      if (p.front) buckets[clamp(Math.floor((p.depth - scale / cameraZ) * 6), 0, 3)].push(p);
+      if (p.front) {
+        p.radius = outlinedRadius(p, landNeighbors[index], sine, cosine, pointRadius);
+        const bucket = clamp(Math.floor((p.depth - scale / cameraZ) * 6), 0, 3);
+        landNext[index] = landHeads[bucket];
+        landHeads[bucket] = index;
+      }
     }
-    for (let index = 0; index < buckets.length; index++) {
-      ctx.fillStyle = `rgba(237,244,255,${0.28 + index * 0.2})`;
+    for (let index = 0; index < landHeads.length; index++) {
+      ctx.fillStyle = landColors[index];
       ctx.beginPath();
-      for (const point of buckets[index]) {
-        ctx.moveTo(point.x + pointRadius, point.y);
-        ctx.arc(point.x, point.y, pointRadius, 0, TAU);
+      for (let pointIndex = landHeads[index]; pointIndex !== -1; pointIndex = landNext[pointIndex]) {
+        const point = projectedLand[pointIndex];
+        ctx.moveTo(point.x + point.radius, point.y);
+        ctx.arc(point.x, point.y, point.radius, 0, TAU);
       }
       ctx.fill();
     }
-    for (const route of projectedRoutes) {
+    // The artwork is another geographic point set on the same sphere. Reuse
+    // projected records and depth buckets without extra animation or vectors.
+    const brandedRadius = pointRadius;
+    brandedHeads.fill(-1);
+    for (let index = 0; index < brandedLand.length; index++) {
+      const point = project(brandedLand[index], sine, cosine, projectedBrandedLand[index]);
+      if (point.front) {
+        point.radius = outlinedRadius(point, brandedNeighbors[index], sine, cosine, brandedRadius);
+        const depth = clamp(Math.floor((point.depth - scale / cameraZ) * 6), 0, 3);
+        const bucket = (artworkColorIndices ? artworkColorIndices[index] : 0) * 4 + depth;
+        brandedNext[index] = brandedHeads[bucket];
+        brandedHeads[bucket] = index;
+      }
+    }
+    for (let index = 0; index < brandedHeads.length; index++) {
+      ctx.fillStyle = brandedColors[index];
+      ctx.beginPath();
+      for (let pointIndex = brandedHeads[index]; pointIndex !== -1; pointIndex = brandedNext[pointIndex]) {
+        const point = projectedBrandedLand[pointIndex];
+        ctx.moveTo(point.x + point.radius, point.y);
+        ctx.arc(point.x, point.y, point.radius, 0, TAU);
+      }
+      ctx.fill();
+    }
+    sparkField.update(elapsed, motionEnabled);
+    ctx.lineCap = 'round';
+    for (let routeIndex = 0; routeIndex < projectedRoutes.length; routeIndex++) {
+      const route = projectedRoutes[routeIndex];
       const points = route.projected;
       for (let index = 0; index < points.length; index++) project(route.points[index], sine, cosine, points[index]);
-      const head = (elapsed / 6500 + route.phase) % 1.5;
-      const tail = head - 0.55;
-      ctx.lineWidth = Math.max(0.7, radius * 0.0018);
+      ctx.lineWidth = Math.max(0.5, radius * 0.001);
+      ctx.strokeStyle = 'rgba(255,170,78,.14)';
+      ctx.beginPath();
       for (let index = 1; index < points.length; index++) {
-        const progress = index / 64;
-        if (progress > head || progress < tail || !routeVisible(points[index - 1]) || !routeVisible(points[index])) continue;
-        ctx.strokeStyle = `rgba(255,${150 + Math.round(55 * progress)},70,${clamp((progress - tail) / 0.55, 0, 1) * 0.95})`;
+        if (!routeVisible(points[index - 1]) || !routeVisible(points[index])) continue;
+        ctx.moveTo(points[index - 1].x, points[index - 1].y);
+        ctx.lineTo(points[index].x, points[index].y);
+      }
+      ctx.stroke();
+      const head = sparkField.pulseStates[routeIndex * 4];
+      const fade = sparkField.pulseStates[routeIndex * 4 + 1];
+      if (fade <= 0) continue;
+      for (let index = 1; index < points.length; index++) {
+        if (!points[index - 1].front || !points[index].front) continue;
+        const behind = head - (index - 0.5) / 64;
+        if (behind < 0 || behind > ROUTE_PULSE_TAIL) continue;
+        const strength = (1 - behind / ROUTE_PULSE_TAIL) ** 1.6 * fade;
+        const bucket = Math.min(15, Math.floor(strength * 16));
         ctx.beginPath();
         ctx.moveTo(points[index - 1].x, points[index - 1].y);
         ctx.lineTo(points[index].x, points[index].y);
+        ctx.lineWidth = clamp(radius * 0.012, 3, 5);
+        ctx.strokeStyle = pulseGlowColors[bucket];
         ctx.stroke();
+        ctx.lineWidth = clamp(radius * 0.004, 1.2, 1.8);
+        ctx.strokeStyle = pulseCoreColors[bucket];
+        ctx.stroke();
+        if (behind < 0.038) {
+          const core = (1 - behind / 0.038) ** 2 * fade;
+          ctx.lineWidth = 0.65;
+          ctx.strokeStyle = pulseWhiteColors[Math.min(15, Math.floor(core * 16))];
+          ctx.stroke();
+        }
       }
+    }
+    sparkHeads.fill(-1);
+    for (let index = 0; index < sparkField.count; index++) {
+      const alpha = sparkField.alphas[index];
+      if (alpha <= 0.015) continue;
+      const offset = index * 3;
+      // Reuse one vector record rather than allocate a point per particle/frame.
+      sparkVector[0] = sparkField.positions[offset];
+      sparkVector[1] = sparkField.positions[offset + 1];
+      sparkVector[2] = sparkField.positions[offset + 2];
+      const point = project(sparkVector, sine, cosine, projectedSparks[index]);
+      if (!point.front) continue;
+      const bucket = sparkField.colorIndices[index] * 8 + Math.min(7, Math.floor(alpha * 8));
+      sparkNext[index] = sparkHeads[bucket];
+      sparkHeads[bucket] = index;
+    }
+    const sparkRadius = clamp(radius * 0.0038, 1, 1.8);
+    for (let bucket = 0; bucket < sparkHeads.length; bucket++) {
+      ctx.fillStyle = sparkColors[bucket];
+      ctx.beginPath();
+      for (let index = sparkHeads[bucket]; index !== -1; index = sparkNext[index]) {
+        const point = projectedSparks[index];
+        ctx.moveTo(point.x + sparkRadius, point.y);
+        ctx.arc(point.x, point.y, sparkRadius, 0, TAU);
+      }
+      ctx.fill();
     }
     for (const pin of pins) {
       const point = project(pin.vector, sine, cosine, pin.projected);
       if (!point.front) continue;
       const isOrigin = pin.index === -1;
       const dotRadius = clamp(radius * (isOrigin ? 0.012 : 0.005), isOrigin ? 4 : 2, isOrigin ? 8 : 4);
-      const pulse = (elapsed / 2200 + Math.max(0, pin.index) * 0.31) % 1;
-      ctx.strokeStyle = `rgba(255,140,64,${(1 - pulse) * (isOrigin ? 0.65 : 0.3)})`;
-      ctx.lineWidth = 0.7;
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, dotRadius + pulse * dotRadius * 3, 0, TAU);
-      ctx.stroke();
       ctx.fillStyle = '#ff924c';
       ctx.beginPath();
       ctx.arc(point.x, point.y, dotRadius, 0, TAU);
@@ -289,11 +430,15 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
     return point.front || dx * dx + dy * dy > radius * radius * 1.004004;
   }
 
-  function update({ phi: nextPhi, theta, deltaTime = 0 } = {}) {
+  function update({ phi: nextPhi, theta, deltaTime = 0, elapsedTime,
+    motionEnabled: nextMotionEnabled = motionEnabled, forceDraw = false } = {}) {
     if (destroyed || !attached || document.hidden) return;
+    if (forceDraw || motionEnabled !== nextMotionEnabled) needsDraw = true;
+    motionEnabled = nextMotionEnabled;
     if (Number.isFinite(nextPhi)) phi = nextPhi;
     if (Number.isFinite(theta)) tiltX = theta;
-    elapsed += clamp(Number.isFinite(deltaTime) ? deltaTime : 0, 0, 100);
+    if (Number.isFinite(elapsedTime)) elapsed = elapsedTime;
+    else elapsed += clamp(Number.isFinite(deltaTime) ? deltaTime : 0, 0, 100);
     const now = performance.now();
     const sinceDraw = now - lastDraw;
     // The GSAP callback may arrive a few milliseconds before its ideal phase.
@@ -329,6 +474,8 @@ export function createFallbackGlobe(sourceCanvas, options = {}) {
   update();
   return {
     update, resize, attach,
+    landPointCount: land.length, landSpacingDegrees, sourceColors: hasArtworkColors,
+    routeEffectPointCount: sparkField.count,
     setLabelsVisible(visible) {
       const nextVisible = Boolean(visible);
       if (labelsVisible === nextVisible) return;

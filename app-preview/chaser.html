@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=chaser-files-1" data-openlive-chaser></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SHOWAVE Chaser / Mapper: Slice Sequencing</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<script src="showave-brand.js"></script>
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<link rel="stylesheet" href="openlive-chaser.css">
+</head>
+<body>
+<div id="chaserRoot">
+  <header id="menubar">
+    <div class="showave-brand-lockup--nav" data-showave-brand="chaser"></div>
+    <nav id="menus" aria-label="SHOWAVE Chaser menus">
+      <button type="button" class="menu-top" id="chMenuFileTrigger" data-ch-menu="file" aria-haspopup="menu" aria-controls="chMenuFile" aria-expanded="false">File</button>
+      <button type="button" class="menu-top" id="chMenuEditTrigger" data-ch-menu="edit" aria-haspopup="menu" aria-controls="chMenuEdit" aria-expanded="false">Edit</button>
+      <button type="button" class="menu-top" id="chMenuSequenceTrigger" data-ch-menu="sequence" aria-haspopup="menu" aria-controls="chMenuSequence" aria-expanded="false">Sequence</button>
+      <button type="button" class="menu-top" id="chMenuViewTrigger" data-ch-menu="view" aria-haspopup="menu" aria-controls="chMenuView" aria-expanded="false">View</button>
+    </nav>
+    <div class="mb-right"><span id="chDocumentName">Untitled Chase</span></div>
+  </header>
+
+  <div id="chaserToolbar" role="toolbar" aria-label="Chaser playback and view controls">
+    <div class="ch-toolbar-group" role="group" aria-label="Editor mode">
+      <button type="button" class="btn ch-mode on" id="chModeChase" aria-pressed="true">Chase</button>
+      <button type="button" class="btn ch-mode" id="chModeMap" aria-pressed="false">Pixel Map</button>
+      <button type="button" class="btn ch-mode" id="chModeEnvelope" aria-pressed="false">Envelopes</button>
+      <button type="button" class="btn ch-factory-toggle" id="chFactoryToggle" aria-pressed="false" title="Open the chase pattern factory">Factory</button>
+    </div>
+    <span class="ch-toolbar-sep" aria-hidden="true"></span>
+    <div class="ch-toolbar-group ch-history-tools" role="group" aria-label="Edit history">
+      <button type="button" class="btn sq" id="chUndo" aria-label="Undo" title="Undo (Ctrl+Z)">&#8630;</button>
+      <button type="button" class="btn sq" id="chRedo" aria-label="Redo" title="Redo (Ctrl+Shift+Z)">&#8631;</button>
+    </div>
+    <span class="ch-toolbar-sep" aria-hidden="true"></span>
+    <div class="ch-toolbar-group ch-playback-tools" role="group" aria-label="Editor preview playback">
+      <button type="button" class="btn sq" id="chPrevious" aria-label="Previous step" title="Previous step">&#9198;</button>
+      <button type="button" class="btn sq on" id="chPlay" aria-label="Play chase" aria-pressed="false" title="Play / Pause">&#9654;</button>
+      <button type="button" class="btn sq" id="chNext" aria-label="Next step" title="Next step">&#9197;</button>
+      <button type="button" class="btn sq" id="chReset" aria-label="Reset to step one" title="Reset to step one">&#8634;</button>
+    </div>
+    <span class="ch-toolbar-sep" aria-hidden="true"></span>
+    <label class="ch-bpm ch-tempo-control" title="Editor preview only; programme tempo comes from the SHOWAVE Live beat clock.">Preview BPM <input type="number" id="chBpm" min="20" max="300" step="1" value="120"></label>
+    <label class="ch-bpm ch-tempo-control" title="Editor preview rate; each SHOWAVE Chaser Source has its own live rate control.">Steps / beat
+      <select id="chRate"><option>1/4</option><option>1/2</option><option selected>1</option><option>2</option><option>4</option></select>
+    </label>
+    <label class="ch-bpm ch-tempo-control" title="Editor preview direction; each SHOWAVE Chaser Source has its own live direction control.">Direction
+      <select id="chDirection"><option>Forward</option><option>Reverse</option><option>Bounce</option></select>
+    </label>
+    <div class="ch-toolbar-spacer"></div>
+    <button type="button" class="btn" id="chFit" title="Fit the Input Map in the canvas">Fit Map</button>
+    <div class="ch-save-state" id="chSaveState" role="status" aria-live="polite">
+      <i class="ch-save-dot" aria-hidden="true"></i><span>Kept for this session</span>
+    </div>
+  </div>
+
+  <main class="ch-main">
+    <aside class="ch-sidebar" aria-label="Chaser workspace browser">
+      <div class="ch-sidebar-tabs" role="tablist" aria-label="Workspace browser">
+        <button type="button" id="chSidebarSequences" class="on" role="tab" aria-selected="true" aria-controls="chSequencePane">Sequences</button>
+        <button type="button" id="chSidebarViews" role="tab" aria-selected="false" aria-controls="chViewPane">Views</button>
+        <button type="button" id="chSidebarEnvelopes" role="tab" aria-selected="false" aria-controls="chEnvelopePane">Envelopes</button>
+      </div>
+
+      <div class="ch-sidebar-panes">
+        <section class="ch-sidebar-pane on" id="chSequencePane" role="tabpanel" aria-labelledby="chSidebarSequences">
+          <div class="ch-panel-head">Sequences <span class="count" id="chSequenceCount">1</span></div>
+          <div class="ch-sequence-list" id="chSequenceList" role="listbox" aria-label="Chase sequences"></div>
+          <div class="ch-sidebar-actions">
+            <button type="button" class="btn sq" id="chAddSequence" aria-label="Add sequence" title="Add sequence">+</button>
+            <button type="button" class="btn sq" id="chDuplicateSequence" aria-label="Duplicate sequence" title="Duplicate sequence">&#10697;</button>
+            <button type="button" class="btn sq" id="chRemoveSequence" aria-label="Remove sequence" title="Remove sequence">&#215;</button>
+          </div>
+        </section>
+
+        <section class="ch-sidebar-pane" id="chViewPane" role="tabpanel" aria-labelledby="chSidebarViews" hidden>
+          <div class="ch-panel-head">Views <span class="ch-pane-caption">visibility sets</span></div>
+          <div class="ch-view-list" id="chViewList" role="listbox" aria-label="Map views"></div>
+          <div class="ch-sidebar-actions">
+            <button type="button" class="btn sq" id="chAddView" aria-label="Add view" title="Add view">+</button>
+            <button type="button" class="btn sq" id="chDuplicateView" aria-label="Duplicate view" title="Duplicate view">&#10697;</button>
+            <button type="button" class="btn sq" id="chRemoveView" aria-label="Remove view" title="Remove view">&#215;</button>
+          </div>
+          <div class="ch-panel-head ch-visibility-head">
+            <span>Screen &amp; slices</span>
+            <span class="ch-visibility-bulk" role="group" aria-label="Set visibility for the active view">
+              <button type="button" id="chShowAllView" title="Show every slice">All</button>
+              <button type="button" id="chHideAllView" title="Hide every slice">None</button>
+            </span>
+          </div>
+          <div class="ch-visibility-tree" id="chVisibilityTree" role="tree" aria-label="Screens and slices in the active view"></div>
+        </section>
+
+        <section class="ch-sidebar-pane" id="chEnvelopePane" role="tabpanel" aria-labelledby="chSidebarEnvelopes" hidden>
+          <div class="ch-panel-head">Envelopes <span class="ch-pane-caption">global library</span></div>
+          <div class="ch-envelope-list" id="chEnvelopeList" role="listbox" aria-label="Animation envelopes"></div>
+          <div class="ch-sidebar-actions">
+            <button type="button" class="btn sq" id="chAddEnvelope" aria-label="Add envelope" title="Add envelope">+</button>
+            <button type="button" class="btn sq" id="chDuplicateEnvelope" aria-label="Duplicate envelope" title="Duplicate envelope">&#10697;</button>
+            <button type="button" class="btn sq" id="chRemoveEnvelope" aria-label="Remove envelope" title="Remove envelope">&#215;</button>
+          </div>
+          <p class="ch-sidebar-note">Reusable curves are shared by SHOWAVE Chaser sources and projects.</p>
+        </section>
+      </div>
+
+      <div class="ch-map-source">
+        <strong id="chMapName">Checkered starter map</strong>
+        <span id="chMapSummary">8 × 8 logical panels · 64 slices</span>
+        <button type="button" class="btn" id="chOpenMap">Open SHOWAVE Map…</button>
+      </div>
+    </aside>
+
+    <section class="ch-stage-wrap" aria-label="Input Map canvas">
+      <canvas id="chaserCanvas" width="960" height="540" tabindex="0"
+        aria-label="Interactive Chaser canvas. Drag across slices to paint the selected step, hold Space to pan, and use Left or Right to change steps. In Envelope mode, double-click to add an anchor."></canvas>
+      <div class="ch-canvas-nav" role="toolbar" aria-label="Canvas tools and zoom">
+        <div class="ch-canvas-tool-group" role="group" aria-label="Canvas tool">
+          <button type="button" class="btn sq on" id="chToolSelect" aria-label="Select slices" aria-pressed="true" title="Select and paint slices (V)">&#8598;</button>
+          <button type="button" class="btn sq" id="chToolPan" aria-label="Pan canvas" aria-pressed="false" title="Pan canvas (H or hold Space)">&#9995;</button>
+        </div>
+        <span class="ch-canvas-nav-sep" aria-hidden="true"></span>
+        <div class="ch-canvas-tool-group" role="group" aria-label="Canvas zoom">
+          <button type="button" class="btn sq" id="chZoomOut" aria-label="Zoom out" title="Zoom out (Ctrl/Cmd −)">&#8722;</button>
+          <button type="button" class="btn" id="chZoomFit" title="Fit map in canvas">Fit</button>
+          <button type="button" class="btn sq" id="chZoomIn" aria-label="Zoom in" title="Zoom in (Ctrl/Cmd +)">+</button>
+          <output id="chZoomValue" aria-live="polite">100%</output>
+        </div>
+      </div>
+      <div class="ch-stage-badge" id="chStageBadge"><strong>Step 1</strong> · click slices to toggle them</div>
+      <div class="ch-active-view-badge" id="chActiveViewBadge" title="Active visibility view">View: All</div>
+      <div class="ch-canvas-lasso" id="chCanvasLasso" aria-hidden="true" hidden></div>
+      <div class="ch-gesture-hint" id="chGestureHint" role="status" aria-live="polite">Drag to toggle · Shift enables · Ctrl disables · Alt changes visibility</div>
+      <div class="ch-stage-foot">
+        <span id="chCanvasMode" class="active">Chase editor</span>
+        <span id="chCanvasSelection">0 slices active</span>
+        <span class="spacer"></span>
+        <span id="chCanvasResolution">1600 × 900 Input Map</span>
+      </div>
+    </section>
+
+    <aside class="ch-inspector" aria-label="Chaser inspector">
+      <section class="sect ch-project-inspector">
+        <h3>Project</h3>
+        <div class="sect-body">
+          <div class="prow"><label for="chProjectName">Name</label><input id="chProjectName" type="text" value="Untitled Chase"></div>
+          <div class="prow"><label>Input Map</label><span class="ch-value" id="chInspectorMap">Checkered 8 × 8</span></div>
+          <div class="prow"><label>Slices</label><span class="ch-value" id="chInspectorSlices">64</span></div>
+        </div>
+      </section>
+      <section class="sect ch-pixelmap-inspector">
+        <h3>Checkered Pixel Map</h3>
+        <div class="sect-body">
+          <div class="prow"><label for="chNumX">Panels X</label><input id="chNumX" type="number" min="1" max="128" value="8"></div>
+          <div class="prow"><label for="chNumY">Panels Y</label><input id="chNumY" type="number" min="1" max="128" value="8"></div>
+          <div class="prow"><label for="chColor1">Color A</label><input id="chColor1" type="color" value="#101010"></div>
+          <div class="prow"><label for="chColor2">Color B</label><input id="chColor2" type="color" value="#e6e6e6"></div>
+          <div class="prow"><label for="chGridColor">Grid</label><input id="chGridColor" type="color" value="#3d4652"></div>
+          <div class="prow"><label for="chShowLabels">Labels</label><input id="chShowLabels" type="checkbox" checked></div>
+          <div class="prow"><label for="chTransparent">Transparent</label><input id="chTransparent" type="checkbox"></div>
+          <div class="prow"><label></label><button type="button" class="btn" id="chExportMap">Open Export Studio…</button></div>
+        </div>
+      </section>
+      <section class="sect ch-step-inspector">
+        <h3>Active Step</h3>
+        <div class="sect-body">
+          <div class="prow"><label>Step</label><span class="ch-value" id="chInspectorStep">1 / 16</span></div>
+          <div class="prow"><label>Enabled</label><span class="ch-value" id="chInspectorEnabled">0 slices</span></div>
+        </div>
+        <div class="ch-slice-list" id="chSliceList" aria-label="Slices in this step"></div>
+      </section>
+
+      <section class="sect ch-factory-section" id="chFactorySection">
+        <h3>Pattern Factory <small>active sequence</small></h3>
+        <div class="sect-body ch-factory-body">
+          <div class="prow"><label for="chFactoryDirection">Direction</label><select id="chFactoryDirection"><option>Horizontal</option><option>Vertical</option><option>Row</option><option>Column</option><option>Random</option></select></div>
+          <div class="ch-factory-grid-fields">
+            <label>Columns <input id="chFactoryColumns" type="number" min="0" max="128" value="0" aria-describedby="chFactoryAutoHint" title="Use 0 to derive columns from slice positions"></label>
+            <label>Rows <input id="chFactoryRows" type="number" min="0" max="128" value="0" aria-describedby="chFactoryAutoHint" title="Use 0 to derive rows from slice positions"></label>
+            <label>Block <input id="chFactoryBlock" type="number" min="1" max="128" value="1"></label>
+            <label>Modulo <input id="chFactoryModulo" type="number" min="0" max="1024" value="0"></label>
+          </div>
+          <p class="ch-factory-auto-hint" id="chFactoryAutoHint">Rows or columns set to 0 are derived automatically from slice centers.</p>
+          <div class="ch-factory-switches" role="group" aria-label="Factory transformations">
+            <label><input id="chFactoryFlipX" type="checkbox"> Flip X</label>
+            <label><input id="chFactoryFlipY" type="checkbox"> Flip Y</label>
+            <label><input id="chFactoryMirrorX" type="checkbox"> Mirror X</label>
+            <label><input id="chFactoryMirrorY" type="checkbox"> Mirror Y</label>
+          </div>
+          <div class="ch-factory-actions">
+            <button type="button" class="btn on" id="chFactoryGenerate">Generate Chase</button>
+            <button type="button" class="btn" id="chFactoryShuffle">Shuffle</button>
+            <button type="button" class="btn" id="chFactoryReset">Reset Grid</button>
+          </div>
+          <div class="ch-factory-status" id="chFactoryStatus" role="status" aria-live="polite">Open Factory to derive a grid from slice centers.</div>
+        </div>
+      </section>
+
+      <section class="sect ch-envelope-inspector" id="chEnvelopeInspector">
+        <h3>Envelope <small>global curve</small></h3>
+        <div class="sect-body">
+          <div class="prow"><label for="chEnvelopeName">Name</label><input id="chEnvelopeName" type="text" value="Easy Ease"></div>
+          <div class="ch-envelope-selection" id="chEnvelopeSelectionInfo" role="status">No anchor selected</div>
+          <div class="ch-envelope-coordinate-grid">
+            <label>X <input id="chEnvelopePointX" type="number" min="0" max="1" step="0.001" value="0" disabled></label>
+            <label>Y <input id="chEnvelopePointY" type="number" min="0" max="1" step="0.001" value="0" disabled></label>
+          </div>
+          <div class="ch-envelope-actions">
+            <button type="button" class="btn" id="chEnvelopeSegmentLinear" disabled>Make Linear</button>
+            <button type="button" class="btn" id="chEnvelopeReset">Reset S-Curve</button>
+          </div>
+          <p class="ch-envelope-tip">Double-click the curve to add a point. Drag handles to shape it; hold Alt to unlink tangents.</p>
+        </div>
+      </section>
+      <p class="ch-scope-note">Chaser owns the slice sequence and Checkered raster. This toolbar auditions it; live rate and direction belong to each SHOWAVE Chaser Source. Physical output remains in SHOWAVE Map.</p>
+    </aside>
+  </main>
+
+  <section class="ch-sequencer" aria-label="Step sequencer">
+    <div class="ch-sequence-control">
+      <button type="button" class="btn sq" id="chPreviousSequence" aria-label="Previous sequence">&#9664;</button>
+      <input type="number" id="chSequenceIndex" min="1" max="128" value="1" aria-label="Sequence number" title="Jump to sequence number">
+      <input type="text" id="chSequenceName" aria-label="Sequence name" value="Sequence 1">
+      <button type="button" class="btn sq" id="chNextSequence" aria-label="Next sequence">&#9654;</button>
+      <span class="label">Steps</span>
+      <button type="button" class="btn sq" id="chRemoveStep" aria-label="Remove last step">&#8722;</button>
+      <input type="number" id="chStepCount" min="1" max="1024" value="16" aria-label="Number of steps">
+      <button type="button" class="btn sq" id="chAddStep" aria-label="Add step">+</button>
+      <span class="label">Fill</span>
+      <button type="button" class="btn" id="chFillRepeat" title="Repeat the programmed steps to fill the sequence">&#8594;</button>
+      <button type="button" class="btn" id="chFillBounce" title="Fill by repeating the programmed steps in ping-pong order">&#8596;</button>
+      <button type="button" class="btn" id="chClearSequence" title="Clear every step">Clear</button>
+      <span class="ch-step-copy-hint" id="chStepCopyHint">Drag a step to copy · hold Alt to repeat every interval</span>
+    </div>
+    <div class="ch-steps-scroll" id="chSteps" role="listbox" aria-label="Sequence steps"></div>
+  </section>
+
+  <footer class="ch-status">
+    <span><strong>SHOWAVE Chaser</strong> · Slice sequencer and pixel-map raster</span>
+    <span id="chConnection">Waiting for SHOWAVE Map</span>
+    <span class="spacer"></span>
+    <span id="chClock">00:00</span>
+  </footer>
+</div>
+
+<input type="file" id="chProjectFileInput" accept="application/json,application/xml,text/xml,.json,.xml" hidden>
+<input type="file" id="chMapFileInput" accept="application/xml,text/xml,.xml" hidden>
+
+<div class="overlay ch-export-overlay" id="chExportOverlay" aria-hidden="true">
+  <div class="dialog ch-export-dialog" id="chExportDialog" role="dialog" aria-modal="true"
+    aria-labelledby="chExportTitle" aria-describedby="chExportDescription" tabindex="-1">
+    <div class="fw-title ch-export-titlebar">
+      <span class="ch-export-title-mark" aria-hidden="true">PX</span>
+      <div><strong id="chExportTitle">Pixel Map Export Studio</strong><small id="chExportDescription">Input and processor-ready Output maps</small></div>
+      <span class="ch-export-mode-badge" id="chExModeBadge">INPUT</span>
+      <button type="button" class="x" id="chExClose" aria-label="Close Pixel Map Export Studio">&#215;</button>
+    </div>
+
+    <div class="ch-export-commandbar">
+      <div class="ch-export-destination">
+        <span class="ch-export-command-label">Destination</span>
+        <strong id="chExFolderName">No folder selected</strong>
+        <small id="chExFolderHint">Save All will create a ZIP download</small>
+      </div>
+      <button type="button" class="btn" id="chExChooseFolder">Set Folder…</button>
+      <span class="ch-export-divider" aria-hidden="true"></span>
+      <label>Raster scale
+        <select id="chExScale"><option value="100">100% · Native</option><option value="50">50%</option><option value="25">25%</option></select>
+      </label>
+    </div>
+
+    <div class="ch-export-workspace">
+      <aside class="ch-export-browser" aria-label="Export maps and slices">
+        <div class="ch-export-pane-head"><span>Maps</span><span id="chExTargetCount">0</span></div>
+        <div class="ch-export-targets" id="chExTargets" role="listbox" aria-label="Pixel map targets"></div>
+        <div class="ch-export-pane-head ch-export-slice-head">
+          <span>Slices</span><button type="button" id="chExClearSelection">Clear</button>
+        </div>
+        <label class="ch-export-apply"><input type="checkbox" id="chExApplySelected" checked> Apply changes to selected slices</label>
+        <div class="ch-export-slices" id="chExSlices" role="listbox" aria-label="Slices in selected map" aria-multiselectable="true"></div>
+      </aside>
+
+      <section class="ch-export-preview" aria-label="Pixel map export preview">
+        <div class="ch-export-preview-surface" id="chExPreviewSurface">
+          <canvas id="chExCanvas" width="960" height="540" tabindex="0"
+            aria-label="Export preview. Click a slice or drag a selection rectangle to select slices."></canvas>
+          <div class="ch-export-preview-badge"><strong id="chExPreviewName">Input Map</strong><span id="chExPreviewDetail">Rasterized from the PNG renderer</span></div>
+          <div class="ch-export-lasso-tip">Click to select · Shift-click or drag to select multiple</div>
+        </div>
+        <div class="ch-export-previewbar">
+          <div class="ch-export-zoom" role="group" aria-label="Preview zoom">
+            <button type="button" class="btn sq" id="chExZoomOut" aria-label="Zoom out">−</button>
+            <button type="button" class="btn" id="chExZoomFit">Fit</button>
+            <button type="button" class="btn sq" id="chExZoomIn" aria-label="Zoom in">+</button>
+            <span id="chExZoomLabel">100%</span>
+          </div>
+          <span id="chExRasterSummary">1920 × 1080 PNG</span>
+          <span class="spacer"></span>
+          <span class="ch-export-preflight" id="chExPreflight">Ready</span>
+        </div>
+      </section>
+
+      <aside class="ch-export-inspector" aria-label="Pixel map export settings">
+        <section class="ch-export-sect">
+          <h3><span>Project</span><button type="button" data-ex-reset-section="project">Reset</button></h3>
+          <div class="ch-export-sect-body">
+            <div class="ch-export-row"><label for="chExProjectTitle">Title</label><span class="ch-ex-control"><input id="chExProjectTitle" type="text" data-ex-section="project" data-ex-key="title"><button type="button" data-ex-reset="project.title" aria-label="Reset title">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExProjectNotes">Project info</label><span class="ch-ex-control"><textarea id="chExProjectNotes" rows="2" data-ex-section="project" data-ex-key="notes"></textarea><button type="button" data-ex-reset="project.notes" aria-label="Reset project info">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExFontFamily">Font</label><span class="ch-ex-control"><select id="chExFontFamily" data-ex-section="project" data-ex-key="fontFamily"><option>Arial</option><option>Segoe UI</option><option>Helvetica</option><option>Verdana</option><option>Tahoma</option><option>monospace</option></select><button type="button" data-ex-reset="project.fontFamily" aria-label="Reset font">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExFontSize">Font size</label><span class="ch-ex-control"><input id="chExFontSize" type="number" min="6" max="160" data-ex-section="project" data-ex-key="fontSize"><button type="button" data-ex-reset="project.fontSize" aria-label="Reset font size">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExBackground">Background</label><span class="ch-ex-control"><input id="chExBackground" type="color" data-ex-section="project" data-ex-key="background"><button type="button" data-ex-reset="project.background" aria-label="Reset background">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExTransparent">Transparent</label><span class="ch-ex-control"><input id="chExTransparent" type="checkbox" data-ex-section="project" data-ex-key="transparent"><button type="button" data-ex-reset="project.transparent" aria-label="Reset transparency">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExBorder">Borders</label><span class="ch-ex-control"><input id="chExBorder" type="checkbox" data-ex-section="project" data-ex-key="border"><button type="button" data-ex-reset="project.border" aria-label="Reset borders">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExBorderColor">Border color</label><span class="ch-ex-control"><input id="chExBorderColor" type="color" data-ex-section="project" data-ex-key="borderColor"><button type="button" data-ex-reset="project.borderColor" aria-label="Reset border color">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExBorderWidth">Border width</label><span class="ch-ex-control"><input id="chExBorderWidth" type="number" min="0" max="32" step="0.5" data-ex-section="project" data-ex-key="borderWidth"><button type="button" data-ex-reset="project.borderWidth" aria-label="Reset border width">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExTargetInfo">Map title</label><span class="ch-ex-control"><input id="chExTargetInfo" type="checkbox" data-ex-section="project" data-ex-key="showTargetInfo"><button type="button" data-ex-reset="project.showTargetInfo" aria-label="Reset map title">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExScreenNames">Screen name</label><span class="ch-ex-control"><input id="chExScreenNames" type="checkbox" data-ex-section="project" data-ex-key="showScreenNames"><button type="button" data-ex-reset="project.showScreenNames" aria-label="Reset screen names">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExTargetResolution">Resolution</label><span class="ch-ex-control"><input id="chExTargetResolution" type="checkbox" data-ex-section="project" data-ex-key="showTargetResolution"><button type="button" data-ex-reset="project.showTargetResolution" aria-label="Reset map resolution">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExTargetAspect">Aspect ratio</label><span class="ch-ex-control"><input id="chExTargetAspect" type="checkbox" data-ex-section="project" data-ex-key="showTargetAspect"><button type="button" data-ex-reset="project.showTargetAspect" aria-label="Reset map aspect ratio">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExProjectNotesVisible">Project notes</label><span class="ch-ex-control"><input id="chExProjectNotesVisible" type="checkbox" data-ex-section="project" data-ex-key="showProjectNotes"><button type="button" data-ex-reset="project.showProjectNotes" aria-label="Reset project notes visibility">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExProjectInfoPosition">Info position</label><span class="ch-ex-control"><select id="chExProjectInfoPosition" data-ex-section="project" data-ex-key="infoPlacement"><option value="top-left">Top left</option><option value="top-right">Top right</option><option value="center">Center</option><option value="bottom-left">Bottom left</option><option value="bottom-right">Bottom right</option></select><button type="button" data-ex-reset="project.infoPlacement" aria-label="Reset map info position">↺</button></span></div>
+          </div>
+        </section>
+
+        <section class="ch-export-sect">
+          <h3><span>Main <small id="chExSelectionLabel">all slices</small></span><button type="button" id="chExResetSelected">Reset selected</button></h3>
+          <div class="ch-export-sect-body">
+            <div class="ch-export-row"><label for="chExSliceName">Slice name</label><span class="ch-ex-control"><input id="chExSliceName" type="text" data-ex-section="main" data-ex-key="name" placeholder="Use source name"><button type="button" data-ex-reset="main.name" aria-label="Reset slice name">↺</button></span></div>
+          </div>
+        </section>
+
+        <section class="ch-export-sect">
+          <h3><span>Panel</span><button type="button" data-ex-reset-section="panel">Reset</button></h3>
+          <div class="ch-export-sect-body">
+            <div class="ch-export-row"><label for="chExNumX">Panel width px</label><span class="ch-ex-control"><input id="chExNumX" type="number" min="1" max="8192" data-ex-section="panel" data-ex-key="sizeX"><button type="button" data-ex-reset="panel.sizeX" aria-label="Reset panel width">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExNumY">Panel height px</label><span class="ch-ex-control"><input id="chExNumY" type="number" min="1" max="8192" data-ex-section="panel" data-ex-key="sizeY"><button type="button" data-ex-reset="panel.sizeY" aria-label="Reset panel height">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExPitchX">Pixel pitch X</label><span class="ch-ex-control"><input id="chExPitchX" type="number" min="0.001" max="10000" step="0.1" data-ex-section="panel" data-ex-key="pitchX"><button type="button" data-ex-reset="panel.pitchX" aria-label="Reset pitch X">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExPitchY">Pixel pitch Y</label><span class="ch-ex-control"><input id="chExPitchY" type="number" min="0.001" max="10000" step="0.1" data-ex-section="panel" data-ex-key="pitchY"><button type="button" data-ex-reset="panel.pitchY" aria-label="Reset pitch Y">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExUnit">Pitch unit</label><span class="ch-ex-control"><select id="chExUnit" data-ex-section="panel" data-ex-key="unit"><option value="mm">mm</option><option value="cm">cm</option><option value="in">inch</option></select><button type="button" data-ex-reset="panel.unit" aria-label="Reset pitch unit">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExColor1">Color A</label><span class="ch-ex-control"><input id="chExColor1" type="color" data-ex-section="panel" data-ex-key="color1"><button type="button" data-ex-reset="panel.color1" aria-label="Reset color A">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExColor2">Color B</label><span class="ch-ex-control"><input id="chExColor2" type="color" data-ex-section="panel" data-ex-key="color2"><button type="button" data-ex-reset="panel.color2" aria-label="Reset color B">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExCoordinates">Coordinates</label><span class="ch-ex-control"><select id="chExCoordinates" data-ex-section="panel" data-ex-key="coordinates"><option value="none">None</option><option value="mixed">A1, B1…</option><option value="letters">Letters</option><option value="numbers">Numbers</option></select><button type="button" data-ex-reset="panel.coordinates" aria-label="Reset coordinates">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExCoordinateSize">Coord. size</label><span class="ch-ex-control"><input id="chExCoordinateSize" type="number" min="5" max="96" data-ex-section="panel" data-ex-key="coordinateSize"><button type="button" data-ex-reset="panel.coordinateSize" aria-label="Reset coordinate size">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExGridColor">Grid color</label><span class="ch-ex-control"><input id="chExGridColor" type="color" data-ex-section="panel" data-ex-key="gridColor"><button type="button" data-ex-reset="panel.gridColor" aria-label="Reset grid color">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExGridWidth">Grid width</label><span class="ch-ex-control"><input id="chExGridWidth" type="number" min="0" max="24" step="0.5" data-ex-section="panel" data-ex-key="gridWidth"><button type="button" data-ex-reset="panel.gridWidth" aria-label="Reset grid width">↺</button></span></div>
+          </div>
+        </section>
+
+        <section class="ch-export-sect">
+          <h3><span>Info</span><button type="button" data-ex-reset-section="info">Reset</button></h3>
+          <div class="ch-export-sect-body ch-export-check-grid">
+            <label><span>Name</span><input id="chExInfoName" type="checkbox" data-ex-section="info" data-ex-key="name"></label>
+            <label><span>Screen</span><input id="chExInfoScreen" type="checkbox" data-ex-section="info" data-ex-key="screen"></label>
+            <label><span>Top-left</span><input id="chExInfoPosition" type="checkbox" data-ex-section="info" data-ex-key="position"></label>
+            <label><span>Resolution</span><input id="chExInfoResolution" type="checkbox" data-ex-section="info" data-ex-key="resolution"></label>
+            <label><span>Aspect</span><input id="chExInfoAspect" type="checkbox" data-ex-section="info" data-ex-key="aspect"></label>
+            <label><span>Physical size</span><input id="chExInfoPhysical" type="checkbox" data-ex-section="info" data-ex-key="physical"></label>
+            <div class="ch-export-row wide"><label for="chExInfoPlacement">Position</label><span class="ch-ex-control"><select id="chExInfoPlacement" data-ex-section="info" data-ex-key="placement"><option value="top-left">Top left</option><option value="top-right">Top right</option><option value="center">Center</option><option value="bottom-left">Bottom left</option><option value="bottom-right">Bottom right</option></select><button type="button" data-ex-reset="info.placement" aria-label="Reset info position">↺</button></span></div>
+          </div>
+        </section>
+
+        <section class="ch-export-sect">
+          <h3><span>Logo</span><button type="button" id="chExRemoveLogo">Remove</button></h3>
+          <div class="ch-export-sect-body">
+            <div class="ch-export-row"><label for="chExLogoFile">Image</label><span class="ch-ex-control"><input id="chExLogoFile" type="file" accept="image/png,image/jpeg,image/webp"><button type="button" data-ex-reset="logo.dataUrl" aria-label="Reset logo">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExLogoSize">Size</label><span class="ch-ex-control"><input id="chExLogoSize" type="range" min="2" max="100" step="1" data-ex-section="logo" data-ex-key="size"><output id="chExLogoSizeValue" for="chExLogoSize">28%</output></span></div>
+            <div class="ch-export-row"><label for="chExLogoPosition">Position</label><span class="ch-ex-control"><select id="chExLogoPosition" data-ex-section="logo" data-ex-key="position"><option value="top-left">Top left</option><option value="top-right">Top right</option><option value="center">Center</option><option value="bottom-left">Bottom left</option><option value="bottom-right">Bottom right</option></select><button type="button" data-ex-reset="logo.position" aria-label="Reset logo position">↺</button></span></div>
+            <div class="ch-export-row"><label for="chExLogoOpacity">Opacity</label><span class="ch-ex-control"><input id="chExLogoOpacity" type="range" min="0" max="1" step="0.05" data-ex-section="logo" data-ex-key="opacity"><output id="chExLogoOpacityValue" for="chExLogoOpacity">100%</output></span></div>
+            <p class="ch-export-logo-name" id="chExLogoName">No logo loaded</p>
+          </div>
+        </section>
+
+        <section class="ch-export-sect">
+          <h3><span>Deco</span><button type="button" data-ex-reset-section="deco">Reset</button></h3>
+          <div class="ch-export-sect-body ch-export-check-grid">
+            <label><span>Cross</span><input id="chExDecoCross" type="checkbox" data-ex-section="deco" data-ex-key="cross"></label>
+            <label><span>Circle</span><input id="chExDecoCircle" type="checkbox" data-ex-section="deco" data-ex-key="circle"></label>
+            <label><span>Corner dots</span><input id="chExDecoDots" type="checkbox" data-ex-section="deco" data-ex-key="dots"></label>
+            <div class="ch-export-row wide"><label for="chExDecoColor">Color</label><span class="ch-ex-control"><input id="chExDecoColor" type="color" data-ex-section="deco" data-ex-key="color"><button type="button" data-ex-reset="deco.color" aria-label="Reset decoration color">↺</button></span></div>
+            <div class="ch-export-row wide"><label for="chExDecoWidth">Line width</label><span class="ch-ex-control"><input id="chExDecoWidth" type="number" min="0.25" max="48" step="0.25" data-ex-section="deco" data-ex-key="lineWidth"><button type="button" data-ex-reset="deco.lineWidth" aria-label="Reset line width">↺</button></span></div>
+            <div class="ch-export-row wide"><label for="chExDotSize">Dot size</label><span class="ch-ex-control"><input id="chExDotSize" type="number" min="0.5" max="96" step="0.5" data-ex-section="deco" data-ex-key="dotSize"><button type="button" data-ex-reset="deco.dotSize" aria-label="Reset dot size">↺</button></span></div>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <div class="btnrow ch-export-actions">
+      <div class="ch-export-status" id="chExStatus" role="status" aria-live="polite"><i aria-hidden="true"></i><span>Ready to export</span></div>
+      <button type="button" class="btn" id="chExCloseFooter">Close</button>
+      <button type="button" class="btn" id="chExDownloadCurrent">Export Current PNG</button>
+      <button type="button" class="btn on" id="chExSaveAll">Save All Maps</button>
+    </div>
+  </div>
+</div>
+
+<div class="ch-menu" id="chMenuFile" role="menu" hidden>
+  <button type="button" role="menuitem" data-action="new-map">New from SHOWAVE Map</button>
+  <button type="button" role="menuitem" data-action="new-checkered">New Checkered Starter</button>
+  <button type="button" role="menuitem" data-action="current-resolume-map">Load Current Resolume Map</button>
+  <button type="button" role="menuitem" data-action="import-map">Import Advanced Output Preset…</button>
+  <button type="button" role="menuitemcheckbox" aria-checked="false" data-action="follow-resolume">Follow Resolume Map Changes</button>
+  <div class="sep"></div>
+  <button type="button" role="menuitem" data-action="save-current">Save Project</button>
+  <button type="button" role="menuitem" data-action="save-project" title="Save the complete project, including Views, Envelopes and Export Studio settings">Save Project As…</button>
+  <button type="button" role="menuitem" data-action="save-native" title="Chaser 3 XML retains sequences, input slices and visibility. Save a SHOWAVE project to retain named Views, Envelopes and export styling.">Save Chaser 3 XML As…</button>
+  <button type="button" role="menuitem" data-action="load-project">Load Project…</button>
+  <button type="button" role="menuitem" data-action="relink-map">Relink Map</button>
+  <div class="sep"></div>
+  <button type="button" role="menuitem" data-action="export-map">Pixel Map Export Studio…</button>
+</div>
+<div class="ch-menu" id="chMenuEdit" role="menu" hidden>
+  <button type="button" role="menuitem" data-action="undo">Undo</button>
+  <button type="button" role="menuitem" data-action="redo">Redo</button>
+  <div class="sep"></div>
+  <button type="button" role="menuitem" data-action="copy-step">Copy Step</button>
+  <button type="button" role="menuitem" data-action="paste-step">Paste Step</button>
+  <button type="button" role="menuitem" data-action="invert-step">Invert Step</button>
+  <button type="button" role="menuitem" data-action="clear-step">Clear Step</button>
+</div>
+<div class="ch-menu" id="chMenuSequence" role="menu" hidden>
+  <button type="button" role="menuitem" data-action="add-sequence">Add Sequence</button>
+  <button type="button" role="menuitem" data-action="duplicate-sequence">Duplicate Sequence</button>
+  <button type="button" role="menuitem" data-action="remove-sequence">Remove Sequence</button>
+  <button type="button" role="menuitem" data-action="clear-sequence">Clear Active Sequence</button>
+  <div class="sep"></div>
+  <button type="button" role="menuitem" data-action="generate-factory">Generate with Factory</button>
+  <button type="button" role="menuitem" data-action="shuffle-steps">Shuffle Steps</button>
+</div>
+<div class="ch-menu" id="chMenuView" role="menu" hidden>
+  <button type="button" role="menuitem" data-action="sidebar-sequences">Sequence Browser</button>
+  <button type="button" role="menuitem" data-action="sidebar-views">Views Browser</button>
+  <div class="sep"></div>
+  <button type="button" role="menuitem" data-action="mode-chase">Chase Editor</button>
+  <button type="button" role="menuitem" data-action="mode-pixelmap">Pixel Map</button>
+  <button type="button" role="menuitem" data-action="mode-envelope">Envelope Editor</button>
+  <div class="sep"></div>
+  <button type="button" role="menuitem" data-action="show-all">Show All Slices</button>
+  <button type="button" role="menuitem" data-action="hide-all">Hide All Slices</button>
+  <div class="sep"></div>
+  <button type="button" role="menuitem" data-action="fit-map">Fit Map</button>
+</div>
+
+<script src="openlive-hub.js"></script>
+<script src="arena-bus.js"></script>
+<script src="openlive-chaser.js"></script>
+<script src="openlive-chaser-native.js"></script>
+<script src="openlive-chaser-export.js"></script>
+<script src="openlive-chaser-ui.js"></script>
+<script src="openlive-integrations.js"></script>
+</body>
+</html>

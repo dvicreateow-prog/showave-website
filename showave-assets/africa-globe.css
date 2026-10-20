@@ -7,6 +7,16 @@
   pointer-events: auto;
   touch-action: pan-y pinch-zoom;
 }
+/* Keep the joined mark inside the desktop frame. Scale its entire existing
+   stage so the glow, geographic dots, routes and labels stay registered.
+   Individual transforms compose with the original scroll-animation transform. */
+@media (min-width: 768px) {
+  .home-hero-globe {
+    scale: .8 !important;
+    translate: -12% 0 !important;
+    transform-origin: 50% 50%;
+  }
+}
 /* OrbitControls writes touch-action inline even when its controls are disabled. */
 #globe {
   pointer-events: auto;

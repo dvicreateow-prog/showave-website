@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Encoder name="Encoder" uuid="570acfa50c624b6fa6407c7f8d6c6691" encoderName="H.264 High 1080p30">
+	<Params name="Params">
+		<ParamEncoderVideo storage="0" name="Video">
+			<ParamChoice name="Codec" T="STRING" default="avc1.640028" value="avc1.640028" storeChoices="0"/>
+			<ParamChoice name="Rate Control" T="STRING" default="cbr" value="cbr" storeChoices="0"/>
+			<ParamRange name="Width" T="DOUBLE" default="1920" value="1920">
+				<ValueRange name="defaultRange" min="128" max="7680"/>
+			</ParamRange>
+			<ParamRange name="Height" T="DOUBLE" default="1080" value="1080">
+				<ValueRange name="defaultRange" min="128" max="4320"/>
+			</ParamRange>
+			<ParamRange name="Framerate" T="DOUBLE" default="30" value="30">
+				<ValueRange name="defaultRange" min="1" max="120"/>
+			</ParamRange>
+			<ParamRange name="Bitrate" T="DOUBLE" default="4500" value="4500">
+				<ValueRange name="defaultRange" min="100" max="50000"/>
+			</ParamRange>
+			<ParamRange name="Keyframe Interval" T="DOUBLE" default="2" value="2">
+				<ValueRange name="defaultRange" min="0.5" max="10"/>
+			</ParamRange>
+		</ParamEncoderVideo>
+		<ParamEncoderAudio storage="0" name="Audio">
+			<ParamChoice name="Codec" T="STRING" default="mp4a.40.2" value="mp4a.40.2" storeChoices="0"/>
+			<ParamRange name="Sample Rate" T="DOUBLE" default="48000" value="48000">
+				<ValueRange name="defaultRange" min="8000" max="48000"/>
+			</ParamRange>
+			<ParamRange name="Bitrate" T="DOUBLE" default="160" value="160">
+				<ValueRange name="defaultRange" min="32" max="320"/>
+			</ParamRange>
+		</ParamEncoderAudio>
+	</Params>
+	<Notes>Lower motion cost than 60fps for the same visual quality on slower uplinks.</Notes>
+</Encoder>

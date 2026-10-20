@@ -1,0 +1,668 @@
+/* ===========================================================================
+   advanced-output.css — the Advanced Output editor's chrome.
+
+   Loaded after arena.css / nocturne.css. Every value comes from their tokens
+   and every control borrows the vocabulary the main window (index.html) uses,
+   so the editor reads as the same application rather than a separate tool:
+
+     · type          Inter 11.5px/1.35 from --font; controls at 11px, section
+                     heads at 10px uppercase / .08em, hints at 10.5px
+     · section head  .ao-sec > h4   ≡  .sect > h3 / .mon-head / .tgroup
+     · parameter row .ao-row        ≡  .prow      (92px right-aligned label,
+                                                   boxed inset value)
+     · buttons       .ao-btn        ≡  .btn       (outlined, accent on state)
+     · chips         .ao-chip       ≡  .ws-chip / .conn pill
+     · list rows     .ao-item       ≡  .titem
+     · dropdowns     .ao-menu       ≡  .dropdown / .dd-item
+     · stage         .ao-stage      ≡  .mon-body
+   =========================================================================== */
+
+/* Column widths measured off the Arena window in output-transformation.htm
+   (1648x1094, ~1x): left column 214px, right column 216px, stage takes the
+   rest. The 278px right column this used to carry was 62px over. */
+.ao{ --ao-left:214px; --ao-right:216px; --ao-control-h:24px;
+  position:relative;
+  display:flex; flex-direction:column; height:100%; min-height:0;
+  background:var(--panel); font:var(--font); color:var(--txt); }
+
+/* ---- toolbar ------------------------------------------------------------
+   Sits where the transport toolbar sits in the main window, and is built the
+   same way: a panel-coloured strip of outlined controls over a hairline. */
+.ao-bar{ display:grid; grid-template-columns:var(--ao-left) minmax(0,1fr) var(--ao-right);
+  align-items:stretch; flex:0 0 30px; height:30px; padding:0; background:var(--panel);
+  border-bottom:1px solid var(--line); }
+.ao-bar-left,.ao-bar-center,.ao-bar-right{ min-width:0; display:flex; align-items:center; height:29px; }
+.ao-bar-left{ padding:2px 6px; border-right:1px solid var(--line); }
+.ao-bar-left .ao-menu-wrap{ width:100%; }
+.ao-bar-center{ gap:4px; padding:0 6px; }
+.ao-bar-right{ justify-content:flex-end; padding:0 8px; border-left:1px solid var(--line); }
+.ao-bar .ao-sp{ flex:1; }
+.ao-composition{ overflow:hidden; color:var(--n500); font-size:10px; white-space:nowrap; text-overflow:ellipsis; }
+.ao-sep{ width:1px; align-self:stretch; margin:6px 3px; background:var(--line);
+  box-shadow:1px 0 0 var(--n900); }
+.ao-screen{ font-size:11px; padding:1px 6px; height:18px; max-width:200px;
+  background:var(--inset); border:1px solid var(--n800); color:var(--n200);
+  border-radius:var(--radius-sm); }
+.ao-screen:hover{ border-color:var(--n700); }
+.ao-tools, .ao-views{ display:flex; gap:3px; }
+
+/* CASING. Advanced Output's section headers are Title Case in Resolume's own
+   string table — "Screens", "Slices", "Input Selection", "Output
+   Transformation", "Fixture Parameters" — and its menu group headings are
+   rendered greyed but never uppercased. The decisive one is .ao-sec > h4: it is
+   fed a USER-AUTHORED Slice name, so a slice named "Main LED wall" painted as
+   "MAIN LED WALL". Resolume never re-cases user data (manual/composition.htm
+   notes a Name is also the filename on disk). advanced-output.css already
+   declares .ao-sec > h4 equivalent to .sect > h3 / .mon-head / .tgroup, which no
+   longer shout, so these had to move with them.
+   .ao-btn-go keeps its caps: a live transport action is the one class Resolume
+   does shout (RECORD, STOP, PAUSE). */
+/* chip — the house pill, as worn by .ws-chip and the connection indicator */
+.ao-chip{ display:inline-flex; align-items:center; font-size:9.5px; letter-spacing:.01em;
+  padding:1px 9px; border:1px solid var(--n800);
+  border-radius:999px; background:transparent; color:var(--n600);
+  cursor:pointer; white-space:nowrap; }
+.ao-chip:hover{ border-color:var(--a600); color:var(--n300); }
+.ao-chip.on{ color:var(--a200); border-color:var(--color-accent);
+  box-shadow:0 0 0 1px var(--color-accent), 0 0 12px -4px var(--color-accent); }
+
+/* the screen-setup dropdown, top left — the widest control on the bar */
+.ao-preset{ width:100%; height:var(--ao-control-h); text-align:left; }
+
+/* the two stages, as a tab pair — the main window's .ptab, in miniature */
+.ao-stages{ display:flex; align-self:stretch; }
+.ao-stagetab{ height:29px; padding:0 var(--space-3); font-size:11px; color:var(--n500);
+  background:transparent; border:0; border-right:1px solid var(--line);
+  cursor:pointer; white-space:nowrap; }
+.ao-stagetab:first-child{ border-left:1px solid var(--line); }
+.ao-stagetab:hover{ color:var(--n300); }
+.ao-stagetab.on{ color:var(--a200); box-shadow:inset 0 -2px 0 var(--color-accent);
+  background:color-mix(in srgb,var(--color-accent) 12%,transparent); }
+
+/* button — .btn, to the pixel */
+.ao-btn{ background:transparent; border:1px solid var(--n800); color:var(--n300);
+  height:var(--ao-control-h); padding:0 8px; font-size:11px; line-height:1.3; white-space:nowrap;
+  border-radius:var(--radius-sm); cursor:pointer; }
+.ao-btn:hover{ background:color-mix(in srgb,var(--color-accent) 12%,transparent);
+  border-color:var(--a600); }
+.ao-btn:active{ background:color-mix(in srgb,var(--color-accent) 20%,transparent);
+  border-color:var(--a400); }
+.ao-btn.danger{ color:var(--n400); }
+.ao-btn.danger:hover{ background:color-mix(in srgb,var(--red) 14%,transparent);
+  border-color:var(--red); color:#f0cccc; }
+.ao-menu-wrap{ position:relative; }
+
+/* ---- the screen tree, down the left -------------------------------------
+   One row per screen, its slices nested under it. The plus+ menus are at the
+   TOP, under the preset dropdown, and the column ends in the contextual help
+   box — the arrangement in the Arena screenshots in output-transformation.htm.
+   (The prose in advanced-output.htm says "the foot of the list"; the pictures
+   disagree with it, and the pictures are the interface.) */
+.ao-tree{ flex:0 0 var(--ao-left); min-width:0; display:flex; flex-direction:column;
+  border-right:1px solid var(--line); background:var(--strip); }
+.ao-treelist{ flex:1; min-height:0; overflow:auto; }
+.ao-treefoot{ flex:0 0 32px; display:flex; align-items:center; gap:0; padding:4px 6px;
+  border-bottom:1px solid var(--line); }
+.ao-treefoot .ao-menu-wrap:first-child{ flex:0 0 44px; }
+.ao-treefoot .ao-menu-wrap:last-child{ flex:1; }
+.ao-treefoot .ao-plus{ width:100%; height:var(--ao-control-h); padding:0 6px; font-size:10.5px; border-radius:0; }
+.ao-treefoot .ao-menu-wrap:first-child .ao-plus{ border-radius:var(--radius-sm) 0 0 var(--radius-sm); }
+.ao-treefoot .ao-menu-wrap:last-child .ao-plus{ border-left:0; border-radius:0 var(--radius-sm) var(--radius-sm) 0; }
+/* at the top the hairline belongs under it, not over it */
+.ao-treetop{ border-bottom:1px solid var(--line); }
+
+/* The contextual help box that closes the left column. Fixed height so the
+   tree above it does not jump as the text changes length. */
+.ao-help{ flex:0 0 auto; min-height:96px; border-top:1px solid var(--line);
+  background:var(--color-surface); }
+.ao-help-t{ height:20px; display:flex; align-items:center; padding:0 var(--space-3);
+  background:var(--head); border-bottom:1px solid var(--line);
+  font-size:10px; letter-spacing:.01em;
+  color:var(--n400); font-weight:500; }
+.ao-help-b{ padding:6px var(--space-3) 8px; font-size:10.5px; line-height:1.45;
+  color:var(--n500); }
+
+/* The bar naming the object the inspector is editing — Arena's "Slice 1". */
+.ao-selhead{ position:sticky; top:0; z-index:2; height:26px; display:flex; align-items:center;
+  padding:0 var(--space-3); background:var(--head); border-bottom:1px solid var(--line);
+  font-size:11px; font-weight:500; color:var(--n200);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* Composition( w, h ) at the right end of the tab row. It turns red and shows
+   the renderer's own message when there is one, rather than a stale number. */
+.oo-stat-err{ color:var(--red); }
+
+.ao-screenrow{ display:flex; align-items:center; gap:5px; padding:3px var(--space-2);
+  background:var(--head); border-bottom:1px solid var(--line); cursor:pointer; }
+.ao-screenrow:hover{ background:color-mix(in srgb,var(--color-accent) 10%,var(--head)); }
+.ao-screenrow.on{ box-shadow:inset 3px 0 0 var(--color-accent);
+  background:color-mix(in srgb,var(--color-accent) 14%,var(--head)); }
+.ao-screenrow.off{ opacity:.45; }
+.ao-screenrow.drop{ outline:2px solid var(--a400); outline-offset:-2px; }
+.ao-fold{ flex:0 0 10px; text-align:center; font-size:8px; color:var(--n600); }
+.ao-fold:hover{ color:var(--a200); }
+.ao-screennm{ flex:1; min-width:0; display:flex; flex-direction:column; line-height:1.2; }
+.ao-screennm b{ font-size:11px; font-weight:500; color:var(--n200);
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+/* the manual: a screen shows the output it is sending to under its name */
+.ao-screennm small{ font-size:9.5px; color:var(--n600);
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.ao-slices{ padding:1px 0 2px; }
+.ao-slices .ao-item{ padding-left:var(--space-4); }
+
+/* ---- stage --------------------------------------------------------------
+   The same black-box treatment the three monitors get in the main window. */
+.ao-main{ flex:1; min-height:0; display:flex; }
+.ao-stage{ flex:1; min-width:0; position:relative; overflow:hidden;
+  background:#101220; }
+.ao-canvas{ display:block; }
+
+/* Transform / Edit Points sit in the top right of the stage, over the canvas */
+.ao-tools{ position:absolute; right:var(--space-3); top:var(--space-2); display:flex; gap:3px;
+  padding:2px; border-radius:999px; background:color-mix(in srgb,var(--color-surface) 82%,transparent);
+  border:1px solid var(--n800); backdrop-filter:blur(3px); }
+.ao-tool{ font-size:9.5px; letter-spacing:.01em;
+  padding:2px 10px; border:0; border-radius:999px; background:transparent;
+  color:var(--n500); cursor:pointer; white-space:nowrap; }
+.ao-tool:hover{ color:var(--n200); }
+.ao-tool.on{ color:var(--a200); background:color-mix(in srgb,var(--color-accent) 22%,transparent);
+  box-shadow:0 0 0 1px var(--color-accent); }
+.ao-readout{ position:absolute; left:var(--space-3); bottom:var(--space-2);
+  font-size:10.5px; color:var(--n600); pointer-events:none;
+  text-shadow:0 1px 3px rgba(11,12,20,.9); }
+.ao-hint{ position:absolute; left:12px; bottom:32px; max-width:calc(100% - 24px); transform:translateY(6px);
+  padding:3px 12px; font-size:11px; border-radius:999px; pointer-events:none;
+  background:color-mix(in srgb,var(--color-accent) 22%,var(--color-surface));
+  color:var(--n100); border:1px solid var(--a600);
+  box-shadow:0 0 16px -6px var(--color-accent);
+  opacity:0; transition:opacity .18s, transform .18s; }
+.ao-hint.on{ opacity:1; transform:translateY(0); }
+.ao-hint.bad{ background:color-mix(in srgb,var(--red) 22%,var(--color-surface));
+  border-color:var(--red); color:#f0cccc; box-shadow:0 0 16px -6px var(--red); }
+
+/* Broadcast feedback is local to this editor and independent of the footer.
+   It never grows the inspector or steals keyboard focus when a message lands. */
+.ao .oo-messages{ position:absolute; right:8px; bottom:36px; z-index:80;
+  width:min(360px,calc(100% - 16px)); font:inherit; pointer-events:none;
+  display:flex; flex-direction:column; align-items:stretch; gap:4px; }
+.ao .oo-messages-panel{ background:var(--panel); color:var(--txt);
+  border:1px solid var(--n700); border-radius:4px; box-shadow:0 4px 18px #0008; pointer-events:auto; }
+.ao .oo-messages [hidden]{ display:none !important; }
+.oo-messages-head{ display:flex; align-items:center; justify-content:space-between;
+  padding:4px 7px; border-bottom:1px solid var(--line); font-size:11px; }
+.ao .oo-messages-head .ao-btn{ height:22px; min-width:24px; padding:0 5px; }
+.oo-messages-list{ max-height:min(320px,45vh); overflow:auto; overscroll-behavior:contain; }
+.oo-message{ padding:8px 10px; border-left:2px solid var(--color-accent); border-bottom:1px solid var(--line); }
+.oo-message.error{ border-left-color:var(--red); }
+.oo-message.warn{ border-left-color:var(--amber); }
+.oo-message-label{ display:block; font-size:10px; margin-bottom:3px; color:var(--n400); }
+.oo-message.error .oo-message-label{ color:var(--red); }
+.oo-message.warn .oo-message-label{ color:var(--amber); }
+.oo-message-text{ font-size:11px; line-height:1.45; white-space:pre-wrap; overflow-wrap:anywhere; user-select:text; }
+.ao .oo-messages-toggle{ align-self:flex-end; pointer-events:auto; font-size:10px; height:22px; }
+.oo-message-announcer{ position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.ao .oo-section-help{ margin-left:auto; padding:0; width:18px; height:18px; min-width:18px;
+  border-radius:50%; font-size:11px; line-height:16px; }
+.ao .oo-broadcast-detail{ font:inherit; font-size:10px; height:auto; min-height:20px;
+  padding:1px 5px; margin:2px 4px; max-width:calc(100% - 8px); text-align:left;
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.ao .oo-broadcast-detail.warn,.ao .oo-broadcast-detail.error{ color:var(--amber); }
+.ao-row.oo-dest > .oo-broadcast-detail{ order:7; margin-left:19px; }
+.ao .oo-broadcast-fold{ border-bottom:1px solid var(--line); font-size:10px; }
+.oo-broadcast-fold > summary{ cursor:pointer; padding:4px 7px; color:var(--n500); }
+.oo-broadcast-fold > summary:focus-visible{ outline:1px solid var(--color-accent); outline-offset:-1px; }
+
+/* ---- properties ---------------------------------------------------------
+   Laid out like #props in the main window: a stack of folded sections whose
+   heads are uppercase hairline strips and whose rows are .prow-shaped. */
+.ao-side{ flex:0 0 var(--ao-right); min-width:0; overflow:auto;
+  border-left:1px solid var(--line); background:var(--panel); }
+.ao-sec{ border-bottom:1px solid var(--line); }
+.ao-sec > h4{ height:22px; display:flex; align-items:center; margin:0;
+  padding:0 var(--space-3); background:var(--head); border-bottom:1px solid var(--line);
+  font-size:10px; letter-spacing:.01em;
+  color:var(--n400); font-weight:500; }
+
+.ao-row{ display:flex; align-items:center; gap:5px; min-height:24px;
+  padding:1px var(--space-3) 1px 0; }
+.ao-row > label{ flex:0 0 88px; text-align:right; font-size:11px; color:var(--n500);
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.ao-row input[type=text], .ao-row input[type=number], .ao-row select{
+  flex:1; min-width:0; height:22px; font-size:11px; padding:0 5px;
+  border-radius:var(--radius-sm); }
+.ao-row input[type=number]{ font-variant-numeric:tabular-nums; }
+.ao-row input[type=range]{ flex:1; min-width:0; height:22px; }
+.ao-val{ flex:0 0 46px; height:22px; display:flex; align-items:center; justify-content:flex-end;
+  text-align:right; font-size:11px; color:var(--n200);
+  background:var(--inset); border:1px solid var(--n800); border-radius:var(--radius-sm);
+  padding:0 4px; font-variant-numeric:tabular-nums; }
+.ao-ro{ flex:1; font-size:11px; color:var(--n400); overflow:hidden;
+  white-space:nowrap; text-overflow:ellipsis; }
+.ao-row .ao-btn{ padding:0 6px; font-size:10.5px; }
+/* WORK ITEM 4. --n700 is not an ink: it tops out at 2.37:1 against ANY derived
+   surface and bottoms at 1.35:1, so no palette makes it readable as text --
+   .ao-x measured 1.89:1 and .ao-num 2.18:1 live. It is not lifted, because it is
+   also --check-b and --menu-disabled and lifting it would wreck the
+   checkerboard and make disabled items read as enabled. The ENABLED glyphs move
+   to --n600, which the anchored solve now floors at the AA target on every
+   palette. Cost: none. advanced-output.css is this sheet's twin and carries the
+   identical change; the two windows must not disagree about the same control. */
+.ao-x{ color:var(--n600); font-size:10.5px; }
+.ao-none{ padding:var(--space-4) var(--space-3); font-size:10.5px;
+  color:var(--n600); text-align:center; }
+.ao-note{ padding:2px var(--space-3) var(--space-2); font-size:10.5px; color:var(--n600); }
+
+/* Compact indeterminate state for controls shared by several selected slices. */
+.ao-mixed{ display:inline-flex; align-items:center; min-width:0; height:18px;
+  padding:0 6px; border:1px dashed color-mix(in srgb,var(--amber) 68%,var(--n800));
+  border-radius:999px; background:color-mix(in srgb,var(--amber) 9%,transparent);
+  color:var(--amber); font-size:8.5px; font-weight:500; letter-spacing:.01em;
+  line-height:1; white-space:nowrap; }
+.ao-row[data-mixed="true"] > label{ color:color-mix(in srgb,var(--amber) 76%,var(--n500)); }
+.ao-row input[data-mixed="true"],.ao-row select[data-mixed="true"],
+.ao-row button[data-mixed="true"],[data-mixed="true"].ao-tog{
+  border-style:dashed; border-color:color-mix(in srgb,var(--amber) 72%,var(--n800));
+  color:var(--amber); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--amber) 10%,transparent); }
+.ao-row select[data-mixed="true"]{
+  background-color:color-mix(in srgb,var(--amber) 7%,var(--inset)); }
+
+/* Tables such as control points can remain scoped to the primary slice. */
+.ao-primary-note{ margin:3px var(--space-3) var(--space-2); padding:5px 7px;
+  border-left:2px solid var(--a600); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  background:color-mix(in srgb,var(--color-accent) 8%,var(--inset));
+  color:var(--n500); font-size:9.5px; line-height:1.35; }
+.ao-primary-note strong{ color:var(--a200); font-size:8.5px; font-weight:600;
+  letter-spacing:.01em; }
+
+/* on/off toggle — a .btn that lights the accent when it is on */
+.ao-tog{ flex:1; height:22px; font-size:10.5px; padding:0 6px;
+  border:1px solid var(--n800); border-radius:var(--radius-sm);
+  background:transparent; color:var(--n400); cursor:pointer; }
+.ao-tog:hover{ border-color:var(--a600); color:var(--n200); }
+.ao-tog.on{ color:var(--a200); border-color:var(--color-accent);
+  box-shadow:0 0 0 1px var(--color-accent), 0 0 10px -3px var(--color-accent); }
+.ao-tog:disabled{ opacity:.34; cursor:not-allowed; box-shadow:none; border-color:var(--n800); }
+
+/* routed input status — the green activity dot is shared with connection
+   indicators, while muted/error states remain explicit rather than showing a
+   test pattern as though it were live video. */
+.ao-route-sec{ box-shadow:inset 3px 0 0 var(--color-accent); }
+.ao-source-sec{ box-shadow:inset 3px 0 0 var(--color-accent);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--color-accent) 5%,transparent),transparent 46%); }
+.ao-source-sec > h4{ color:var(--a200); }
+.ao-source-summary{ display:grid; gap:3px; padding:4px var(--space-3); }
+.ao-source-summary .ao-row{ min-height:22px; padding:0; }
+.ao-source-summary .ao-row > label{ flex-basis:78px; font-size:10px; }
+.ao-source-summary .ao-feed{ width:100%; }
+.ao-source-controls{ display:flex; align-items:center; gap:4px; flex:1; min-width:0; }
+.ao-source-controls > *{ min-width:0; }
+.ao-source-controls > select,.ao-source-controls > input{ flex:1; }
+.ao-source-controls > .ao-tog,.ao-source-controls > .ao-btn{ flex:1 1 0; }
+.ao-map-actions{ display:flex; align-items:center; gap:3px; flex:1; min-width:0; }
+.ao-map-actions .ao-btn{ flex:1 1 0; min-width:0; padding:0 5px;
+  overflow:hidden; text-overflow:ellipsis; }
+.ao-feed{ flex:1; min-width:0; height:22px; display:flex; align-items:center; gap:5px;
+  padding:0 6px; border:1px solid var(--n800); border-radius:var(--radius-sm);
+  background:var(--inset); color:var(--n400); font-size:9.5px; }
+.ao-feed i,.ao-route i{ flex:0 0 6px; width:6px; height:6px; border-radius:50%; background:var(--n700); }
+.ao-feed b{ font-size:9px; letter-spacing:.06em; font-weight:600; color:var(--n400); }
+.ao-feed span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ao-feed.live i,.ao-route.live i{ background:var(--mint); box-shadow:0 0 7px var(--mint); }
+.ao-feed.live b{ color:var(--mint); }
+.ao-feed.ready i,.ao-route.ready i{ background:var(--amber); }
+.ao-feed.muted i,.ao-route.muted i{ background:var(--red); }
+.ao-feed.degraded{ border-color:color-mix(in srgb,var(--amber) 50%,var(--n800));
+  background:color-mix(in srgb,var(--amber) 6%,var(--inset)); }
+.ao-feed.degraded i,.ao-route.degraded i{ background:var(--amber);
+  box-shadow:0 0 6px color-mix(in srgb,var(--amber) 72%,transparent); }
+.ao-feed.degraded b{ color:var(--amber); }
+.ao-route.degraded{ color:var(--amber); }
+.ao-feed.offline{ border-color:var(--n800);
+  background:color-mix(in srgb,var(--n800) 18%,var(--inset)); color:var(--n600); }
+.ao-feed.offline i,.ao-route.offline i{ background:var(--n700); box-shadow:none; }
+.ao-feed.offline b{ color:var(--n600); }
+/* WORK ITEM 4. "Offline" is a reported state, not a disabled control, and its
+   own sibling .ao-feed.offline b already prints at --n600 — the two halves of
+   one status block disagreed by a rung, at 1.35:1 for the worse half. The dot
+   above stays --n700: that is a fill, which is what the rung is for. */
+.ao-route.offline{ color:var(--n600); }
+.ao-feed.cycle{ border-color:color-mix(in srgb,var(--red) 60%,var(--n800));
+  background:color-mix(in srgb,var(--red) 7%,var(--inset)); }
+.ao-feed.cycle i,.ao-route.cycle i{ background:var(--red);
+  box-shadow:0 0 7px color-mix(in srgb,var(--red) 70%,transparent); }
+.ao-feed.cycle b{ color:#f0cccc; }
+.ao-route.cycle{ color:var(--red); }
+.ao-unit{ flex:0 0 12px; color:var(--n600); font-size:10px; }
+
+/* Alpha is a visible chain in Resolume: routed source, Slice, then the
+   flattened Screen. This compact block keeps those stages next to each other. */
+.ao-mix-sec{ box-shadow:inset 3px 0 0 color-mix(in srgb,var(--color-accent) 58%,transparent); }
+.ao-alpha-read{ flex:1; height:22px; display:flex; align-items:center; gap:5px;
+  padding:0 6px; border:1px solid var(--n800); border-radius:var(--radius-sm);
+  background:var(--inset); color:var(--n200); font-size:10.5px; font-variant-numeric:tabular-nums; }
+.ao-alpha-read small{ margin-left:auto; color:var(--n600); font-size:9px; letter-spacing:.01em; }
+.ao-alpha-meter{ position:relative; flex:1; height:22px; overflow:hidden;
+  display:flex; align-items:center; border:1px solid var(--n800); border-radius:var(--radius-sm);
+  background:var(--inset); }
+.ao-alpha-meter i{ position:absolute; inset:0 auto 0 0; width:calc(var(--ao-alpha,0) * 100%);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--color-accent) 42%,transparent),color-mix(in srgb,var(--color-accent) 74%,transparent)); }
+.ao-alpha-meter b{ position:relative; z-index:1; width:100%; padding:0 6px; text-align:right;
+  color:var(--n200); font-size:9.5px; font-weight:500; font-variant-numeric:tabular-nums; }
+.ao-stack{ flex:1; height:22px; display:flex; align-items:center; gap:3px; }
+.ao-stack .ao-btn{ flex:0 0 27px; padding:0; }
+.ao-stack b{ flex:1; text-align:center; color:var(--n400); font-size:9.5px;
+  font-weight:500; font-variant-numeric:tabular-nums; }
+.ao-stack .ao-btn:disabled{ opacity:.3; cursor:not-allowed; }
+/* CLONE EXTENSION marker. Arena has exactly two ordering commands, "Bring
+   Forward" and "Send Backwards" (both single-step); Bring to Front and Send to
+   Back are ours. They are dimmed, italicised and carry a superscript + so the
+   difference is visible on the button itself and not only in a tooltip. */
+.ao-stack .ao-btn.ao-clone-ext{ color:var(--n500); font-style:italic;
+  border-style:dashed; }
+.ao-stack .ao-btn.ao-clone-ext sup{ font-size:7px; font-style:normal;
+  vertical-align:super; line-height:0; opacity:.8; }
+.ao-clone-note b{ color:var(--n300); font-weight:600; }
+.ao-clone-note sup{ font-size:7px; vertical-align:super; line-height:0; }
+
+/* ---- slice list — the browser's .titem, one row per slice --------------- */
+.ao-list{ max-height:200px; overflow:auto; padding:1px 0; }
+.ao-item{ display:flex; align-items:center; gap:6px; padding:2px var(--space-3);
+  font-size:11.5px; color:var(--n300); cursor:pointer; border-radius:var(--radius-sm); }
+.ao-item:hover{ background:color-mix(in srgb,var(--color-accent) 12%,transparent); }
+.ao-item.on{ background:color-mix(in srgb,var(--color-accent) 20%,transparent);
+  color:var(--n100); }
+.ao-item.off{ opacity:.45; }
+/* WORK ITEM 4, same rule as .ao-x above; twin in advanced-output.css. */
+.ao-num{ flex:0 0 16px; color:var(--n600); font-variant-numeric:tabular-nums;
+  font-size:10.5px; }
+.ao-nm{ flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.ao-kind{ font-size:9.5px; color:var(--n600); letter-spacing:.01em; }
+.ao-route{ max-width:82px; display:flex; align-items:center; gap:4px; overflow:hidden;
+  white-space:nowrap; text-overflow:ellipsis; font-size:8.5px; color:var(--n600);
+  letter-spacing:.01em; }
+.ao-alpha-mini{ flex:0 0 28px; text-align:right; color:var(--n500); font-size:8.5px;
+  font-variant-numeric:tabular-nums; }
+.ao-eye{ flex:0 0 14px; text-align:center; color:var(--n600); font-size:10.5px; }
+.ao-eye:hover{ color:var(--a200); }
+
+/* ---- vertex table ------------------------------------------------------- */
+.ao-verts{ max-height:170px; overflow:auto; padding:2px 0; }
+.ao-vrow{ display:flex; align-items:center; gap:4px; min-height:24px; padding:1px var(--space-3); }
+/* WORK ITEM 4. The vertex index is a 10px numeric label, the same job as .ao-num
+   above, and --n700 tops out at 2.37:1 against any derived surface. */
+.ao-vrow > span{ flex:0 0 14px; font-size:10px; color:var(--n600);
+  font-variant-numeric:tabular-nums; text-align:right; }
+.ao-vrow input{ flex:1; min-width:0; height:22px; font-size:11px; padding:0 4px;
+  border-radius:var(--radius-sm); font-variant-numeric:tabular-nums; }
+
+/* footer actions follow the editor's three-column geometry. */
+.ao-foot{ display:grid; grid-template-columns:var(--ao-left) minmax(0,1fr) var(--ao-right);
+  flex:0 0 34px; height:34px; background:var(--panel); border-top:1px solid var(--line); }
+.ao-foot-left,.ao-foot-center,.ao-foot-right{ min-width:0; display:flex; align-items:center; }
+.ao-foot-left{ padding:0 8px; border-right:1px solid var(--line); color:var(--n600); font-size:10px; }
+.ao-foot-center{ justify-content:flex-end; gap:6px; padding:0 8px; }
+.ao-foot-right{ border-left:1px solid var(--line); }
+/* Cancel / Save & Close. Arena puts these at the far bottom right of the
+   Advanced Output window, as two buttons of equal weight — Save & Close reads
+   as the default only because it is wider and sits last, not because it is
+   coloured. Matched rather than invented. */
+.ao-commit{ justify-content:flex-end; gap:6px; padding:0 8px; }
+.ao-commit .ao-btn{ height:var(--ao-control-h); padding:0 12px; white-space:nowrap; }
+.ao-commit .ao-btn-primary{ border-color:var(--n700); color:var(--n200); }
+.ao-commit .ao-btn-primary:hover{ background:color-mix(in srgb,var(--color-accent) 18%,transparent);
+  border-color:var(--color-accent); color:#fff; }
+.ao-foot-center .ao-btn{ height:var(--ao-control-h); }
+.ao-cancel{ min-width:65px; }
+.ao-save-close{ min-width:104px; }
+
+/* ---- context / dropdown menu — the menu bar's .dropdown ----------------- */
+.ao-menu{ position:absolute; z-index:80; min-width:190px; padding:var(--space-1) 0;
+  background:var(--color-surface); border:1px solid var(--n800);
+  border-radius:var(--radius-md); box-shadow:var(--shadow-md); }
+.ao-mitem{ position:relative; padding:3px 22px 3px 24px; font-size:11.5px; color:var(--n300);
+  cursor:default; white-space:nowrap; }
+.ao-mitem:hover{ background:color-mix(in srgb,var(--color-accent) 20%,transparent);
+  color:var(--n100); }
+/* the tick column the main window's .dd-item .chk occupies */
+.ao-mchk{ position:absolute; left:7px; width:12px; text-align:center; color:var(--color-accent); }
+.ao-mitem:hover .ao-mchk{ color:var(--n100); }
+.ao-msep{ height:1px; margin:3px 6px; background:var(--n800); }
+/* a group header, greyed and unclickable — as the first item of Arena's menus */
+/* WORK ITEM 4. Greyed and unclickable, but a group header is a LABEL, not an
+   inactive control, so WCAG 1.4.3's disabled exemption does not cover it. --n600
+   is the dimmest rung the solve guarantees; it still reads as a header against
+   the .ao-mitem --n300 below it. */
+.ao-mgroup{ padding:3px 22px 3px 24px; font-size:9.5px; letter-spacing:.01em;
+  color:var(--n600); cursor:default; white-space:nowrap; }
+
+/* ---- as a standalone window --------------------------------------------- */
+body.ao-window{ margin:0; height:100vh; overflow:hidden; background:var(--bg); }
+body.ao-window #app{ display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+body.ao-window #menubar,body.ao-window #status{ display:none; }
+body.ao-window .ao{ flex:1; min-height:0; }
+body.ao-window > .ao{ flex:1; min-height:0; }
+
+/* ---- Broadcast destination rows -----------------------------------------
+   A Broadcast fans out to many destinations — twenty or more is the expected
+   case, not the edge case — and each row carries five controls in the 216px
+   inspector column. Wrapping puts the name on its own line and the transport,
+   the enable toggle and the remove button on the next, so a long list stays
+   readable instead of collapsing every field to a few pixels. */
+.ao-row.oo-dest{ flex-wrap:wrap; row-gap:3px; align-items:center;
+  border-bottom:1px solid var(--line); }
+.ao-row.oo-dest:hover{ background:color-mix(in srgb,var(--color-accent) 10%,transparent); }
+.ao-row.oo-dest > label{ flex:0 0 auto; min-width:14px; text-align:right; }
+.ao-row.oo-dest > .oo-account-confirm{ flex:1 1 100%; min-width:0; order:6;
+  border-left:2px solid var(--color-accent); padding:4px 6px; }
+.oo-account-confirm[hidden]{ display:none !important; }
+.oo-account-confirm p{ margin:0 0 6px; color:var(--n400); font-size:10px; line-height:1.4; }
+.oo-account-confirm .ao-btn{ margin:0 4px 3px 0; }
+/* calc(100% - 21px), not 100%. At 100% the name claimed a whole line and left
+   the 14px ordinal stranded above it with 191px of dead space — a THREE-line
+   68.8px row, where both this comment block and the builder describe two lines.
+   Measured after: 51px. `flex:1 1 auto` and nowrap were both tried and are
+   worse: they pull the select onto line 1 at 13px and 39.3px, i.e. "RT" for
+   "RTMP via local helper". */
+.ao-row.oo-dest > input[type=text]{ flex:1 1 calc(100% - 21px); min-width:0; order:2; }
+/* 1 1 0 rather than 1 1 auto: the select's widest option ("RTMP via local
+   helper") otherwise sets a min content width that pushes the remove button
+   onto a third line. */
+/* min-width guards the only flexible item on line 2 against its four fixed
+   siblings. Without it the state chip's arrival squeezed the select to a 2.9px
+   content box — no glyphs, no arrow. Line 2 totals 181.9px inside 205px, so it
+   still cannot push the remove button onto a third line. */
+.ao-row.oo-dest > select{ flex:1 1 0; min-width:88px; order:3; }
+.ao-row.oo-dest > .ao-tog{ flex:0 0 auto; order:4; }
+/* 22px matches .ao-row select and .ao-tog; the inherited 24px overhung both. */
+.ao-row.oo-dest > .ao-btn{ flex:0 0 auto; order:5; padding:2px 6px; height:22px; }
+/* A saved ingest: the host it points at, never the key. Sits where the URL
+   field would, and reads as "connected" rather than "empty". */
+.ao-row.oo-dest > .oo-dest-saved{ flex:1 1 calc(100% - 80px); min-width:0; order:2; font-size:10px;
+  color:var(--n400); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ao-row.oo-dest > .oo-dest-note{ flex:1 1 100%; order:2; font-size:9.5px; color:var(--red); }
+/* "Use a saved ingest…" — sits above the paste field, same width. */
+.ao-row.oo-dest > select.oo-dest-use{ flex:1 1 calc(100% - 21px); min-width:0; order:2; font-size:10px; }
+/* What the saved key is worth on this platform (catalogue keyModel / goLive).
+   Its own line under the lock and Forget/Replace — order:6 keeps the button
+   beside the lock instead of stranding it below the hint. 19px = the 14px
+   ordinal plus the 5px row gap, so it aligns with the host text above it.
+   .bad is amber, not red: a per-show key is a fact to act on, not a fault. */
+.ao-row.oo-dest > .oo-dest-hint{ flex:1 1 100%; order:6; font-size:9.5px; line-height:1.25;
+  padding-left:19px; color:var(--n600); }
+.ao-row.oo-dest > .oo-dest-hint.bad{ color:var(--amber); }
+
+/* ---- Stream info --------------------------------------------------------
+   Title and Description live on the Broadcast, so they use the ordinary
+   parameter rows. CATEGORY DOES NOT LIVE HERE: YouTube category ids, Twitch
+   game ids and Kick categories are three disjoint lists, so it sits on each
+   channel-backed destination row instead (.oo-dest-cat below) — which is where
+   Restream puts it too.
+
+   Only Description needs a shape of its own: it is prose that runs to
+   paragraphs on YouTube, and a 22px input makes writing one an act of faith.
+   The label sits at the TOP of the box rather than centred against it, as it
+   does for every other row. */
+.ao-row.oo-ta-row{ align-items:flex-start; padding-top:3px; }
+.ao-row.oo-ta-row > label{ padding-top:4px; }
+.oo-ta{ flex:1; min-width:0; min-height:46px; font-size:11px; line-height:1.35;
+  padding:3px 5px; resize:vertical; font-family:inherit;
+  background:var(--inset); color:var(--n200);
+  border:1px solid var(--n800); border-radius:var(--radius-sm); }
+
+/* What the capability table says a platform has no field for, under the box it
+   applies to. Amber for the same reason .oo-dest-info.bad is: "Twitch has no
+   description" is a thing to know before typing, not a fault. */
+.ao-note.oo-cap-note{ padding-top:0; color:var(--amber); font-size:9.5px; line-height:1.3;
+  cursor:help; }
+
+/* UPDATE ALL's result, ONE LINE PER CHANNEL. Never one line for all of them:
+   the push is N independent writes to N platform APIs, so partial success is
+   the normal case and a single aggregate word would be false the moment one
+   channel refused a field. Indented to the value column so the list reads as a
+   list rather than as prose. */
+.oo-apply{ margin:0 var(--space-3) 2px; padding-left:4px; font-size:9.5px; line-height:1.3;
+  border-left:2px solid var(--n800); color:var(--n500); cursor:help;
+  overflow-wrap:anywhere; }
+.oo-apply.bad{ border-left-color:var(--amber); color:var(--amber); }
+
+/* What the platform did with the Stream info, on the destination row that
+   asked for it. Its own line under the controls — order:7 keeps it below the
+   key hint, and 19px matches .oo-dest-hint so the two align.
+   `.ok` is the accent rather than green: this is a fact, not a celebration.
+   `.bad` is amber, not red, for the same reason it is on .oo-dest-hint --
+   "Twitch has no description field" is a thing to know, not a fault. */
+.ao-row.oo-dest > .oo-dest-info{ flex:1 1 100%; order:7; font-size:9.5px; line-height:1.25;
+  padding-left:19px; color:var(--n600); }
+.ao-row.oo-dest > .oo-dest-info.ok{ color:var(--a300); }
+.ao-row.oo-dest > .oo-dest-info.bad{ color:var(--amber); }
+/* PER-DESTINATION CATEGORY. Its own sub-row under the destination it belongs
+   to, on one line: a 19px indent that matches .oo-dest-hint and .oo-dest-info,
+   the word "Category" at hint size, then the field. It must NOT inherit the
+   full-width rule for .ao-row.oo-dest > input[type=text], which is written for
+   the destination NAME and would push the field onto its own line. */
+.ao-row.oo-dest > .oo-dest-cat-label{ flex:0 0 auto; order:2; padding-left:5px;
+  font-size:9.5px; color:var(--n600); }
+.ao-row.oo-dest > input[type=text].oo-dest-cat{ flex:1 1 0; min-width:70px; order:3; }
+/* "one registration away" under a platform that has no client id yet. It shares
+   .oo-dest-note's geometry but not its red: nothing is broken, something is
+   unregistered, and red would read as a failure the operator caused. */
+.ao-row.oo-dest > .oo-dest-note.oo-dest-setup{ color:var(--n500); line-height:1.3;
+  padding-left:0; }
+
+/* ---- Platform workflows ------------------------------------------------ */
+.oo-platform-picker{ margin:6px; padding:7px; border:1px solid var(--n800);
+  border-radius:var(--radius-sm); background:var(--inset); color:var(--n200);
+  font-size:11px; line-height:1.4; overflow-wrap:anywhere; }
+.oo-platform-picker label{ display:block; }
+.oo-platform-picker select{ display:block; width:100%; min-width:0; margin:4px 0 8px;
+  font:inherit; background:var(--inset); color:var(--n200); border:1px solid var(--n800); }
+.oo-platform-details p{ margin:5px 0; }
+.oo-platform-details h4{ font:inherit; font-weight:600; margin:10px 0 2px; }
+.oo-platform-details a{ color:var(--a300); }
+.oo-platform-details .oo-platform-status{ color:var(--a300); }
+.oo-platform-details .oo-platform-caveat{ color:var(--n500); }
+.oo-platform-details .ao-btn{ margin-top:6px; max-width:100%; white-space:normal; }
+
+/* ---- Go Live -------------------------------------------------------------
+   Lives at the right of the CENTRE footer region, beside the status it reports,
+   because the 216px commit column cannot hold it as well as Cancel and Save &
+   Close — measured 291px of content in 216px, which overflowed across the
+   notification band rather than clipping.
+   Separated from that band by a rule on its LEFT: the commit column already
+   draws a border-left, so a border-right here put two hairlines a few pixels
+   apart. It is a different kind of action from its neighbours — Cancel and Save
+   & Close commit or discard the DOCUMENT, this starts and stops the SHOW, and
+   Cancel must never roll it back. */
+.ao-golive{ display:flex; align-items:center; gap:var(--space-2); flex:0 0 auto;
+  margin-left:var(--space-3); padding-left:var(--space-3);
+  border-left:1px solid var(--n800); }
+/* DELIBERATE EXCEPTION to nocturne's "the accent is never flooded across a large
+   area" rule. Every other control in this application is an outline, which is
+   right for parameters and wrong for this one: an operator glancing at the
+   footer mid-show has to read on-air state in peripheral vision, and an outlined
+   button does not carry at that distance. It is small, there is exactly one of
+   it, and it is the only control here that changes what the outside world sees.
+   Solid green = armed and ready. Solid red = on air. */
+/* A flat fill of --color-accent reads as a mint TINT at this size, because that
+   token is tuned to be an edge and a glow rather than a surface. Depth comes
+   from a vertical ramp between two stops that both already exist (a400 -> a700)
+   plus a hairline top highlight, which is what makes a lit control read as lit
+   rather than as a coloured rectangle. Text stays --mint-t: dark on green holds
+   contrast at both ends of the ramp, where white would fail at the top. */
+.ao-btn.ao-btn-go{ min-width:88px; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; font-size:11px;
+  background:linear-gradient(180deg, var(--a400) 0%, var(--a600) 55%, var(--a700) 100%);
+  border-color:var(--a700); color:var(--mint-t);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.30), 0 1px 2px rgba(0,0,0,.45),
+             0 0 16px -6px var(--color-accent);
+  text-shadow:0 1px 0 rgba(255,255,255,.18); }
+.ao-btn.ao-btn-go:hover:not(:disabled){
+  background:linear-gradient(180deg, var(--a300) 0%, var(--a500) 55%, var(--a600) 100%);
+  border-color:var(--a600);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.38), 0 1px 2px rgba(0,0,0,.45),
+             0 0 20px -5px var(--color-accent); }
+.ao-btn.ao-btn-go:active:not(:disabled){
+  background:linear-gradient(180deg, var(--a700) 0%, var(--a600) 100%);
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.45); }
+
+/* ON AIR. nocturne keeps --red low-chroma on purpose, "so they read as state,
+   not as a second accent competing with the accent" — right for a warning row,
+   wrong for this. An on-air lamp is a safety signal and the one place in the
+   interface that should be the most saturated thing on screen. Declared here
+   rather than by bending the shared token, so nothing else inherits it. */
+.ao-btn.ao-btn-go.on{ --onair:#e33b2e; --onair-lo:#8f1d14;
+  background:linear-gradient(180deg,#f05043 0%, var(--onair) 55%, var(--onair-lo) 100%);
+  border-color:var(--onair-lo); color:#fff;
+  text-shadow:0 1px 1px rgba(0,0,0,.45);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.32), 0 1px 2px rgba(0,0,0,.5),
+             0 0 18px -4px var(--onair);
+  animation:ao-onair 2.4s ease-in-out infinite; }
+.ao-btn.ao-btn-go.on:hover{
+  background:linear-gradient(180deg,#f46456 0%,#e8483a 55%,#a2251a 100%); }
+/* A slow breath, not a flash: unmistakable without becoming the brightest
+   moving thing in a dark room. */
+@keyframes ao-onair{
+  0%,100%{ box-shadow:inset 0 1px 0 rgba(255,255,255,.32), 0 1px 2px rgba(0,0,0,.5),
+                      0 0 18px -4px var(--onair); }
+  50%    { box-shadow:inset 0 1px 0 rgba(255,255,255,.32), 0 1px 2px rgba(0,0,0,.5),
+                      0 0 26px 0 var(--onair); } }
+.ao-btn.ao-btn-go:disabled{ background:transparent; border-color:var(--n800);
+  color:var(--n600); box-shadow:none; opacity:.6; cursor:not-allowed; }
+
+/* The per-destination Go stays an outline so the master reads as the primary,
+   but a running one turns solid red for the same reason as above. */
+.ao-row.oo-dest > .ao-btn.oo-go-on{
+  background:linear-gradient(180deg,#e8483a 0%,#a2251a 100%);
+  border-color:#8f1d14; color:#fff; font-weight:600;
+  text-shadow:0 1px 1px rgba(0,0,0,.45); }
+/* ---- the notification area (.ao-foot-center) ----------------------------
+   One region for everything transient, in the footer width that was empty while
+   the 216px commit column overflowed. Two registers plus Go Live on one line:
+   STATUS is a standing fact and sits left; NOTICE takes the remaining width,
+   ellipsised rather than wrapping, because the footer must never change height
+   mid-show; Go Live sits at the right, against the commit column.
+   NOT overflow:hidden — that clipped Go Live's accent glow. The notice does its
+   own ellipsis (:text-overflow below), so nothing here needs to be clipped. */
+.ao-notify{ display:flex; align-items:center; gap:var(--space-3);
+  min-width:0; padding:0 var(--space-3); }
+.ao-nstatus{ flex:0 0 auto; font-size:10.5px; color:var(--n500); white-space:nowrap;
+  padding:1px 8px; border:1px solid var(--n800); border-radius:999px; }
+.ao-nstatus:empty{ display:none; }
+.ao-nstatus.is-live{ color:#f0cccc; border-color:#8f1d14;
+  background:color-mix(in srgb,#e33b2e 18%,transparent); }
+.ao-nstatus.is-warn{ color:var(--amber); border-color:var(--amber); }
+.ao-nstatus.is-error{ color:#f0cccc; border-color:#8f1d14; }
+.ao-nnotice{ flex:1 1 auto; min-width:0; font-size:10.5px; color:var(--n400);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ao-nnotice.is-warn{ color:var(--amber); }
+.ao-nnotice.is-error{ color:#e79a94; }
+.ao-nnotice.is-live{ color:var(--a300); }
+
+/* per-destination state: one word, on the row, where the object is */
+/* order:1 puts the state on the ORDINAL's line, which has 191px free, instead of
+   on line 2 where it was stealing the select's width. Measured: restores the
+   select to 102.7px at zero height cost. */
+.oo-deststate{ flex:0 0 auto; order:1; margin-left:auto; font-size:9.5px;
+  letter-spacing:.06em; color:var(--a300); }
+.oo-deststate.bad{ color:var(--red); }

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>SHOWAVE Timeline: Timecoded Show Automation</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<script src="showave-brand.js"></script>
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<script>
+window.__timelineLoadErrors=[];
+window.addEventListener('error',function(event){
+  window.__timelineLoadErrors.push({message:event.message,file:event.filename,
+    line:event.lineno,column:event.colno,at:Date.now()});
+});
+window.addEventListener('unhandledrejection',function(event){
+  window.__timelineLoadErrors.push({message:String(event.reason&&event.reason.message||event.reason),
+    unhandled:true,at:Date.now()});
+});
+</script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<link rel="stylesheet" href="openlive-timeline.css?v=timeline-9">
+</head>
+<body>
+<a class="tl-skip-link" href="#tlTimelineCanvas">Skip to timeline</a>
+
+<div id="timelineRoot" data-tool="select" data-source-state="unlinked">
+  <header id="menubar">
+    <div class="showave-brand-lockup--nav" data-showave-brand="timeline"></div>
+    <nav id="menus" aria-label="SHOWAVE Timeline menus">
+      <button type="button" class="menu-top" id="tlMenuFileTrigger" data-tl-menu="file"
+        aria-haspopup="menu" aria-controls="tlMenuFile" aria-expanded="false">File</button>
+      <button type="button" class="menu-top" id="tlMenuEditTrigger" data-tl-menu="edit"
+        aria-haspopup="menu" aria-controls="tlMenuEdit" aria-expanded="false">Edit</button>
+      <button type="button" class="menu-top" id="tlMenuTimelineTrigger" data-tl-menu="timeline"
+        aria-haspopup="menu" aria-controls="tlMenuTimeline" aria-expanded="false">Timeline</button>
+      <button type="button" class="menu-top" id="tlMenuViewTrigger" data-tl-menu="view"
+        aria-haspopup="menu" aria-controls="tlMenuView" aria-expanded="false">View</button>
+    </nav>
+    <div class="mb-right tl-document-meta">
+      <span class="tl-dirty-dot" id="tlDirtyDot" aria-hidden="true"></span>
+      <span id="tlDocumentName">Untitled Timeline</span>
+    </div>
+  </header>
+
+  <section id="tlTransport" class="tl-transport" aria-label="Timeline transport and timecode">
+    <div class="tl-transport-buttons" role="toolbar" aria-label="Transport">
+      <button type="button" class="btn sq" id="tlRewind" data-action="rewind"
+        aria-label="Rewind to timeline start" title="Rewind to start (Home)">&#9198;</button>
+      <button type="button" class="btn sq" id="tlPlayFromCursor" data-action="play-from-cursor"
+        aria-label="Play from cursor" title="Play from cursor (Shift+Space)">&#9655;&#124;</button>
+      <button type="button" class="btn sq tl-play" id="tlPlayPause" data-action="play-pause"
+        aria-label="Play timeline" aria-pressed="false" title="Play or pause (Space)">&#9654;</button>
+      <button type="button" class="btn sq" id="tlStop" data-action="stop"
+        aria-label="Stop timeline" title="Stop (Escape)">&#9632;</button>
+      <button type="button" class="btn sq tl-record" id="tlRecord" data-action="record"
+        aria-label="Record live actions" aria-pressed="false" title="Record live actions (R)"><span aria-hidden="true">&#9679;</span></button>
+    </div>
+
+    <div class="tl-timecode-control" id="tlTimecodeControl" data-state="unlinked" role="group" aria-label="Timecode source">
+      <label class="tl-source-select" for="tlTimecodeSource">
+        <span>Source</span>
+        <select id="tlTimecodeSource" aria-describedby="tlSourceStatus">
+          <option value="internal">Internal</option>
+          <option value="smpte-1">SMPTE 1</option>
+          <option value="smpte-2">SMPTE 2</option>
+          <option value="midi-clock">MIDI Clock</option>
+        </select>
+      </label>
+      <button type="button" class="btn tl-link" id="tlTimecodeLink" data-action="link-timecode"
+        aria-pressed="false" aria-describedby="tlSourceStatus"><span class="tl-link-icon" aria-hidden="true">&#128279;</span><span id="tlLinkLabel">Link</span></button>
+      <span class="tl-source-status" id="tlSourceStatus" role="status" aria-live="polite">
+        <i aria-hidden="true"></i><span>Internal clock ready</span>
+      </span>
+    </div>
+
+    <div class="tl-clock-cluster" aria-label="Timeline clock">
+      <span class="tl-clock-label">Live</span>
+      <output class="tl-main-clock" id="tlTimeDisplay" aria-live="off" aria-label="Current timeline time">00:00:00.000</output>
+      <span class="tl-cursor-clock"><span>Cursor</span><output id="tlCursorDisplay">00:00:00.000</output></span>
+    </div>
+
+    <div class="tl-transport-spacer"></div>
+    <button type="button" class="btn" id="tlGo" data-action="continue"
+      disabled title="Continue a timeline paused by Wait for Go"><span aria-hidden="true">GO</span><span class="tl-button-caption">Continue</span></button>
+  </section>
+
+  <section id="tlEditorToolbar" class="tl-editor-toolbar" aria-label="Timeline editing tools">
+    <div class="tl-toolbar-group" role="toolbar" aria-label="Editing tool">
+      <button type="button" class="btn sq on" id="tlToolSelect" data-tool="select"
+        aria-label="Select tool" aria-pressed="true" title="Select and marquee (V)">&#8598;</button>
+      <button type="button" class="btn sq" id="tlToolPan" data-tool="pan"
+        aria-label="Pan tool" aria-pressed="false" title="Pan timeline (H or hold Space)">&#9995;</button>
+      <button type="button" class="btn sq" id="tlToolAdd" data-tool="add"
+        aria-label="Add trigger tool" aria-pressed="false" title="Add trigger (A)">+</button>
+    </div>
+    <span class="tl-toolbar-separator" aria-hidden="true"></span>
+    <div class="tl-toolbar-group" role="toolbar" aria-label="Edit history">
+      <button type="button" class="btn sq" id="tlUndo" data-action="undo" aria-label="Undo" title="Undo (Ctrl+Z)" disabled>&#8630;</button>
+      <button type="button" class="btn sq" id="tlRedo" data-action="redo" aria-label="Redo" title="Redo (Ctrl+Shift+Z)" disabled>&#8631;</button>
+    </div>
+    <span class="tl-toolbar-separator" aria-hidden="true"></span>
+    <button type="button" class="btn tl-snap" id="tlSnap" data-action="toggle-snap" aria-pressed="true" title="Toggle snapping">
+      <span aria-hidden="true">&#8981;</span> Snap
+    </button>
+    <div class="tl-snap-readout" id="tlSnapReadout" aria-live="polite">Triggers · Markers · Cursor</div>
+    <button type="button" class="btn tl-add-trigger" id="tlAddTrigger" data-action="add-trigger">Add Trigger…</button>
+    <div class="tl-toolbar-spacer"></div>
+    <div class="tl-toolbar-group tl-zoom-tools" role="toolbar" aria-label="Timeline zoom">
+      <button type="button" class="btn sq" id="tlZoomOut" data-action="zoom-out" aria-label="Zoom out" title="Zoom out (−)">&#8722;</button>
+      <button type="button" class="btn" id="tlZoomFit" data-action="zoom-fit" title="Fit the whole timeline">Fit</button>
+      <button type="button" class="btn sq" id="tlZoomIn" data-action="zoom-in" aria-label="Zoom in" title="Zoom in (+)">+</button>
+      <output id="tlZoomValue" aria-live="polite">100%</output>
+    </div>
+    <span class="tl-toolbar-separator" aria-hidden="true"></span>
+    <div class="tl-view-switch" role="group" aria-label="Timeline view">
+      <button type="button" class="btn on" id="tlGraphViewButton" data-view="graph" aria-pressed="true" aria-controls="tlGraphView">Graph</button>
+      <button type="button" class="btn" id="tlTableViewButton" data-view="table" aria-pressed="false" aria-controls="tlTableView">Table</button>
+    </div>
+    <button type="button" class="btn" id="tlOptions" data-action="options">Options…</button>
+  </section>
+
+  <main class="tl-main">
+    <aside class="tl-browser" aria-label="Timeline tracks">
+      <div class="tl-panel-heading">
+        <div><strong>Tracks</strong><span id="tlTrackCount">0</span></div>
+        <button type="button" class="tl-heading-action" id="tlCollapseTracks" data-action="collapse-tracks"
+          aria-label="Collapse all tracks" aria-pressed="false" title="Collapse all tracks">&#8645;</button>
+      </div>
+      <div class="tl-track-list" id="tlTrackList" role="listbox" aria-label="Timeline tracks" aria-multiselectable="false">
+        <div class="tl-empty" id="tlTrackEmpty">
+          <strong>No tracks yet</strong>
+          <span>Add a track, then place triggers at exact show times.</span>
+          <button type="button" class="btn" data-action="add-track">Add first track</button>
+        </div>
+      </div>
+      <div class="tl-browser-actions" role="toolbar" aria-label="Track actions">
+        <button type="button" class="btn sq" id="tlAddTrack" data-action="add-track" aria-label="Add track" title="Add track">+</button>
+        <button type="button" class="btn sq" id="tlDuplicateTrack" data-action="duplicate-track" aria-label="Duplicate selected track" title="Duplicate track" disabled>&#10697;</button>
+        <button type="button" class="btn sq" id="tlRemoveTrack" data-action="remove-track" aria-label="Remove selected track" title="Remove track" disabled>&#215;</button>
+      </div>
+      <section class="tl-browser-summary" aria-labelledby="tlProjectSummaryHeading">
+        <h2 id="tlProjectSummaryHeading">Show range</h2>
+        <dl>
+          <div><dt>Start</dt><dd id="tlSummaryStart">00:00:00.000</dd></div>
+          <div><dt>End</dt><dd id="tlSummaryEnd">00:05:00.000</dd></div>
+          <div><dt>Triggers</dt><dd id="tlTriggerCount">0</dd></div>
+          <div><dt>Markers</dt><dd id="tlMarkerCount">0</dd></div>
+        </dl>
+        <button type="button" class="btn" id="tlImportMarkers" data-action="import-markers">Import marker CSV…</button>
+      </section>
+    </aside>
+
+    <section class="tl-workspace" aria-label="Timeline editor">
+      <div class="tl-overview" aria-label="Timeline overview">
+        <div class="tl-overview-label" aria-hidden="true">OVERVIEW</div>
+        <div class="tl-overview-stage" id="tlOverviewStage">
+          <canvas id="tlOverviewCanvas" width="1200" height="58" tabindex="0"
+            aria-label="Timeline overview. Drag the highlighted range to pan, or drag its edges to zoom."></canvas>
+          <div class="tl-overview-window" id="tlOverviewWindow" aria-hidden="true">
+            <span class="tl-overview-handle start"></span><span class="tl-overview-handle end"></span>
+          </div>
+          <div class="tl-overview-cursor" id="tlOverviewCursor" aria-hidden="true"></div>
+          <div class="tl-overview-live" id="tlOverviewLive" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <section class="tl-graph-view" id="tlGraphView" aria-label="Graphical timeline">
+        <div class="tl-ruler-corner" aria-hidden="true">TRACK</div>
+        <div class="tl-ruler-viewport" id="tlRulerViewport">
+          <div class="tl-ruler" id="tlRuler" aria-hidden="true"></div>
+        </div>
+        <div class="tl-row-labels" id="tlRowLabels" aria-hidden="true"></div>
+        <div class="tl-timeline-viewport" id="tlTimelineViewport">
+          <canvas id="tlTimelineCanvas" width="1280" height="720" tabindex="0" role="application"
+            aria-describedby="tlCanvasHelp" aria-label="Timeline graph. Use arrow keys to move the cursor, Enter to add a trigger, and Delete to remove selected triggers."></canvas>
+          <div class="tl-trigger-layer" id="tlTriggerLayer" aria-hidden="true"></div>
+          <div class="tl-playhead" id="tlPlayhead" aria-hidden="true"><span></span></div>
+          <div class="tl-cursor" id="tlCursor" aria-hidden="true"><span></span></div>
+          <div class="tl-marquee" id="tlMarquee" aria-hidden="true" hidden></div>
+          <div class="tl-empty-stage" id="tlStageEmpty">
+            <strong>Build the show in time</strong>
+            <span>Add a track, then double-click the lane to create a trigger.</span>
+          </div>
+        </div>
+        <p class="sr-only" id="tlCanvasHelp">The graphical view supports selection, marquee selection, dragging, snapping, zooming, and panning. The Table view provides the same triggers in an accessible table.</p>
+      </section>
+
+      <section class="tl-table-view" id="tlTableView" aria-labelledby="tlTableHeading" hidden>
+        <div class="tl-table-toolbar">
+          <h2 id="tlTableHeading">Trigger table</h2>
+          <label for="tlTableFilter">Filter</label>
+          <input id="tlTableFilter" type="search" placeholder="Track, type, target or label">
+          <output id="tlTableCount" aria-live="polite">0 triggers</output>
+        </div>
+        <div class="tl-table-scroll">
+          <table id="tlTriggerTable">
+            <caption class="sr-only">All timeline triggers. Select a row to edit it in the inspector.</caption>
+            <thead>
+              <tr>
+                <th scope="col" aria-sort="ascending"><button type="button" data-sort="timeMs">Time <span aria-hidden="true">&#9650;</span></button></th>
+                <th scope="col"><button type="button" data-sort="track">Track</button></th>
+                <th scope="col"><button type="button" data-sort="type">Type</button></th>
+                <th scope="col"><button type="button" data-sort="target">Target</button></th>
+                <th scope="col"><button type="button" data-sort="level">Level</button></th>
+                <th scope="col"><button type="button" data-sort="fadeMs">Fade</button></th>
+                <th scope="col"><button type="button" data-sort="durationMs">Duration</button></th>
+                <th scope="col"><button type="button" data-sort="label">Label</button></th>
+              </tr>
+            </thead>
+            <tbody id="tlTriggerTableBody"></tbody>
+          </table>
+        </div>
+        <div class="tl-table-empty" id="tlTableEmpty">No triggers match this view.</div>
+      </section>
+    </section>
+
+    <aside class="tl-inspector" id="tlInspector" aria-label="Timeline inspector">
+      <section class="tl-inspector-section" id="tlProjectInspector">
+        <h2><span>Timeline</span><small>project</small></h2>
+        <div class="tl-inspector-body">
+          <div class="tl-property"><label for="tlProjectName">Name</label><input id="tlProjectName" type="text" value="Untitled Timeline" autocomplete="off"></div>
+          <div class="tl-property"><label for="tlProjectDuration">Duration</label><input id="tlProjectDuration" type="text" inputmode="numeric" value="00:05:00.000" aria-describedby="tlTimeFormatHint"></div>
+          <div class="tl-property"><span>Tracks</span><output id="tlInspectorTrackCount">0</output></div>
+          <div class="tl-property"><span>Triggers</span><output id="tlInspectorTriggerCount">0</output></div>
+        </div>
+      </section>
+
+      <section class="tl-inspector-section" id="tlTrackInspector" hidden>
+        <h2><span>Track</span><small id="tlTrackInspectorState">selected</small></h2>
+        <div class="tl-inspector-body">
+          <div class="tl-property"><label for="tlTrackName">Name</label><input id="tlTrackName" type="text" autocomplete="off"></div>
+          <div class="tl-property"><label for="tlTrackColor">Colour</label><input id="tlTrackColor" type="color" value="#55e4c2"></div>
+          <div class="tl-property"><label for="tlTrackTarget">Default target</label><select id="tlTrackTarget"></select></div>
+          <div class="tl-property tl-check-property"><label for="tlTrackMuted">Muted</label><input id="tlTrackMuted" type="checkbox"></div>
+          <div class="tl-property tl-check-property"><label for="tlTrackLocked">Locked</label><input id="tlTrackLocked" type="checkbox"></div>
+          <div class="tl-property"><label for="tlTrackCollapse">Detail</label><select id="tlTrackCollapse"><option value="0">Expanded</option><option value="1">Compact</option><option value="2">Collapsed</option></select></div>
+        </div>
+      </section>
+
+      <section class="tl-inspector-section" id="tlTriggerInspector" hidden>
+        <h2><span>Trigger</span><small id="tlSelectionCount">1 selected</small></h2>
+        <div class="tl-inspector-body">
+          <div class="tl-property"><label for="tlInspectorType">Type</label><select id="tlInspectorType"></select></div>
+          <div class="tl-property"><label for="tlInspectorTime">Time</label><input id="tlInspectorTime" type="text" inputmode="numeric" aria-describedby="tlTimeFormatHint"></div>
+          <div class="tl-property"><label for="tlInspectorTarget">Target</label><select id="tlInspectorTarget"></select></div>
+          <div class="tl-property" id="tlInspectorLevelRow"><label for="tlInspectorLevel">Level</label><span class="tl-input-unit"><input id="tlInspectorLevel" type="number" min="0" max="100" step="1"><span>%</span></span></div>
+          <div class="tl-property" id="tlInspectorFadeRow"><label for="tlInspectorFade">Fade</label><span class="tl-input-unit"><input id="tlInspectorFade" type="number" min="0" step="0.01"><span>s</span></span></div>
+          <div class="tl-property" id="tlInspectorDurationRow"><label for="tlInspectorDuration">Duration</label><span class="tl-input-unit"><input id="tlInspectorDuration" type="number" min="0" step="0.01"><span>s</span></span></div>
+          <div class="tl-property"><label for="tlInspectorLabel">Label</label><input id="tlInspectorLabel" type="text" autocomplete="off"></div>
+          <p class="tl-hint" id="tlTimeFormatHint">Time format: HH:MM:SS.mmm</p>
+        </div>
+        <div class="tl-inspector-actions">
+          <button type="button" class="btn" id="tlDuplicateTrigger" data-action="duplicate-trigger">Duplicate</button>
+          <button type="button" class="btn danger" id="tlDeleteTrigger" data-action="delete-trigger">Delete</button>
+        </div>
+      </section>
+
+      <section class="tl-inspector-section tl-no-selection" id="tlNoSelectionInspector">
+        <h2>Selection</h2>
+        <div class="tl-no-selection-body">
+          <span aria-hidden="true">&#9671;</span>
+          <p>Select a track or trigger to edit its exact properties.</p>
+        </div>
+      </section>
+
+      <section class="tl-inspector-section tl-running-state" aria-labelledby="tlRunStateHeading">
+        <h2 id="tlRunStateHeading">Playback</h2>
+        <dl>
+          <div><dt>State</dt><dd id="tlPlaybackState">Stopped</dd></div>
+          <div><dt>Next</dt><dd id="tlNextTrigger">N/A</dd></div>
+          <div><dt>Active tracks</dt><dd id="tlActiveTrackCount">0</dd></div>
+        </dl>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="tl-statusbar">
+    <span class="tl-status-primary"><strong>SHOWAVE Timeline</strong><span aria-hidden="true">·</span><span id="tlStatusMessage" role="status" aria-live="polite">Ready</span></span>
+    <span class="tl-status-connection" id="tlConnectionStatus"><i aria-hidden="true"></i>Waiting for SHOWAVE Live</span>
+    <span class="tl-status-spacer"></span>
+    <span id="tlSelectionStatus">Nothing selected</span>
+    <span id="tlViewRange">00:00:00.000 to 00:05:00.000</span>
+  </footer>
+</div>
+
+<input type="file" id="tlProjectFileInput" accept="application/json,.json" hidden>
+<input type="file" id="tlMarkerCsvInput" accept="text/csv,.csv,text/plain" hidden>
+
+<div class="overlay tl-modal-overlay" id="tlAddTriggerOverlay" aria-hidden="true">
+  <form class="dialog tl-modal" id="tlAddTriggerModal" role="dialog" aria-modal="true"
+    aria-labelledby="tlAddTriggerTitle" aria-describedby="tlAddTriggerDescription" tabindex="-1">
+    <div class="fw-title tl-modal-titlebar">
+      <div><strong id="tlAddTriggerTitle">Add Trigger</strong><small id="tlAddTriggerDescription">Place an action at an exact timeline time</small></div>
+      <button type="button" class="x" id="tlAddTriggerClose" data-action="close-add-trigger" aria-label="Close Add Trigger dialog">&#215;</button>
+    </div>
+    <div class="tl-modal-body">
+      <div class="tl-form-row"><label for="tlAddTrackSelect">Track</label><select id="tlAddTrackSelect" required></select></div>
+      <div class="tl-form-row"><label for="tlAddType">Trigger type</label><select id="tlAddType" required>
+        <option value="Set Level">Set Level</option>
+        <option value="Go to cue">Go to Cue</option>
+        <option value="Trigger Clip">Trigger Clip</option>
+        <option value="Flash">Flash</option>
+        <option value="Timed Flash">Timed Flash</option>
+        <option value="Timed Flash and Go">Timed Flash and Go</option>
+        <option value="Swop">Swop</option>
+        <option value="Preload">Preload</option>
+        <option value="Marker">Marker</option>
+        <option value="Wait for Go">Wait for Go</option>
+      </select></div>
+      <div class="tl-form-row"><label for="tlAddTime">Time</label><span class="tl-composite-control"><input id="tlAddTime" type="text" inputmode="numeric" value="00:00:00.000" required><button type="button" class="btn" id="tlAddAtLive" data-action="use-live-time">Live</button></span></div>
+      <div class="tl-form-row" id="tlAddTargetRow"><label for="tlAddTarget">Target</label><select id="tlAddTarget"></select></div>
+      <div class="tl-form-row" id="tlAddLevelRow"><label for="tlAddLevel">Level</label><span class="tl-input-unit"><input id="tlAddLevel" type="number" min="0" max="100" step="1" value="100"><span>%</span></span></div>
+      <div class="tl-form-row" id="tlAddFadeRow"><label for="tlAddFade">Fade</label><span class="tl-input-unit"><input id="tlAddFade" type="number" min="0" step="0.01" value="0"><span>s</span></span></div>
+      <div class="tl-form-row" id="tlAddDurationRow"><label for="tlAddDuration">Duration</label><span class="tl-input-unit"><input id="tlAddDuration" type="number" min="0" step="0.01" value="1"><span>s</span></span></div>
+      <div class="tl-form-row"><label for="tlAddLabel">Label</label><input id="tlAddLabel" type="text" placeholder="Optional note" autocomplete="off"></div>
+    </div>
+    <div class="btnrow tl-modal-actions">
+      <button type="button" class="btn" id="tlAddTriggerCancel" data-action="close-add-trigger">Cancel</button>
+      <button type="submit" class="btn on" id="tlAddTriggerConfirm">Add Trigger</button>
+    </div>
+  </form>
+</div>
+
+<div class="overlay tl-modal-overlay" id="tlOptionsOverlay" aria-hidden="true">
+  <form class="dialog tl-modal tl-options-modal" id="tlOptionsModal" role="dialog" aria-modal="true"
+    aria-labelledby="tlOptionsTitle" aria-describedby="tlOptionsDescription" tabindex="-1">
+    <div class="fw-title tl-modal-titlebar">
+      <div><strong id="tlOptionsTitle">Timeline Options</strong><small id="tlOptionsDescription">Playback range, timecode and release behaviour</small></div>
+      <button type="button" class="x" id="tlOptionsClose" data-action="close-options" aria-label="Close Timeline Options">&#215;</button>
+    </div>
+    <div class="tl-options-scroll">
+      <fieldset class="tl-option-group">
+        <legend>Range</legend>
+        <div class="tl-form-row"><label for="tlOptionStart">Start</label><input id="tlOptionStart" type="text" inputmode="numeric" value="00:00:00.000"></div>
+        <div class="tl-form-row"><label for="tlOptionEnd">End</label><input id="tlOptionEnd" type="text" inputmode="numeric" value="00:05:00.000"></div>
+        <div class="tl-form-row"><label for="tlOptionDuration">Duration</label><input id="tlOptionDuration" type="text" inputmode="numeric" value="00:05:00.000"></div>
+      </fieldset>
+      <fieldset class="tl-option-group">
+        <legend>Timecode</legend>
+        <div class="tl-form-row"><label for="tlOptionSource">Source</label><select id="tlOptionSource">
+          <option value="internal">Internal</option><option value="smpte-1">SMPTE 1</option><option value="smpte-2">SMPTE 2</option><option value="midi-clock">MIDI Clock</option>
+        </select></div>
+        <div class="tl-form-row"><label for="tlOptionOffset">Offset</label><input id="tlOptionOffset" type="text" inputmode="numeric" value="00:00:00.000"></div>
+        <div class="tl-form-row"><label for="tlOptionFps">Frame rate</label><select id="tlOptionFps"><option value="24">24 fps</option><option value="25" selected>25 fps</option><option value="29.97">29.97 fps</option><option value="30">30 fps</option></select></div>
+        <label class="tl-option-check"><input id="tlOptionLoop" type="checkbox"><span><strong>Loop internal timecode</strong><small>Restart at the end of the selected range</small></span></label>
+      </fieldset>
+      <fieldset class="tl-option-group">
+        <legend>Activation</legend>
+        <div class="tl-form-row"><label for="tlOptionActivateInRange">Activate in range</label><select id="tlOptionActivateInRange"><option value="100">At 100%</option><option value="0">At 0%</option><option value="off">Off</option></select></div>
+        <label class="tl-option-check"><input id="tlOptionKillOutOfRange" type="checkbox" checked><span><strong>Kill out of range</strong><small>Release timeline actions after leaving the range</small></span></label>
+        <div class="tl-form-row"><label for="tlOptionFaderRaised">Fader raised</label><select id="tlOptionFaderRaised"><option value="none">No action</option><option value="play">Play</option></select></div>
+        <div class="tl-form-row"><label for="tlOptionFaderZero">Fader at zero</label><select id="tlOptionFaderZero"><option value="none">No action</option><option value="stop">Stop</option><option value="pause">Pause</option></select></div>
+        <label class="tl-option-check"><input id="tlOptionKillAtZero" type="checkbox"><span><strong>Kill at zero</strong><small>Release timeline actions when the master reaches zero</small></span></label>
+      </fieldset>
+      <fieldset class="tl-option-group">
+        <legend>Release</legend>
+        <label class="tl-option-check"><input id="tlOptionReleaseToHome" type="checkbox"><span><strong>Release to home</strong><small>Return controlled values to their default state</small></span></label>
+        <div class="tl-form-row"><label for="tlOptionReleaseTime">Release time</label><span class="tl-input-unit"><input id="tlOptionReleaseTime" type="number" min="0" step="0.01" value="2"><span>s</span></span></div>
+      </fieldset>
+      <fieldset class="tl-option-group">
+        <legend>Snapping</legend>
+        <label class="tl-option-check compact"><input id="tlOptionSnapTriggers" type="checkbox" checked><span><strong>Triggers</strong></span></label>
+        <label class="tl-option-check compact"><input id="tlOptionSnapMarkers" type="checkbox" checked><span><strong>Markers</strong></span></label>
+        <label class="tl-option-check compact"><input id="tlOptionSnapCursor" type="checkbox" checked><span><strong>Cursor</strong></span></label>
+      </fieldset>
+    </div>
+    <div class="btnrow tl-modal-actions">
+      <button type="button" class="btn" id="tlOptionsCancel" data-action="close-options">Cancel</button>
+      <button type="submit" class="btn on" id="tlOptionsApply">Apply</button>
+    </div>
+  </form>
+</div>
+
+<div class="tl-menu" id="tlMenuFile" role="menu" hidden>
+  <button type="button" role="menuitem" data-action="new-project">New Timeline</button>
+  <button type="button" id="tlSaveProject" role="menuitem" data-action="save-project">Save Timeline As…</button>
+  <button type="button" id="tlLoadProject" role="menuitem" data-action="load-project">Open Timeline…</button>
+  <div class="sep" role="separator"></div>
+  <button type="button" role="menuitem" data-action="import-markers">Import Marker CSV…</button>
+</div>
+<div class="tl-menu" id="tlMenuEdit" role="menu" hidden>
+  <button type="button" role="menuitem" data-action="undo">Undo</button>
+  <button type="button" role="menuitem" data-action="redo">Redo</button>
+  <div class="sep" role="separator"></div>
+  <button type="button" role="menuitem" data-action="select-all">Select All Triggers</button>
+  <button type="button" role="menuitem" data-action="duplicate-trigger">Duplicate Selection</button>
+  <button type="button" role="menuitem" data-action="delete-trigger">Delete Selection</button>
+</div>
+<div class="tl-menu" id="tlMenuTimeline" role="menu" hidden>
+  <button type="button" role="menuitem" data-action="add-track">Add Track</button>
+  <button type="button" role="menuitem" data-action="add-trigger">Add Trigger…</button>
+  <button type="button" role="menuitem" data-action="add-marker">Add Marker at Cursor</button>
+  <div class="sep" role="separator"></div>
+  <button type="button" role="menuitemcheckbox" aria-checked="false" data-action="record">Record Live Actions</button>
+  <button type="button" role="menuitem" data-action="simplify">Simplify Selected Fader Motion</button>
+  <button type="button" role="menuitem" data-action="smooth">Smooth Selected Triggers</button>
+  <div class="sep" role="separator"></div>
+  <button type="button" role="menuitem" data-action="options">Timeline Options…</button>
+</div>
+<div class="tl-menu" id="tlMenuView" role="menu" hidden>
+  <button type="button" role="menuitemradio" aria-checked="true" data-action="graph-view">Graph View</button>
+  <button type="button" role="menuitemradio" aria-checked="false" data-action="table-view">Table View</button>
+  <div class="sep" role="separator"></div>
+  <button type="button" role="menuitem" data-action="zoom-fit">Fit Timeline</button>
+  <button type="button" role="menuitemcheckbox" aria-checked="true" data-action="toggle-snap">Snap to Triggers, Markers and Cursor</button>
+  <button type="button" role="menuitem" data-action="collapse-tracks">Collapse All Tracks</button>
+</div>
+
+<script src="openlive-hub.js"></script>
+<script src="arena-bus.js"></script>
+<script src="openlive-timeline.js?v=timeline-9"></script>
+<script src="openlive-integrations.js"></script>
+<script src="openlive-timeline-ui.js?v=timeline-9"></script>
+<link rel="stylesheet" href="openlive-areas.css">
+<link rel="stylesheet" href="openlive-phone-mirror.css">
+<link rel="stylesheet" href="openlive-tool-areas.css">
+<script src="openlive-phone-mirror.js"></script>
+<script src="openlive-areas.js"></script>
+<script src="openlive-tool-areas.js"></script>
+</body>
+</html>

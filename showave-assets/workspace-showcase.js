@@ -13,7 +13,7 @@
       function schedule() {
         clearTimeout(timer);timer=0;
         if(!stage.isConnected)return;
-        if(!paused&&!reduce.matches&&visible&&!document.hidden&&!hovered&&!focused)
+        if(!paused&&!reduce.matches&&visible&&!document.hidden&&!hovered&&!focused&&!document.body.classList.contains('showave-demo-open'))
           timer=setTimeout(()=>show(index+1),5500);
       }
       function updateToggle() {
@@ -49,6 +49,8 @@
       stage.addEventListener('focusin',()=>{focused=true;schedule();});
       stage.addEventListener('focusout',()=>setTimeout(()=>{focused=stage.contains(document.activeElement);schedule();},0));
       document.addEventListener('visibilitychange',schedule);
+      document.addEventListener('showave:demo-open',schedule);
+      document.addEventListener('showave:demo-close',schedule);
       reduce.addEventListener('change',()=>{paused=reduce.matches;updateToggle();schedule();});
       if('IntersectionObserver'in window){
         const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;schedule();},{threshold:.15});

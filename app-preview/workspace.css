@@ -1,0 +1,166 @@
+/* ===========================================================================
+   workspace.css — the dock engine's chrome, in the Nocturne design base.
+   Loaded after arena.css and nocturne.css; takes every value from their tokens.
+   =========================================================================== */
+
+#wsRoot{ flex:1; min-height:0; display:flex; overflow:hidden; }
+
+/* ---- flex tree ---------------------------------------------------------- */
+.ws-flex{ display:flex; min-width:0; min-height:0; flex:1; }
+.ws-flex.ws-row{ flex-direction:row; }
+.ws-flex.ws-column{ flex-direction:column; }
+.ws-cell{ display:flex; min-width:0; min-height:0; overflow:hidden; }
+.ws-cell > *{ flex:1; min-width:0; min-height:0; }
+
+/* splitters — a hairline that thickens to the accent on approach */
+.ws-split{ flex:0 0 3px; position:relative; background:var(--line); touch-action:none; }
+.ws-split::after{ content:''; position:absolute; inset:0; margin:auto;
+  background:var(--line); transition:background .12s; }
+.ws-split-row{ cursor:col-resize; }
+.ws-split-row::after{ width:1px; height:100%; }
+.ws-split-column{ cursor:row-resize; }
+.ws-split-column::after{ height:1px; width:100%; }
+.ws-split:hover::after, .ws-split:focus-visible::after{ background:var(--color-accent); }
+body.ws-resizing-x, body.ws-resizing-x *{ cursor:col-resize !important; user-select:none; }
+body.ws-resizing-y, body.ws-resizing-y *{ cursor:row-resize !important; user-select:none; }
+
+/* ---- panel -------------------------------------------------------------- */
+.ws-panel{ display:flex; flex-direction:column; min-width:0; min-height:0;
+  background:var(--panel); border:0; border-radius:0;
+  overflow:hidden; }
+.ws-panel.in-tab{ border:0; border-radius:0; background:transparent; }
+/* CASING. Same verdict and the same evidence as windows.css: panel titles, tab
+   labels, section headers and state chips are Title Case in English.txt
+   ("Screens", "Slices", "Input Selection", "Output Transformation", "Composition",
+   "Layer", "Group"). panel.html loads this sheet beside nocturne.css, whose
+   equivalent rules (.sect > h3, .mon-head, .tgroup) no longer shout, so leaving
+   these would paint the same class of element in two conventions in one window. */
+.ws-head{ display:flex; align-items:center; gap:var(--space-2); flex:0 0 20px;
+  padding:0 var(--space-2) 0 var(--space-3); background:var(--head);
+  border-bottom:1px solid var(--line); cursor:grab; }
+.ws-head:active{ cursor:grabbing; }
+.ws-title{ flex:1; font-size:10px; letter-spacing:.01em;
+  color:var(--n400); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.ws-editor-type{ flex:1; min-width:0; border:0; border-radius:0; background:transparent;
+  padding:0; text-align:left; color:var(--n400); font-size:10px; line-height:20px;
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis; cursor:pointer; }
+.ws-editor-type:hover{ color:var(--n100); }
+.ws-btn{ cursor:pointer; color:var(--n600); font-size:11px; line-height:1;
+  padding:2px 4px; border-radius:var(--radius-sm); }
+.ws-btn:hover{ color:var(--n100); background:color-mix(in srgb,var(--color-accent) 20%,transparent); }
+.ws-body{ flex:1; min-height:0; overflow:auto; position:relative; }
+
+/* ---- tabbed container --------------------------------------------------- */
+.ws-tabs{ display:flex; flex-direction:column; min-width:0; min-height:0;
+  background:var(--panel); border:0; border-radius:0;
+  overflow:hidden; }
+.ws-tabstrip{ display:flex; align-items:stretch; flex:0 0 21px; background:var(--head);
+  border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none; }
+.ws-tabstrip::-webkit-scrollbar{ height:0; }
+.ws-tab{ display:flex; align-items:center; gap:4px; padding:0 var(--space-3);
+  font-size:10px; letter-spacing:.01em; color:var(--n600);
+  cursor:grab; white-space:nowrap; border-right:1px solid var(--line); }
+.ws-tab:hover{ color:var(--n300); background:color-mix(in srgb,var(--color-accent) 8%,transparent); }
+.ws-tab.on{ color:var(--a200); box-shadow:inset 0 -2px 0 var(--color-accent);
+  background:color-mix(in srgb,var(--color-accent) 12%,transparent); }
+.ws-tab:active{ cursor:grabbing; }
+.ws-tabx{ font-size:9px; color:transparent; padding:0 1px; border-radius:var(--radius-sm); }
+.ws-tab:hover .ws-tabx{ color:var(--n600); }
+.ws-tabx:hover{ color:var(--n100); background:color-mix(in srgb,var(--color-accent) 25%,transparent); }
+.ws-tabpop{ margin-left:auto; padding:0 var(--space-3); display:flex; align-items:center;
+  color:var(--n600); cursor:pointer; font-size:11px; }
+.ws-tabpop:hover{ color:var(--a200); }
+.ws-area-options{ border:0; background:transparent; border-radius:0; }
+.ws-tabpop + .ws-tabpop{ margin-left:0; }
+.ws-tabbody{ flex:1; min-height:0; position:relative; }
+.ws-pane{ display:none; position:absolute; inset:0; }
+.ws-pane.on{ display:flex; }
+.ws-pane > *{ flex:1; min-width:0; }
+
+/* ---- minimise / maximise ------------------------------------------------
+   Minimised keeps the title bar (or the tab strip) and drops the body; the
+   JS also releases the flex hold so the siblings take the room back.
+   Maximised lifts the panel out over the whole workspace — #wsRoot is the
+   containing block, so it covers exactly the dock area and nothing else. */
+.ws-panel.ws-minimised, .ws-tabs.ws-minimised{ flex:0 0 auto !important; }
+.ws-panel.ws-minimised > .ws-body,
+.ws-tabs.ws-minimised > .ws-tabbody{ display:none; }
+.ws-panel.ws-minimised > .ws-head,
+.ws-tabs.ws-minimised > .ws-tabstrip{ border-bottom:0; }
+.ws-panel.ws-minimised, .ws-tabs.ws-minimised{ opacity:.85; }
+
+#wsRoot{ position:relative; }
+.ws-panel.ws-maximised, .ws-tabs.ws-maximised{
+  position:absolute; inset:0; z-index:60;
+  box-shadow:0 24px 64px -12px rgba(0,0,0,.75);
+  border-color:var(--a600); }
+/* everything else stays put but stops competing for the pointer */
+#wsRoot.ws-has-max .ws-split{ pointer-events:none; }
+.ws-panel.ws-maximised > .ws-head,
+.ws-tabs.ws-maximised > .ws-tabstrip{ background:color-mix(in srgb,var(--color-accent) 14%,var(--head)); }
+
+/* ---- drop feedback ------------------------------------------------------ */
+.ws-drop{ outline:2px solid var(--a400); outline-offset:-2px;
+  background:color-mix(in srgb,var(--color-accent) 10%,transparent) !important; }
+.ws-panel, .ws-tabs{ position:relative; }
+.ws-drop::before{ content:''; position:absolute; inset:0; z-index:80; pointer-events:none;
+  background:color-mix(in srgb,var(--color-accent) 22%,transparent); border:1px solid var(--color-accent); }
+.ws-drop[data-drop-edge=left]::before{ right:50%; }
+.ws-drop[data-drop-edge=right]::before{ left:50%; }
+.ws-drop[data-drop-edge=top]::before{ bottom:50%; }
+.ws-drop[data-drop-edge=bottom]::before{ top:50%; }
+.ws-drop[data-drop-edge=center]::before{ inset:25%; }
+.ws-empty{ flex:1; display:grid; place-items:center; color:var(--n700); font-size:11px;
+  align-content:center; gap:8px; position:relative; }
+.ws-empty-add{ cursor:pointer; }
+.ws-area-menu{ position:fixed; z-index:10000; min-width:210px; max-width:min(320px,calc(100vw - 8px));
+  max-height:calc(100vh - 8px); overflow:auto; padding:4px; background:var(--head,#252630);
+  color:var(--n100,#ddd); border:1px solid var(--line,#444); box-shadow:0 8px 28px #0009; }
+.ws-menu-item{ display:block; width:100%; border:0; border-radius:0; padding:6px 10px;
+  font:inherit; font-size:11px; text-align:left; color:inherit; background:transparent; cursor:pointer; }
+.ws-menu-item:hover, .ws-menu-item:focus-visible{ background:var(--color-accent,#426ca3); color:#fff; }
+.ws-menu-item:disabled{ color:var(--n700,#777); cursor:default; background:transparent; }
+.ws-menu-heading{ font-size:10px; color:var(--n600,#999); padding:5px 10px; }
+.ws-menu-separator{ height:1px; background:var(--line,#444); margin:4px; }
+.ws-todo{ display:grid; place-items:center; align-content:center; gap:4px; height:100%;
+  color:var(--n700); font-size:11px; text-align:center; padding:var(--space-4); }
+.ws-todo b{ color:var(--n500); font-weight:500; font-size:12px; }
+
+/* ---- panel interiors — shared vocabulary for every registered panel ----- */
+.p-sec{ border-bottom:1px solid var(--line); }
+.p-sec > h4{ display:flex; align-items:center; gap:6px; margin:0; padding:3px var(--space-3);
+  background:var(--head); font-size:9.5px; letter-spacing:.01em;
+  color:var(--n500); cursor:pointer; font-weight:500; }
+.p-sec > h4::before{ content:'▾'; font-size:7px; color:var(--n700); }
+.p-sec.folded > h4::before{ content:'▸'; }
+.p-sec.folded > .p-body{ display:none; }
+.p-sec > h4 .p-tag{ margin-left:auto; color:var(--n700); font-size:9px; }
+.p-body{ padding:var(--space-1) 0 var(--space-2); }
+.p-empty{ padding:var(--space-6) var(--space-4); text-align:center; color:var(--n700); font-size:11px; }
+.p-toolbar{ display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2) var(--space-3);
+  border-bottom:1px solid var(--line); background:var(--strip); flex:0 0 auto; }
+.p-toolbar input[type=text]{ flex:1; min-width:0; padding:2px var(--space-2); }
+.p-list{ overflow:auto; }
+.p-row{ display:flex; align-items:center; gap:var(--space-2); padding:2px var(--space-3);
+  color:var(--n300); cursor:default; }
+.p-row:hover{ background:color-mix(in srgb,var(--color-accent) 10%,transparent); }
+.p-row.sel{ background:color-mix(in srgb,var(--color-accent) 20%,transparent); color:var(--n100); }
+.p-row .p-dim{ margin-left:auto; color:var(--n700); font-size:10px; }
+.p-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:var(--space-2); padding:var(--space-2); }
+.p-note{ padding:var(--space-2) var(--space-3); color:var(--n600); font-size:10.5px; }
+
+/* ---- workspace shell ---------------------------------------------------- */
+#wsBar{ display:flex; align-items:center; gap:var(--space-2); flex:0 0 24px;
+  padding:0 var(--space-3); background:#1b1d2b; border-bottom:1px solid var(--line); }
+#wsBar .sp{ flex:1; }
+#wsBar select, #wsBar button{ font-size:10.5px; padding:1px var(--space-2); }
+.ws-chip{ display:inline-flex; align-items:center; gap:5px; padding:1px 8px; font-size:9.5px;
+  letter-spacing:.01em; border:1px solid var(--n800);
+  border-radius:999px; color:var(--n600); cursor:pointer; }
+.ws-chip:hover{ border-color:var(--a600); color:var(--n300); }
+.ws-chip.on{ color:var(--a200); border-color:var(--color-accent); }
+
+/* undocked single-panel window */
+body.ws-popout{ margin:0; height:100vh; display:flex; flex-direction:column; }
+body.ws-popout #wsPop{ flex:1; min-height:0; display:flex; }

@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<title>SHOWAVE Forge: Settings &amp; ISF Editor</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="showave-brand.js"></script>
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+  /* ---------------------------------------------------------------------
+     Page-specific layout only. Every look that windows.css already carries
+     (.win-title .side-tab .formgroup .formrow .datatable .tb-btn .win-tab
+      .win-chip .statusline .pval .sect-body) is used through the class,
+     never re-declared here.
+     --------------------------------------------------------------------- */
+
+  /* the three top panes: settings and the ISF editor are flex rows */
+  #settings.pane.active, #isf.pane.active{ display:flex; flex:1; min-height:0; }
+
+  /* arena.css leaves the tick and the shortcut in the mint-era colour on
+     hover; nocturne.css never reached them. Local repair, tokens only. */
+  .dropdown .dd-item:hover .chk, .dropdown .dd-item:hover .kbd{ color:var(--a200); }
+  .dropdown .dd-item .kbd{ font-variant-numeric:tabular-nums; }
+  .win-title .menu-top{ align-self:stretch; }
+
+  /* ---- preference splits: settings left, fold-out monitor right -------- */
+  .pref-split{ display:flex; gap:var(--space-4); align-items:flex-start; }
+  .pref-col{ min-width:0; }
+  .pref-col.left{ flex:1 1 420px; }
+  .pref-col.monitor{ flex:0 0 300px; width:300px; }
+  .pref-col .formgroup{ max-width:none; }
+
+  /* a group header with a control pushed into its top right corner */
+  .fg-head{ display:flex; align-items:center; gap:var(--space-3);
+    margin-bottom:var(--space-2); }
+  .fg-head h3{ margin-bottom:0; }
+  .fg-head .right{ margin-left:auto; display:flex; align-items:center; gap:var(--space-2); }
+  /* the tail of a group — where the version dropdown sits */
+  .fg-foot{ margin-top:var(--space-3); padding-top:var(--space-3);
+    border-top:1px solid var(--line); }
+
+  /* ---- the fold-out monitors ------------------------------------------ */
+  .mon-fold > h3{ display:flex; align-items:center; gap:var(--space-2);
+    cursor:pointer; user-select:none; }
+  /* the twisty is the h3's own 10px glyph shrunk by transform, so no
+     off-scale font-size is introduced for it */
+  .mon-fold > h3 .tw{ display:inline-block; transform:scale(.7); color:var(--n600); }
+  .mon-fold.folded .monlog, .mon-fold.folded .monfoot{ display:none; }
+  .monlog{ height:196px; overflow:auto; background:var(--inset);
+    border:1px solid var(--n800); border-radius:var(--radius-sm);
+    padding:var(--space-2); font:10.5px/1.55 Consolas,"SF Mono",monospace;
+    color:var(--n400); }
+  .monlog > div{ white-space:pre; font-variant-numeric:tabular-nums; }
+  .monlog .empty{ white-space:normal; color:var(--n700); }
+  .monfoot{ display:flex; align-items:center; gap:var(--space-2);
+    padding-top:var(--space-2); }
+  .monfoot .tb-label{ margin-left:auto; }
+
+  /* ---- ISF / shader editor -------------------------------------------- */
+  .isf-code{ flex:1; display:flex; flex-direction:column; min-width:0; }
+  .isf-code textarea{ flex:1; background:var(--inset); border:none; border-radius:0;
+    color:var(--n300); padding:var(--space-3) var(--space-4);
+    font:12px/1.5 Consolas,"SF Mono",monospace; resize:none; outline:none; tab-size:2; }
+  .isf-side{ flex:0 0 290px; width:290px;
+    background:
+      linear-gradient(180deg,var(--glass-reflection-start) 0,var(--glass-reflection-end) 34%),
+      color-mix(in srgb,var(--color-surface) 68%,var(--glass-bg));
+    border-left:1px solid var(--glass-border); overflow-y:auto;
+    box-shadow:inset 1px 0 0 var(--glass-caustic); }
+  .isf-prev{ height:180px; background:var(--content-black); position:relative;
+    border-bottom:1px solid var(--line); }
+  .isf-prev canvas{ position:absolute; inset:0; width:100%; height:100%; }
+  .errline{ background:color-mix(in srgb,var(--red) 16%,transparent); color:var(--red);
+    border-top:1px solid var(--line); padding:var(--space-1) var(--space-4);
+    font:11px/1.5 Consolas,"SF Mono",monospace; }
+  /* the 190px label column of .formrow does not fit a 290px rail */
+  .isf-side .formrow{ margin:3px var(--space-3); max-width:none; }
+  .isf-side .formrow label{ flex:0 0 84px; width:84px; min-width:84px; }
+  .isf-side .formrow output{ flex:0 0 40px; text-align:right; font-size:10.5px;
+    color:var(--n400); font-variant-numeric:tabular-nums; }
+
+  /* ---- odds and ends --------------------------------------------------- */
+  .formrow .ro{ flex:1; min-width:0; color:var(--n300); }
+  /* short numeric fields keep their own width instead of filling the row */
+  #fftIdx, #oscInPort, #oscOutPort{ flex:0 0 74px; }
+  code{ color:var(--a300); }
+</style>
+</head>
+<body>
+<div class="win-root">
+
+  <!-- ===== title strip — the Wire tab lives here, as the manual says ===== -->
+  <div class="win-title">
+    <span class="showave-brand-lockup--title" data-showave-brand="forge"></span>
+    <span class="menu-top" id="mWire" role="menuitem" tabindex="0" aria-haspopup="menu"
+      aria-expanded="false" title="Forge menu">File</span>
+    <span id="winMode">Settings</span>
+    <span class="sp"></span>
+    <a class="plainlink" href="wire.html">← back to Patch Graph</a>
+  </div>
+
+  <div class="win-tabs" id="topTabs">
+    <div class="win-tab active" data-pane="settings">Settings</div>
+    <div class="win-tab" data-pane="isf">ISF / Shader Editor</div>
+    <div class="win-tab" data-pane="compile">Consolidate &amp; Compile</div>
+  </div>
+
+  <!-- ===================== SETTINGS ===================== -->
+  <div class="pane win-main active" id="settings">
+    <nav class="side-tabs" id="sTabs">
+      <div class="side-group">Preferences</div>
+      <div class="side-tab active" data-t="general">General</div>
+      <div class="side-tab" data-t="audio">Audio</div>
+      <div class="side-tab" data-t="video">Video</div>
+      <div class="side-tab" data-t="midi">MIDI</div>
+      <div class="side-tab" data-t="osc">OSC</div>
+      <div class="side-tab" data-t="fft">FFT</div>
+      <div class="side-tab" data-t="paths">Paths</div>
+      <div class="side-tab" data-t="registration">Registration</div>
+    </nav>
+
+    <div class="win-content" id="prefBody">
+
+      <!-- ---------- GENERAL ---------- -->
+      <section data-tab="general">
+        <h2>General</h2>
+        <div class="formgroup"><h3>Interface</h3>
+          <div class="formrow"><label>Show welcome screen on startup</label><input type="checkbox" checked></div>
+          <div class="formrow"><label>Snap nodes to grid</label><input type="checkbox" checked></div>
+          <div class="formrow"><label>Show inlet values on nodes</label><input type="checkbox" checked></div>
+          <div class="formrow"><label>Link style</label><select><option>Curved</option><option>Straight</option><option>Right angle</option></select></div>
+          <div class="formrow"><label>Colour wires by data type</label><input type="checkbox" checked></div>
+        </div>
+
+        <div class="formgroup"><h3>Updates</h3>
+          <div class="formrow"><label>Check for updates</label><input type="checkbox" checked></div>
+          <div class="formrow"><label>Release channel</label><select><option>Stable</option><option>Beta</option></select></div>
+        </div>
+
+        <!-- Installing: the platform switch sits in the top right corner and
+             the release dropdown at the bottom, as the chapter describes. -->
+        <div class="formgroup" id="fgInstall">
+          <div class="fg-head">
+            <h3>Installing</h3>
+            <div class="right">
+              <span class="tb-label">Version for</span>
+              <span class="win-chip on" data-plat="PC">PC</span>
+              <span class="win-chip" data-plat="Mac">Mac</span>
+            </div>
+          </div>
+          <div class="formrow"><label>Installed version</label><span class="pval">Wire 7.4.0</span>
+            <span class="unit" id="platNote">detected: PC</span></div>
+          <div class="formrow"><label>Graphics acceleration</label><span class="ro">Required: check the spec page for the current minimum requirements.</span></div>
+          <div class="fg-foot">
+            <div class="formrow"><label>All releases</label>
+              <select id="wireVer">
+                <option>Wire 7.6.0</option>
+                <option selected>Wire 7.4.0</option>
+                <option>Wire 7.3.1</option>
+                <option>Wire 7.2.0</option>
+                <option>Wire 7.1.0</option>
+                <option>Wire 7.0.0</option>
+              </select>
+              <button class="tb-btn" id="dlBtn" type="button" disabled
+                title="A browser window cannot download and run an installer for you">Download installer…</button>
+            </div>
+            <div class="hint">Download the installer from the Resolume website, run the install file and
+              follow instructions. This window cannot fetch or run an installer. The release dropdown is
+              here so the version you want is named before you go and get it.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- AUDIO ---------- -->
+      <section data-tab="audio" hidden>
+        <h2>Audio</h2>
+        <div class="formgroup"><h3>Output</h3>
+          <div class="formrow"><label>Audio output device</label><select><option>Speakers (Realtek HD)</option><option>ASIO: Focusrite USB</option><option>None</option></select></div>
+          <div class="formrow"><label>Sample rate</label>
+            <select id="sampleRate"><option>44100</option><option selected>48000</option><option>96000</option></select>
+            <span class="unit">Hz</span></div>
+          <div class="formrow"><label>Buffer size</label><select><option>256</option><option selected>512</option><option>1024</option></select></div>
+          <div class="hint">The maximum frequency the Spectrum In node reports depends on this sample
+            rate. A Spectrum In node needs an output device selected, otherwise the patch shows the red
+            warning triangle next to the zoom control.</div>
+        </div>
+        <div class="formgroup"><h3>Input</h3>
+          <div class="formrow"><label>Audio input device</label><select><option>None</option><option>Microphone (USB)</option></select></div>
+          <div class="formrow"><label>FFT size</label><select><option>512</option><option selected>1024</option><option>2048</option></select></div>
+        </div>
+      </section>
+
+      <!-- ---------- VIDEO ---------- -->
+      <section data-tab="video" hidden>
+        <h2>Video</h2>
+        <div class="formgroup"><h3>Rendering</h3>
+          <div class="formrow"><label>Default resolution</label><select><option>Host Determined</option><option>1920 x 1080</option><option>3840 x 2160</option></select></div>
+          <div class="formrow"><label>Default bit depth</label><select><option>8 bit</option><option>16 bit</option><option>32 bit float</option></select></div>
+          <div class="formrow"><label>Preview framerate cap</label><select><option>30</option><option selected>60</option><option>Unlimited</option></select></div>
+        </div>
+        <div class="formgroup"><h3>Sharing</h3>
+          <div class="formrow"><label>Spout output</label><input type="checkbox" checked></div>
+          <div class="formrow"><label>NDI output</label><input type="checkbox"></div>
+        </div>
+      </section>
+
+      <!-- ---------- MIDI ---------- -->
+      <section data-tab="midi" hidden>
+        <h2>MIDI</h2>
+        <div class="pref-split">
+          <div class="pref-col left">
+            <div class="formgroup">
+              <div class="fg-head"><h3>Devices</h3>
+                <div class="right"><button class="tb-btn small" id="midiRefresh" type="button">Refresh</button></div>
+              </div>
+              <table class="datatable" id="midiTable">
+                <thead><tr><th>Device</th><th>Input</th><th>Output</th></tr></thead>
+                <tbody></tbody>
+              </table>
+              <div class="hint">Make sure that your midi device is detected. Press Refresh if you just
+                connected a new device. To have the device work in SHOWAVE Forge the output box should be toggled
+                on. Right-click a device for the same two toggles.</div>
+              <div class="hint" id="midiStatus">Listing the patch's remembered devices. Press Refresh to
+                ask this browser for the MIDI ports actually connected to the machine.</div>
+              <div class="hint">MIDI In and MIDI Voices nodes read from the enabled devices. MIDI Read
+                outputs the pitch, velocity, cc value, controller and channel; MIDI Filter takes one
+                pitch and channel; MIDI Out, Midi On, Midi Off and CC write data back out.</div>
+            </div>
+          </div>
+
+          <!-- "Fold out the MIDI monitor on the right of the MIDI Preferences." -->
+          <div class="pref-col monitor">
+            <div class="formgroup mon-fold folded" id="midiMon">
+              <h3><span class="tw">▶</span>MIDI Monitor</h3>
+              <div class="monlog" id="midiLog">
+                <div class="empty">SHOWAVE Forge shows every MIDI message it receives from all enabled
+                  controllers here. Press Refresh to connect this window to the machine's MIDI ports.</div>
+              </div>
+              <div class="monfoot">
+                <button class="tb-btn small" data-clear="#midiLog" type="button">Clear</button>
+                <span class="tb-label" id="midiCount">0 messages</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- OSC ---------- -->
+      <section data-tab="osc" hidden>
+        <h2>OSC</h2>
+        <div class="pref-split">
+          <div class="pref-col left">
+            <div class="formgroup"><h3>Input</h3>
+              <div class="formrow"><label>OSC Input</label><input type="checkbox" id="oscIn" checked></div>
+              <div class="formrow"><label>Port</label><input type="number" id="oscInPort" value="7100"></div>
+              <div class="hint">Before you start working with OSC, make sure that OSC Input is enabled
+                and that you are on the same network and port as the device sending OSC to SHOWAVE Forge. To get
+                OSC into SHOWAVE Forge use the OSC In node and connect it to the Read OSC node, then specify the
+                address.</div>
+            </div>
+            <div class="formgroup"><h3>Output</h3>
+              <div class="formrow"><label>OSC Output</label><input type="checkbox" id="oscOut"></div>
+              <div class="formrow"><label>Target IP</label><input type="text" value="127.0.0.1"></div>
+              <div class="formrow"><label>Port</label><input type="number" id="oscOutPort" value="7101"></div>
+              <div class="formrow"><label>Use Bundles</label><input type="checkbox" checked></div>
+              <div class="hint">Toggling Use Bundles packs all your messages together and sends them in
+                one big bundle. Most OSC applications don't really care whether you send bundles or not,
+                but some will prefer having it on or off. To get OSC out of SHOWAVE Forge use the Write OSC node
+                in conjunction with the OSC Out node.</div>
+            </div>
+          </div>
+
+          <!-- "Here you can monitor the incoming OSC data." -->
+          <div class="pref-col monitor">
+            <div class="formgroup mon-fold folded" id="oscMon">
+              <h3><span class="tw">▶</span>OSC Monitor</h3>
+              <div class="monlog" id="oscLog">
+                <div class="empty">Here you can monitor the incoming OSC data. A browser page cannot open
+                  a UDP socket, so nothing can arrive on port <b id="oscPortEcho">7100</b> in this window.
+                  SHOWAVE Forge lists every incoming address and its values here.</div>
+              </div>
+              <div class="monfoot">
+                <button class="tb-btn small" data-clear="#oscLog" type="button">Clear</button>
+                <span class="tb-label" id="oscState">input enabled</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- FFT ---------- -->
+      <section data-tab="fft" hidden>
+        <h2>FFT</h2>
+        <div class="formgroup"><h3>Spectrum In</h3>
+          <div class="formrow"><label>Spectrum in</label>
+            <select id="fftSource"><option value="local">local</option><option value="composition" selected>show</option><option value="external">external</option></select></div>
+          <div class="formrow"><label>External FFT source</label>
+            <select id="fftExternal" disabled><option>None</option><option>Microphone (USB)</option><option>Line In</option></select></div>
+          <div class="hint">A patch that contains the Spectrum In node will create a spectrum in tab in
+            the effect, source or mixer you have made. This is a simple drop down menu where you can
+            choose between local, show or external. If you choose local, the audio playing on the
+            Clip will be used. If you choose show, all the audio playing in the Show will
+            be used. If you choose external, the external FFT source set in the preferences will be used.</div>
+        </div>
+
+        <div class="formgroup"><h3>Frequency Bands</h3>
+          <div class="formrow"><label>Sample rate</label><span class="pval" id="fftRate">48000 Hz</span>
+            <span class="unit">set under Audio</span></div>
+          <div class="formrow"><label>Values</label><span class="pval">1024 floats</span>
+            <span class="unit">one per frequency band</span></div>
+          <div class="formrow"><label>Maximum frequency</label><span class="pval" id="fftMax">24000 Hz</span></div>
+          <div class="formrow"><label>Width of each band</label><span class="pval" id="fftBand">23.44 Hz</span></div>
+          <div class="formrow"><label>Index</label>
+            <input type="number" id="fftIdx" value="0" min="0" max="1023">
+            <span class="unit" id="fftIdxRange">covers 0 – 23 Hz</span></div>
+          <div class="hint">SHOWAVE Forge will receive the FFT data as an array of 1024 float values which each
+            correspond to a frequency band. The lower the index, the lower the frequency. The width of
+            each band is the sample rate divided by two, divided by 1024. The hearing limit of most
+            adults is between 15khz and 17khz, so the highest indexes may be out of range and therefore
+            less useful.</div>
+        </div>
+      </section>
+
+      <!-- ---------- PATHS ---------- -->
+      <section data-tab="paths" hidden>
+        <h2>Paths</h2>
+        <div class="formgroup"><h3>Directories</h3>
+          <div class="formrow"><label>Patches</label><input type="text" value="Documents\Resolume Wire\Patches"></div>
+          <div class="formrow"><label>Resources</label><input type="text" value="Documents\Resolume Wire\Resources"></div>
+          <div class="formrow"><label>Compiled output</label><input type="text" value="Documents\Resolume Arena\Extra Effects"></div>
+          <div class="hint">Compiling to the Arena Extra Effects folder makes the patch load
+            automatically on next Arena startup.</div>
+        </div>
+      </section>
+
+      <!-- ---------- REGISTRATION ---------- -->
+      <section data-tab="registration" hidden>
+        <h2>Registration</h2>
+        <div class="formgroup"><h3>Product Identity</h3>
+          <div class="formrow"><label>Product</label><span class="ro" style="color:var(--a300)">SHOWAVE Forge</span></div>
+          <div class="formrow"><label>Publisher</label><span class="ro">Afro Unity Group</span></div>
+          <div class="formrow"><label>Creator</label><span class="ro">Godrick Sankofa <span class="hint">Agaba Godrick</span></span></div>
+          <div class="formrow"><label>Compatibility</label><span class="ro">Resolume Wire paths and .wire/.wired formats retained</span></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ===================== ISF EDITOR ===================== -->
+  <div class="pane win-main" id="isf">
+    <div class="isf-code">
+      <div class="win-toolbar">
+        <select class="tb-select" id="isfFile"><option>bloom.fs</option><option>warp.fs</option><option>New Shader…</option></select>
+        <button class="tb-btn" id="compileBtn" type="button">Compile</button>
+        <button class="tb-btn" type="button">Revert</button>
+        <span class="tb-sp"></span>
+        <span class="tb-label" id="isfStatus">Compiled OK</span>
+      </div>
+      <textarea id="code" spellcheck="false">/*{
+  "DESCRIPTION": "Simple bloom",
+  "CATEGORY": "Blur",
+  "INPUTS": [
+    { "NAME": "inputImage", "TYPE": "image" },
+    { "NAME": "Threshold", "TYPE": "float", "DEFAULT": 0.6, "MIN": 0.0, "MAX": 1.0 },
+    { "NAME": "Amount",    "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.0, "MAX": 4.0 },
+    { "NAME": "Size",      "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }
+  ]
+}*/
+
+void main() {
+    vec2 uv = isf_FragNormCoord;
+    vec4 src = IMG_NORM_PIXEL(inputImage, uv);
+
+    vec4 sum = vec4(0.0);
+    float r = Size * 0.02;
+    for (int i = -4; i <= 4; i++) {
+        for (int j = -4; j <= 4; j++) {
+            vec2 o = vec2(float(i), float(j)) * r;
+            vec4 s = IMG_NORM_PIXEL(inputImage, uv + o);
+            sum += max(s - Threshold, 0.0);
+        }
+    }
+    sum /= 81.0;
+
+    gl_FragColor = src + sum * Amount;
+}</textarea>
+      <div class="errline" id="errLine" style="display:none"></div>
+    </div>
+
+    <div class="isf-side">
+      <div class="isf-prev"><canvas id="isfPrev" width="290" height="180"></canvas></div>
+      <div class="sect"><h3>Inputs</h3><div class="sect-body sbody" id="isfInputs"></div></div>
+      <div class="sect"><h3>ISF</h3><div class="sect-body sbody">
+        <div class="formrow"><label>Description</label><input type="text" value="Simple bloom"></div>
+        <div class="formrow"><label>Category</label><input type="text" value="Blur"></div>
+        <div class="formrow"><label>Version</label><span class="pval">ISF 2.0</span></div>
+      </div></div>
+      <div class="hint">ISF shaders load as a resource and appear as a node with the declared inputs.
+        Coordinate convention is <code>isf_FragNormCoord</code>, 0–1 bottom-left origin.</div>
+    </div>
+  </div>
+
+  <!-- ===================== CONSOLIDATE / COMPILE ===================== -->
+  <div class="pane win-content" id="compile">
+    <h2>Consolidate &amp; Compile</h2>
+    <div class="formgroup"><h3>Consolidate</h3>
+      <div class="formrow"><label>Copy resources next to patch</label><input type="checkbox" checked></div>
+      <div class="formrow"><label>Destination</label><input type="text" value="Documents\Resolume Wire\Patches\Neon Tunnel"></div>
+      <table class="datatable" style="margin-top:var(--space-3)">
+        <thead><tr><th>Resource</th><th>Type</th><th class="num">Size</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>noise_512.png</td><td>ResourceImage</td><td class="num">1.2 MB</td><td>Will copy</td></tr>
+          <tr><td>grain.mov</td><td>ResourceVideo</td><td class="num">48 MB</td><td>Will copy</td></tr>
+          <tr><td>bloom.fs</td><td>ResourceIsf</td><td class="num">4 KB</td><td>Will copy</td></tr>
+          <tr><td>teal_orange.cube</td><td>ResourceLut3d</td><td class="num">780 KB</td><td>Will copy</td></tr>
+        </tbody></table>
+      <div class="formrow" style="margin-top:var(--space-3)"><label></label>
+        <button class="tb-btn on" type="button">Consolidate</button></div>
+    </div>
+    <div class="formgroup"><h3>Compile for Arena / Avenue</h3>
+      <div class="formrow"><label>Category</label><select><option>Source</option><option selected>Effect</option><option>Mixer</option></select></div>
+      <div class="formrow"><label>Output file</label><input type="text" value="Neon Tunnel.wired"></div>
+      <div class="formrow"><label>Destination</label><input type="text" value="Documents\Resolume Arena\Extra Effects"></div>
+      <div class="formrow"><label>Lock patch (hide nodes)</label><input type="checkbox"></div>
+      <div class="formrow"><label></label><button class="tb-btn on" type="button">Compile</button></div>
+      <div class="hint">A compiled <code>.wired</code> file loads in Arena as a normal effect, source or
+        mixer. Arena ships 15 of these in <code>plugins\wire</code>. A patch that contains the Spectrum In
+        node will also create a spectrum in tab in the effect, source or mixer you have made.</div>
+    </div>
+    <div class="formgroup"><h3>Copy For Sharing</h3>
+      <div class="hint">Copies the selected nodes as text so they can be pasted into a forum post or
+        another patch.</div>
+      <div class="formrow"><label></label><button class="tb-btn" type="button">Copy Patch As Text</button></div>
+    </div>
+  </div>
+
+  <!-- ===================== STATUS ===================== -->
+  <div class="statusline">
+    <span>SHOWAVE Forge · Afro Unity Group</span>
+    <span>Preferences <b class="v" id="slPane">Settings</b></span>
+    <span class="tb-sp"></span>
+    <span>OSC In <b class="v" id="slOsc">7100</b></span>
+    <span>MIDI <b class="v" id="slMidi">2 devices</b></span>
+    <span>Spectrum In <b class="v" id="slFft">show</b></span>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+/* =======================================================================
+   shared menu — reuses arena.css .dropdown / .dd-item / .dd-sep / .chk
+   ======================================================================= */
+function closeMenus(){
+  $$('.dropdown.adhoc').forEach(d=>d.remove());
+  $$('.menu-top.open').forEach(m=>{ m.classList.remove('open'); m.setAttribute('aria-expanded','false'); });
+}
+function openMenu(items,x,y,owner){
+  closeMenus();
+  const dd=document.createElement('div');
+  dd.className='dropdown adhoc'; dd.setAttribute('role','menu');
+  items.forEach(it=>{
+    if(it.sep){ dd.insertAdjacentHTML('beforeend','<div class="dd-sep"></div>'); return; }
+    const d=document.createElement('div');
+    d.className='dd-item'+(it.disabled?' disabled':'');
+    d.setAttribute('role','menuitem'); d.tabIndex=it.disabled?-1:0;
+    if(it.disabled) d.setAttribute('aria-disabled','true');
+    d.innerHTML='<span class="chk">'+(it.on?'✓':'')+'</span><span></span>'+
+                (it.kbd?'<span class="kbd"></span>':'');
+    d.children[1].textContent=it.label;
+    if(it.kbd) d.children[2].textContent=it.kbd;
+    if(!it.disabled) d.addEventListener('click',()=>{ closeMenus(); if(it.run) it.run(); });
+    d.addEventListener('keydown',event=>{
+      if((event.key==='Enter'||event.key===' ')&&!it.disabled){ event.preventDefault(); d.click(); }
+    });
+    dd.appendChild(d);
+  });
+  document.body.appendChild(dd);
+  const r=dd.getBoundingClientRect();
+  dd.style.left=Math.max(4,Math.min(x,window.innerWidth-r.width-6))+'px';
+  dd.style.top =Math.max(4,Math.min(y,window.innerHeight-r.height-6))+'px';
+  if(owner){ owner.classList.add('open'); owner.setAttribute('aria-expanded','true'); }
+  return dd;
+}
+document.addEventListener('mousedown',e=>{ if(!e.target.closest('.dropdown')) closeMenus(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeMenus(); });
+
+/* =======================================================================
+   panes and preference tabs
+   ======================================================================= */
+function showPane(id,focus){
+  $$('#topTabs .win-tab').forEach(x=>{
+    const on=x.dataset.pane===id; x.classList.toggle('active',on);
+    x.setAttribute('aria-selected',String(on)); x.tabIndex=on?0:-1;
+  });
+  $$('.win-root > .pane').forEach(p=>p.classList.toggle('active',p.id===id));
+  const t=$('#topTabs .win-tab.active');
+  const name=t?t.textContent:'';
+  $('#winMode').textContent=name;
+  $('#slPane').textContent=name;
+  if(focus&&t) t.focus({preventScroll:true});
+  syncIsfPreview();
+}
+$('#topTabs').addEventListener('click',e=>{
+  const t=e.target.closest('.win-tab'); if(t) showPane(t.dataset.pane);
+});
+
+function showTab(t,focus){
+  $$('#sTabs .side-tab').forEach(x=>{
+    const on=x.dataset.t===t; x.classList.toggle('active',on);
+    x.setAttribute('aria-selected',String(on)); x.tabIndex=on?0:-1;
+  });
+  $$('#prefBody [data-tab]').forEach(s=>{ s.hidden = s.dataset.tab!==t; });
+  const active=$('#sTabs .side-tab.active'); if(focus&&active) active.focus({preventScroll:true});
+}
+$('#sTabs').addEventListener('click',e=>{
+  const t=e.target.closest('.side-tab'); if(t) showTab(t.dataset.t);
+});
+
+function initialiseTabList(list,items,key,orientation,activate){
+  list.setAttribute('role','tablist'); list.setAttribute('aria-orientation',orientation);
+  items.forEach(item=>{
+    item.setAttribute('role','tab');
+    const id=key==='pane'?item.dataset.pane:item.dataset.t;
+    let panel=key==='pane'?document.getElementById(id):document.querySelector(`#prefBody [data-tab="${id}"]`);
+    if(panel&&!panel.id) panel.id=`wire-${key}-${id}`;
+    if(panel) item.setAttribute('aria-controls',panel.id);
+    const on=item.classList.contains('active'); item.setAttribute('aria-selected',String(on)); item.tabIndex=on?0:-1;
+  });
+  list.addEventListener('keydown',event=>{
+    const item=event.target.closest('[role="tab"]'); if(!item) return;
+    const previous=orientation==='vertical'?'ArrowUp':'ArrowLeft';
+    const nextKey=orientation==='vertical'?'ArrowDown':'ArrowRight';
+    if(![previous,nextKey,'Home','End','Enter',' '].includes(event.key)) return;
+    event.preventDefault();
+    if(event.key==='Enter'||event.key===' '){ activate(key==='pane'?item.dataset.pane:item.dataset.t,true); return; }
+    const at=items.indexOf(item);
+    const next=event.key==='Home'?items[0]:event.key==='End'?items[items.length-1]:
+      items[(at+(event.key===nextKey?1:-1)+items.length)%items.length];
+    activate(key==='pane'?next.dataset.pane:next.dataset.t,true);
+  });
+}
+initialiseTabList($('#topTabs'),$$('#topTabs .win-tab'),'pane','horizontal',showPane);
+initialiseTabList($('#sTabs'),$$('#sTabs .side-tab'),'tab','vertical',showTab);
+
+/* the Wire tab — "Under the Wire tab you will find the preferences" */
+function currentTab(){ const a=$('#sTabs .side-tab.active'); return a?a.dataset.t:''; }
+$('#mWire').addEventListener('click',e=>{
+  const el=e.currentTarget, r=el.getBoundingClientRect();
+  const pane=($('.win-root > .pane.active')||{}).id, tab=currentTab();
+  openMenu([
+    {label:'Preferences…', kbd:'Ctrl+,', on:pane==='settings', run:()=>showPane('settings')},
+    {sep:1},
+    {label:'MIDI Preferences', on:pane==='settings'&&tab==='midi', run:()=>{showPane('settings');showTab('midi');}},
+    {label:'OSC Preferences',  on:pane==='settings'&&tab==='osc',  run:()=>{showPane('settings');showTab('osc');}},
+    {label:'FFT Preferences',  on:pane==='settings'&&tab==='fft',  run:()=>{showPane('settings');showTab('fft');}},
+    {sep:1},
+    {label:'ISF / Shader Editor',   on:pane==='isf',     run:()=>showPane('isf')},
+    {label:'Consolidate & Compile', on:pane==='compile', run:()=>showPane('compile')}
+  ], r.left, r.bottom, el);
+});
+$('#mWire').addEventListener('keydown',event=>{
+  if(!['Enter',' ','ArrowDown'].includes(event.key)) return;
+  event.preventDefault(); $('#mWire').click();
+  $('.dropdown.adhoc .dd-item:not(.disabled)')?.focus();
+});
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key===','){ e.preventDefault(); showPane('settings'); }
+});
+
+/* =======================================================================
+   Installing — platform switch (top right) and the release dropdown
+   ======================================================================= */
+const isMac=/mac|iphone|ipad/i.test(navigator.userAgent||'');
+function setPlatform(p){
+  $$('#fgInstall .win-chip').forEach(c=>c.classList.toggle('on',c.dataset.plat===p));
+  $('#platNote').textContent='detected: '+(isMac?'Mac':'PC');
+  $('#dlBtn').textContent='Download installer for '+p+'…';
+}
+$$('#fgInstall .win-chip').forEach(c=>c.addEventListener('click',()=>setPlatform(c.dataset.plat)));
+setPlatform(isMac?'Mac':'PC');
+
+/* =======================================================================
+   the fold-out monitors
+   ======================================================================= */
+$$('.mon-fold > h3').forEach(h=>h.addEventListener('click',()=>{
+  const g=h.parentElement;
+  g.classList.toggle('folded');
+  h.querySelector('.tw').textContent=g.classList.contains('folded')?'▶':'▼';
+}));
+function monLog(sel,text){
+  const box=$(sel), em=box.querySelector('.empty');
+  if(em) em.remove();
+  const d=document.createElement('div'); d.textContent=text;
+  box.appendChild(d);
+  while(box.children.length>200) box.removeChild(box.firstChild);
+  box.scrollTop=box.scrollHeight;
+}
+$$('[data-clear]').forEach(b=>b.addEventListener('click',()=>{
+  const box=$(b.dataset.clear); box.innerHTML='';
+  const d=document.createElement('div'); d.className='empty';
+  d.textContent='Cleared. New messages appear here.';
+  box.appendChild(d);
+  if(b.dataset.clear==='#midiLog'){ midiSeen=0; $('#midiCount').textContent='0 messages'; }
+}));
+$$('.monlog').forEach(l=>l.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  openMenu([{label:'Clear Monitor',run:()=>{
+    const b=l.parentElement.querySelector('[data-clear]'); if(b) b.click();
+  }}], e.clientX, e.clientY);
+}));
+
+/* =======================================================================
+   MIDI preferences
+   ======================================================================= */
+let MIDI=[{n:'APC40 mkII',i:true,o:false},{n:'loopMIDI Port',i:false,o:false}];
+let midiAccess=null, midiSeen=0;
+
+function renderMidi(){
+  const tb=$('#midiTable tbody'); tb.innerHTML='';
+  MIDI.forEach((d,ix)=>{
+    const tr=document.createElement('tr');
+    tr.dataset.ix=ix;
+    const td=document.createElement('td'); td.textContent=d.n; tr.appendChild(td);
+    ['i','o'].forEach(k=>{
+      const c=document.createElement('td');
+      const b=document.createElement('input');
+      b.type='checkbox'; b.checked=!!d[k]; b.dataset.k=k;
+      if(d[k+'able']===false){ b.disabled=true; b.title='This port has no '+(k==='i'?'input':'output'); }
+      c.appendChild(b); tr.appendChild(c);
+    });
+    tb.appendChild(tr);
+  });
+  $('#slMidi').textContent=MIDI.length+' device'+(MIDI.length===1?'':'s');
+}
+$('#midiTable').addEventListener('change',e=>{
+  const cb=e.target.closest('input[type=checkbox]'); if(!cb) return;
+  MIDI[+cb.closest('tr').dataset.ix][cb.dataset.k]=cb.checked;
+});
+/* right-click a device: the same two boxes the manual names */
+$('#midiTable').addEventListener('contextmenu',e=>{
+  const tr=e.target.closest('tbody tr'); if(!tr) return;
+  e.preventDefault();
+  const d=MIDI[+tr.dataset.ix];
+  openMenu([
+    {label:'Input',  on:d.i, run:()=>{ d.i=!d.i; renderMidi(); }},
+    {label:'Output', on:d.o, run:()=>{ d.o=!d.o; renderMidi(); }},
+    {sep:1},
+    {label:'Refresh', run:midiRefresh}
+  ], e.clientX, e.clientY);
+});
+
+function two(n){ return String(n).padStart(2,'0'); }
+function stamp(){ const d=new Date(); return two(d.getHours())+':'+two(d.getMinutes())+':'+two(d.getSeconds()); }
+
+function onMidiMessage(ev){
+  const b=ev.data, st=b[0], ch=(st&0x0f)+1, kind=st&0xf0;
+  let msg;
+  if(kind===0x90&&b[2]>0)      msg='Note On    pitch '+b[1]+'  velocity '+b[2];
+  else if(kind===0x80||kind===0x90) msg='Note Off   pitch '+b[1]+'  velocity '+b[2];
+  else if(kind===0xb0)         msg='CC         controller '+b[1]+'  cc value '+b[2];
+  else if(kind===0xe0)         msg='Pitch Bend '+((((b[2]||0)<<7)|(b[1]||0))-8192);
+  else                         msg='Raw        '+Array.from(b).join(' ');
+  monLog('#midiLog', stamp()+'  ch '+two(ch)+'  '+msg);
+  midiSeen++; $('#midiCount').textContent=midiSeen+' message'+(midiSeen===1?'':'s');
+}
+
+function midiRefresh(){
+  const st=$('#midiStatus');
+  if(!navigator.requestMIDIAccess){
+    st.textContent='This browser has no Web MIDI, so no port can be detected here. The list above stays '+
+                   'on the devices the patch remembers.';
+    return;
+  }
+  st.textContent='Asking the browser for MIDI access…';
+  navigator.requestMIDIAccess().then(a=>{
+    midiAccess=a;
+    const map={};
+    a.inputs.forEach(p=>{ const n=p.name||'MIDI In'; map[n]=map[n]||{n:n,i:false,o:false};
+      map[n].iable=true; p.onmidimessage=onMidiMessage; });
+    a.outputs.forEach(p=>{ const n=p.name||'MIDI Out'; map[n]=map[n]||{n:n,i:false,o:false};
+      map[n].oable=true; });
+    const list=Object.keys(map).map(k=>{
+      const d=map[k];
+      return {n:d.n, i:d.iable===true, o:false, iable:d.iable===true, oable:d.oable===true};
+    });
+    if(list.length){
+      MIDI=list; renderMidi();
+      st.textContent=list.length+' MIDI port'+(list.length===1?'':'s')+' detected. To have the device '+
+                     'work in SHOWAVE Forge the output box should be toggled on.';
+    } else {
+      st.textContent='MIDI access granted, but no ports are connected. Plug the device in, install its '+
+                     'drivers and press Refresh again.';
+    }
+  }).catch(err=>{
+    st.textContent='MIDI access was refused or is unavailable ('+(err&&err.message?err.message:'no reason given')+
+                   '). The list above stays on the devices the patch remembers.';
+  });
+}
+$('#midiRefresh').addEventListener('click',midiRefresh);
+renderMidi();
+
+/* =======================================================================
+   OSC preferences
+   ======================================================================= */
+function oscSync(){
+  const on=$('#oscIn').checked, out=$('#oscOut').checked;
+  $('#slOsc').textContent=on?$('#oscInPort').value:'off';
+  $('#oscPortEcho').textContent=$('#oscInPort').value;
+  $('#oscState').textContent=(on?'input enabled':'input disabled')+(out?' · output enabled':'');
+}
+['#oscIn','#oscOut','#oscInPort','#oscOutPort'].forEach(s=>{
+  const el=$(s); if(el) el.addEventListener('input',oscSync);
+});
+oscSync();
+
+/* =======================================================================
+   FFT — the band maths straight out of the chapter
+   ======================================================================= */
+const FFT_VALUES=1024;
+function fftSync(){
+  const rate=parseInt($('#sampleRate').value,10)||48000;
+  const band=(rate/2)/FFT_VALUES;
+  $('#fftRate').textContent=rate+' Hz';
+  $('#fftMax').textContent=(rate/2)+' Hz';
+  $('#fftBand').textContent=band.toFixed(2)+' Hz';
+  let n=parseInt($('#fftIdx').value,10); if(isNaN(n)) n=0;
+  n=Math.max(0,Math.min(FFT_VALUES-1,n));
+  $('#fftIdxRange').textContent='covers '+Math.round(n*band)+' – '+Math.round((n+1)*band)+' Hz'+
+    (n*band>15000?'  (above most adult hearing)':'');
+  const src=$('#fftSource').value;
+  $('#fftExternal').disabled=(src!=='external');
+  $('#slFft').textContent=src==='composition'?'show':src;
+}
+['#sampleRate','#fftIdx','#fftSource'].forEach(s=>{
+  const el=$(s); if(el){ el.addEventListener('change',fftSync); el.addEventListener('input',fftSync); }
+});
+fftSync();
+
+/* =======================================================================
+   ISF: parse the INPUTS block and build controls
+   ======================================================================= */
+function parseISF(){
+  const src=$('#code').value;
+  const m=src.match(/\/\*\{([\s\S]*?)\}\*\//);
+  const box=$('#isfInputs'); box.innerHTML='';
+  if(!m){ $('#isfStatus').textContent='No ISF header'; return; }
+  let json;
+  try{ json=JSON.parse('{'+m[1]+'}'); }
+  catch(err){
+    $('#isfStatus').textContent='JSON error';
+    $('#errLine').style.display=''; $('#errLine').textContent='ISF header: '+err.message;
+    return;
+  }
+  $('#errLine').style.display='none';
+  $('#isfStatus').textContent='Compiled OK';
+  (json.INPUTS||[]).forEach(inp=>{
+    const row=document.createElement('div'); row.className='formrow';
+    if(inp.TYPE==='float'){
+      row.innerHTML='<label></label>'+
+        '<input type="range" min="'+(inp.MIN!=null?inp.MIN:0)+'" max="'+(inp.MAX!=null?inp.MAX:1)+
+        '" step="0.01" value="'+(inp.DEFAULT!=null?inp.DEFAULT:0)+'">'+
+        '<output>'+(inp.DEFAULT!=null?inp.DEFAULT:0)+'</output>';
+    } else if(inp.TYPE==='bool'){
+      row.innerHTML='<label></label><input type="checkbox">';
+    } else if(inp.TYPE==='color'){
+      row.innerHTML='<label></label><input type="text" value="1 1 1 1">';
+    } else {
+      row.innerHTML='<label></label><span class="pval">'+inp.TYPE+'</span>';
+    }
+    row.querySelector('label').textContent=inp.NAME;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('input[type=range]').forEach(r=>r.addEventListener('input',()=>{
+    r.parentElement.querySelector('output').value=r.value;
+  }));
+}
+$('#compileBtn').addEventListener('click',parseISF);
+$('#code').addEventListener('input',()=>{ $('#isfStatus').textContent='Modified: press Compile'; });
+
+/* shader preview */
+const p=$('#isfPrev'), px=p.getContext('2d');
+let isfFrame=0;
+let isfBlack=getComputedStyle(document.documentElement).getPropertyValue('--content-black').trim();
+const reduceIsfMotion=matchMedia('(prefers-reduced-motion: reduce)');
+function paintIsf(t){
+  const w=p.width,h=p.height;
+  px.fillStyle=isfBlack; px.fillRect(0,0,w,h);
+  for(let i=0;i<26;i++){
+    const a=t/900+i*0.24, r=18+i*6;
+    px.strokeStyle='hsla('+(238+((i*4+t/60)%54))+',52%,'+(48+i)+'%,'+(0.85-i*0.028)+')';
+    px.lineWidth=2;
+    px.beginPath(); px.arc(w/2+Math.cos(a)*22, h/2+Math.sin(a*1.3)*16, r, 0, 7); px.stroke();
+  }
+}
+function isfPreviewActive(){ return !document.hidden&&$('#isf').classList.contains('active'); }
+function draw(t){
+  if(!isfPreviewActive()||reduceIsfMotion.matches){ isfFrame=0; return; }
+  paintIsf(t); isfFrame=requestAnimationFrame(draw);
+}
+function syncIsfPreview(){
+  if(isfFrame){ cancelAnimationFrame(isfFrame); isfFrame=0; }
+  paintIsf(0);
+  if(isfPreviewActive()&&!reduceIsfMotion.matches) isfFrame=requestAnimationFrame(draw);
+}
+document.addEventListener('visibilitychange',syncIsfPreview);
+if(typeof reduceIsfMotion.addEventListener==='function') reduceIsfMotion.addEventListener('change',syncIsfPreview);
+addEventListener('openlive:appearancechange',()=>{
+  isfBlack=getComputedStyle(document.documentElement).getPropertyValue('--content-black').trim();
+  syncIsfPreview();
+});
+
+/* folding sections in the ISF rail (arena.css folds .sect > .sbody) */
+$$('.sect > h3').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('folded')));
+
+/* deep links: wire-settings.html#isf / #compile / #midi / #osc / #fft */
+if(location.hash){
+  const key=location.hash.slice(1);
+  const pane=$('#topTabs [data-pane="'+key+'"]');
+  const tab=$('#sTabs [data-t="'+key+'"]');
+  if(pane) showPane(key);
+  else if(tab){ showPane('settings'); showTab(key); }
+}
+parseISF();
+syncIsfPreview();
+</script>
+</body>
+</html>

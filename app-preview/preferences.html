@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SHOWAVE Preferences</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<!-- Synchronous first-paint bootstrap: installs the saved palette tokens before
+     either historical Preferences stylesheet can paint its fixed dark defaults. -->
+<script src="openlive-mobile-host.js?v=preferences-qr-2" data-showave-mobile-host defer></script>
+<script src="showave-brand.js"></script>
+<script src="openlive-interface-typography.js?v=interface-fonts-2"></script>
+<script src="openlive-appearance.js?v=interface-fonts-2"></script>
+<!-- Page-scoped copies of the donor tree's stylesheets. This page was authored
+     against those, and this tree's own arena.css / nocturne.css are a different
+     and older lineage: nocturne.css here is 13 KB against the donor's 30 KB and
+     carries none of the .win-content / .formgroup / .formrow rules this markup
+     needs, which left the nav column clipped and the pane overflowing sideways.
+     Copied under their own names rather than swapping the originals, because
+     the donor's nocturne.css also redefines the control metrics (--control-h et
+     al) and adopting it globally would resize every control in the mixer. -->
+<link rel="stylesheet" href="preferences-arena.css">
+<link rel="stylesheet" href="preferences-nocturne.css?v=composition-properties-1">
+<style>
+  /* Preferences — Nocturne polish over arena.css density.
+     Sizes match the main window; only colors/effects are added. */
+  :root{
+    /* 214px, not 150px, and the number is not arbitrary: it is --ao-left from
+       openlive-output-editor.css. The status panel below the tabs is modelled on
+       the Advanced Output's help box, and a help box has to be wide enough to
+       read a sentence in. */
+    --pref-nav-w:214px;
+    --pref-header-h:28px;
+    --pref-control-w:236px;
+    --pref-control-h:24px;
+    --pref-anim:160ms cubic-bezier(.22,.61,.36,1);
+    --pref-status-h:172px;
+    /* The three status colours were written as raw hex in four places each. One
+       definition, so a change to "warning" cannot land in three of the four. */
+    --state-ok:#77c48d;
+    --state-warn:#d0a25f;
+    --state-err:#d56c72;
+    /* Shared signal-meter palette. These are deliberately the same saturated
+       values as the Audio Mixer, independent of the surrounding UI theme. */
+    --audio-meter-bg:var(--inset);
+    --audio-meter-nominal:#37d247;
+    --audio-meter-warning:#e5af24;
+    --audio-meter-error:#e33b57;
+    --audio-meter-dark-nominal:#17641e;
+    --audio-meter-dark-warning:#6e520d;
+    --audio-meter-dark-error:#7d1224;
+    --audio-meter-peak:var(--n100);
+    --audio-meter-vu:var(--line);
+  }
+
+  /* ---- Side column: tabs above, status panel pinned to the corner ---------
+     The tab list and the status panel share one column so the panel sits at the
+     bottom of the window rather than at the bottom of a scrolling list. */
+  .pref-side{
+    flex:0 0 var(--pref-nav-w);
+    width:var(--pref-nav-w);
+    display:flex; flex-direction:column; min-height:0;
+    background:var(--strip);
+    border-right:1px solid var(--line);
+  }
+  .side-tabs{
+    flex:1 1 auto;
+    width:auto;
+    min-height:0;
+    overflow-y:auto;
+    padding-top:8px;
+    background:transparent;
+    border-right:0;
+  }
+  .side-tab{
+    padding:6px 12px;
+    border-bottom:1px solid var(--line2);
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    font-size:11.5px;
+    color:var(--n500);
+    cursor:pointer;
+    transition:color var(--pref-anim), background var(--pref-anim);
+  }
+  .side-tab:hover{
+    color:var(--n200);
+    background:color-mix(in srgb,var(--color-accent) 10%,transparent);
+  }
+  .side-tab.active{
+    color:var(--a200);
+    font-weight:500;
+    background:color-mix(in srgb,var(--color-accent) 12%,transparent);
+    box-shadow:inset 3px 0 0 var(--color-accent);
+  }
+
+  /* ---- Content area ---- */
+  .win-content{ padding:12px 20px 20px; }
+
+  /* Section headers — clean text with bottom border */
+  .win-content section > h2{
+    margin:4px 0 12px;
+    padding:0 0 6px;
+    border-bottom:1px solid var(--line2);
+    color:var(--n100);
+    font-size:13px;
+    font-weight:600;
+  }
+
+  /* ---- Form groups ---- */
+  .formgroup{
+    width:min(620px,100%);
+    max-width:none;
+    margin:0 0 14px;
+    padding:10px 14px;
+    border:1px solid var(--n800);
+    border-radius:var(--radius-md);
+    background:#1e2130;
+    transition:border-color var(--pref-anim);
+  }
+  .formgroup:hover{
+    border-color:color-mix(in srgb,var(--color-accent) 18%,var(--n800));
+  }
+  /* This window deliberately does not use arena.css's form rules, so it carries
+     its own copy of this header. Both must agree, or the two Preferences windows
+     would disagree about the same control. Resolume ships these group headers in
+     Title Case; the authored markup already does. */
+  .formgroup h3{
+    margin:0 0 6px;
+    color:var(--a300);
+    font-size:11px;
+    line-height:18px;
+    font-weight:500;
+    letter-spacing:.01em;
+  }
+
+  /* ---- Form rows ---- */
+  .formrow{
+    min-height:var(--pref-control-h);
+    max-width:620px;
+    margin:5px 0;
+    gap:10px;
+  }
+  .formrow label{
+    flex:0 0 190px; width:190px; min-width:190px;
+    color:var(--n500);
+    transition:color var(--pref-anim);
+  }
+  .formrow:hover label{ color:var(--n400); }
+  .formrow select{
+    flex:0 1 var(--pref-control-w);
+    width:var(--pref-control-w);
+    height:var(--pref-control-h);
+    min-width:0;
+    padding:0 22px 0 6px;
+    transition:border-color var(--pref-anim);
+  }
+  .formrow select:focus{ border-color:var(--a600); }
+  .formrow input[type=text]{
+    flex:0 1 360px; width:360px;
+    height:var(--pref-control-h);
+    min-width:0; padding:0 6px;
+    transition:border-color var(--pref-anim);
+  }
+  .formrow input[type=text]:focus{ border-color:var(--a600); }
+  .formrow input[type=number]{
+    flex:0 0 96px; width:96px;
+    height:var(--pref-control-h);
+    padding:0 6px;
+    transition:border-color var(--pref-anim);
+  }
+  .formrow input[type=number]:focus{ border-color:var(--a600); }
+  .formrow input[type=range]{ flex:0 1 var(--pref-control-w) !important; width:var(--pref-control-w); }
+
+  /* Buttons */
+  .formrow .tb-btn,
+  .formgroup h3 .tb-btn{
+    min-height:var(--pref-control-h);
+    height:var(--pref-control-h);
+    padding:0 10px;
+    white-space:nowrap;
+    transition:all var(--pref-anim);
+  }
+  .formrow .tb-btn:hover,
+  .formgroup h3 .tb-btn:hover{
+    background:color-mix(in srgb,var(--color-accent) 12%,transparent);
+    border-color:var(--a600);
+    color:var(--n100);
+  }
+  .formrow .tb-btn[hidden]{ display:none !important; }
+  .formrow > select + .tb-btn,
+  .formrow > input[type=text] + .tb-btn,
+  .formrow > input[type=number] + .tb-btn,
+  .formrow > .tb-btn + .tb-btn{
+    margin-left:-10px;
+    border-left:0;
+    border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  }
+  .formrow > select:has(+ .tb-btn),
+  .formrow > input:has(+ .tb-btn),
+  .formrow > .tb-btn:has(+ .tb-btn){
+    border-radius:var(--radius-sm) 0 0 var(--radius-sm);
+  }
+  .formgroup .datatable{ margin-top:2px; }
+  .formgroup textarea{ max-width:620px; }
+
+  /* ---- Audio ---- */
+  .audio-value{
+    flex:0 0 70px; color:var(--n300);
+    font-size:10.5px; font-variant-numeric:tabular-nums; text-align:right;
+  }
+  /* THE STATUS NOTES MOVED TO THE CORNER.
+     Thirty-three of these sat inline between the form groups, so a tab like DMX
+     interleaved five paragraphs of prose with its controls and you had to scroll
+     past explanation to reach the next setting. They are still written here, by
+     the same five preferences-*.js modules and by id — nothing about the writers
+     changed — but they are hidden and mirrored into #prefStatus, the panel at
+     the foot of the tab column. One place to look, the way the Advanced Output's
+     help box is one place to look.
+     Kept in the DOM rather than deleted: every writer targets these ids, and the
+     mirror observes them. display:none also stops role="status" announcing the
+     same text twice, since the panel carries the live region now.
+
+     Scoped to .win-content deliberately: the ASIO dialog carries an .audio-status
+     of its own, and that one is not part of any tab — hiding it would delete the
+     sentence explaining why the vendor control panel cannot open. */
+  .audio-status, .video-status, .midi-status, .pref-status{
+    margin:6px 0 0 200px;
+    width:min(420px,calc(100% - 200px));
+    padding:7px 10px;
+    border:1px solid var(--n800);
+    border-radius:var(--radius-sm);
+    background:color-mix(in srgb,var(--inset) 78%,transparent);
+    color:var(--n500); font-size:10.5px; line-height:1.45;
+  }
+  :is(.audio-status,.video-status,.midi-status,.pref-status) strong{ color:var(--n200); font-weight:500; }
+  :is(.audio-status,.video-status,.midi-status,.pref-status)[data-state="ready"]{ border-color:color-mix(in srgb,var(--state-ok) 45%,var(--n800)); }
+  :is(.audio-status,.video-status,.midi-status,.pref-status)[data-state="warning"]{ border-color:color-mix(in srgb,var(--state-warn) 55%,var(--n800)); }
+  :is(.audio-status,.video-status,.midi-status,.pref-status)[data-state="error"]{ border-color:color-mix(in srgb,var(--state-err) 60%,var(--n800)); }
+  .win-content :is(.audio-status,.video-status,.midi-status,.pref-status){ display:none; }
+  .audio-input-safety{ margin:6px 0 0 200px; width:min(520px,calc(100% - 200px));
+    padding:7px 10px; box-sizing:border-box; border-left:2px solid var(--state-ok);
+    background:color-mix(in srgb,var(--inset) 78%,transparent); color:var(--n500);
+    font-size:10.5px; line-height:1.45; }
+  .audio-input-safety strong{ color:var(--n200); font-weight:600; }
+
+  /* ---- the corner panel ------------------------------------------------
+     Anatomy copied from .ao-help / .ao-help-t / .ao-help-b in
+     openlive-output-editor.css: fixed height so the tabs above do not jump as
+     the text changes length, a 20px uppercase header, a small-type body. */
+  /* ONE NOTE AT A TIME, AND NEVER A SCROLLBAR — the way .ao-help works.
+     The first version stacked every note for the tab in a fixed-height box with
+     overflow-y:auto, so Audio's five notes became a scrolling list. The Advanced
+     Output's help box shows exactly one thing, names it in the header, and sizes
+     itself to that one thing: `flex:0 0 auto; min-height:96px` with no overflow
+     rule at all. min-height, not height — it grows to fit the longest text
+     (measured: the longest status note here is 417 characters, about 14 lines at
+     this width) and the tab list above it is what gives up the space, because
+     the list is a list and can scroll without anyone losing a sentence. */
+  .pref-help{
+    flex:0 0 auto; min-height:var(--pref-status-h);
+    display:flex; flex-direction:column;
+    border-top:1px solid var(--line);
+    background:var(--color-surface);
+  }
+  .pref-help-t{
+    min-height:20px; flex:0 0 auto;
+    display:flex; align-items:center; gap:6px; padding:0 4px 0 10px;
+    background:var(--head); border-bottom:1px solid var(--line);
+    /* A panel header, the same class of element as .mon-head. */
+    font-size:10px; letter-spacing:.01em;
+    color:var(--n400); font-weight:500;
+  }
+  /* The header names the note, the way .ao-help-t names the selected slice. */
+  #prefStatusTitle{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pref-step{ margin-left:auto; flex:0 0 auto; display:flex; align-items:center; gap:1px; }
+  .pref-step .pref-help-n{ color:var(--n600); letter-spacing:0;
+    font-variant-numeric:tabular-nums; padding:0 3px; }
+  .pref-step button{
+    width:15px; height:15px; padding:0; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    background:transparent; border:1px solid transparent; border-radius:2px;
+    color:var(--n500); font-size:10px; cursor:pointer;
+  }
+  .pref-step button:hover:not(:disabled){ color:var(--n200);
+    background:color-mix(in srgb,var(--color-accent) 16%,transparent); }
+  .pref-step button:disabled{ color:var(--n800); cursor:default; }
+  .pref-step button:focus-visible{ outline:1px solid var(--color-accent); outline-offset:-1px; }
+  .pref-help-b{
+    flex:1 1 auto;
+    padding:6px 10px 9px;
+    font-size:10.5px; line-height:1.45; color:var(--n500);
+  }
+  .pref-help-b .pref-none{ color:var(--n600); font-style:italic; }
+  /* The 2px rail on the left is the state, in the same three colours the inline
+     boxes used for their border. */
+  .pref-note{ padding:0 0 0 8px; border-left:2px solid var(--n800); cursor:pointer; }
+  .pref-note:hover{ border-left-color:var(--color-accent); }
+  .pref-note strong{ color:var(--n200); font-weight:500; }
+  .pref-note[data-state="ready"]{ border-left-color:var(--state-ok); }
+  .pref-note[data-state="warning"]{ border-left-color:var(--state-warn); }
+  .pref-note[data-state="error"]{ border-left-color:var(--state-err); }
+  /* Clicking a note takes you to the control it is about. */
+  .formgroup.pref-flash{ box-shadow:inset 0 0 0 1px var(--color-accent); }
+  /* A dot in the header, coloured by the worst state on the tab, so the panel
+     answers "is anything wrong here" before it is read. */
+  .pref-help-dot{ width:6px; height:6px; border-radius:50%; background:var(--n700); }
+  .pref-help-dot[data-state="ready"]{ background:var(--state-ok); }
+  .pref-help-dot[data-state="warning"]{ background:var(--state-warn); }
+  .pref-help-dot[data-state="error"]{ background:var(--state-err); }
+  /* The Preferences input uses the same compact horizontal anatomy as the
+     Audio Mixer: stereo PPM fill, VU marker, held peak, instantaneous input
+     marker and clipping edge. Channel letters remain outside the fill. */
+  .audio-meters{ flex:0 1 var(--pref-control-w); width:var(--pref-control-w);
+    display:flex; flex-direction:column; gap:2px; }
+  .audio-meterrow{ display:flex; align-items:center; gap:5px; }
+  .audio-ch{ flex:0 0 8px; font-size:9px; line-height:1; color:var(--n500);
+    font-weight:600; text-align:center; }
+  #audioInputMeters .audio-input-meter{ position:relative; flex:1 1 auto; width:auto; height:8px;
+    overflow:hidden; border:1px solid var(--n800); border-radius:2px;
+    background:var(--audio-meter-bg); }
+  #audioInputMeters .audio-input-meter .audio-meter-lane{ position:absolute; inset:0; overflow:hidden;
+    background:linear-gradient(to right,var(--audio-meter-dark-nominal) 0 66.667%,
+      var(--audio-meter-dark-warning) 66.667% 85%,var(--audio-meter-dark-error) 85% 100%); }
+  #audioInputMeters .audio-input-meter .audio-meter-fill{ position:absolute; left:0; top:0; bottom:0; width:0;
+    background:linear-gradient(to right,var(--audio-meter-nominal) 0 66.667%,
+      var(--audio-meter-warning) 66.667% 85%,var(--audio-meter-error) 85% 100%); }
+  #audioInputMeters .audio-input-meter .audio-meter-vu,
+  #audioInputMeters .audio-input-meter .audio-meter-peak-line{
+    position:absolute; top:0; bottom:0; left:0; width:1px; }
+  #audioInputMeters .audio-input-meter .audio-meter-vu{ background:var(--audio-meter-vu); }
+  #audioInputMeters .audio-input-meter .audio-meter-peak-line{ background:var(--audio-meter-peak); }
+  #audioInputMeters .audio-input-meter .audio-meter-input{ position:absolute; top:0; bottom:0; left:0; width:2px;
+    background:var(--audio-meter-nominal); }
+  #audioInputMeters .audio-input-meter .audio-meter-input[data-zone="dark-green"]{ background:var(--audio-meter-dark-nominal); }
+  #audioInputMeters .audio-input-meter .audio-meter-input[data-zone="green"]{ background:var(--audio-meter-nominal); }
+  #audioInputMeters .audio-input-meter .audio-meter-input[data-zone="yellow"]{ background:var(--audio-meter-warning); }
+  #audioInputMeters .audio-input-meter .audio-meter-input[data-zone="red"]{ background:var(--audio-meter-error); }
+  #audioInputMeters .audio-input-meter .audio-meter-input[data-zone="white"]{ background:var(--audio-meter-peak); }
+  #audioInputMeters .audio-input-meter.clipping{ box-shadow:inset 0 0 0 1px var(--audio-meter-error); }
+  .audio-input-scale{ margin-left:13px; display:flex; justify-content:space-between;
+    color:var(--n600); font-size:7.5px; line-height:8px; font-variant-numeric:tabular-nums; }
+  .audio-meter{
+    flex:0 1 var(--pref-control-w); width:var(--pref-control-w);
+    height:8px; overflow:hidden;
+    border:1px solid var(--n800); border-radius:2px; background:var(--inset);
+  }
+  .audio-progress > i{
+    display:block; width:0; height:100%;
+    background:var(--a600); transition:width 120ms linear;
+  }
+  /* Mono stays explicit in the readout without replacing signal colours. */
+  .audio-meters[data-mono="1"] .audio-ch{ color:var(--n300); }
+  .audio-inline-select{ display:flex; flex:0 1 360px; width:360px; gap:4px; }
+  .audio-inline-select select{ flex:1; width:auto; }
+  .audio-inline-select select:last-child{ flex:0 0 98px; }
+  #vstDirectoryList{ flex:0 1 360px; width:360px; height:74px; padding:3px; background:var(--inset); }
+  #ffglDirectoryList, #ffglPluginList{ flex:0 1 360px; width:360px; height:74px; padding:3px; background:var(--inset); }
+  #ffglPluginList{ height:88px; }
+  .video-builtin{ margin:7px 0 0 200px; width:min(420px,calc(100% - 200px)); color:var(--n600); font-size:10px; line-height:1.45; }
+
+  /* OpenLive-owned temporary media cleanup.  This uses the page's existing
+     overlay/dialog anatomy; the extra rules only lay out the preview and make
+     the destructive action unambiguous. */
+  .temporary-media-summary{
+    flex:0 1 250px; min-width:0; color:var(--n300);
+    font-size:10.5px; font-variant-numeric:tabular-nums;
+  }
+  .temporary-media-cleanup{ width:min(560px,calc(100vw - 32px)); min-width:420px; }
+  .temporary-media-cleanup .fw-title .x{
+    appearance:none; margin-left:auto; padding:0 4px; border:0;
+    background:transparent; color:var(--n500); cursor:pointer;
+  }
+  .temporary-media-cleanup .fw-title .x:hover:not(:disabled){ color:var(--n100); background:var(--state-err); }
+  .temporary-media-cleanup .fw-title .x:disabled{ opacity:.45; cursor:default; }
+  .temporary-media-cleanup .fw-body{ padding:12px 14px; }
+  .temporary-media-protection{
+    margin:0 0 10px; padding:8px 10px; border-left:3px solid var(--state-warn);
+    background:color-mix(in srgb,var(--state-warn) 9%,transparent);
+    color:var(--n300); font-size:10.5px; line-height:1.45;
+  }
+  .temporary-media-powerpoint{
+    margin:0 0 10px; color:var(--n500); font-size:10.5px; line-height:1.45;
+  }
+  .temporary-media-total{
+    display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+    margin-bottom:8px; color:var(--n400); font-size:10.5px;
+  }
+  .temporary-media-total strong{ color:var(--n100); font-size:14px; font-variant-numeric:tabular-nums; }
+  .temporary-media-categories{
+    margin:0; padding:0; border:1px solid var(--n800); background:var(--inset);
+  }
+  /* A fieldset legend beside .appearance-custom legend in the same window. */
+  .temporary-media-categories legend{
+    margin-left:7px; padding:0 4px; color:var(--n500); font-size:9.5px;
+    letter-spacing:.01em;
+  }
+  .temporary-media-category{
+    min-height:34px; display:grid; grid-template-columns:18px minmax(0,1fr) auto;
+    align-items:center; gap:7px; padding:4px 9px; border-bottom:1px solid var(--n800);
+    color:var(--n300); cursor:pointer;
+  }
+  .temporary-media-category:last-child{ border-bottom:0; }
+  .temporary-media-category:hover{ background:color-mix(in srgb,var(--color-accent) 8%,transparent); }
+  .temporary-media-category:has(input:disabled){ color:var(--n600); cursor:default; }
+  .temporary-media-category-count{ color:var(--n500); font-size:10px; font-variant-numeric:tabular-nums; }
+  .temporary-media-empty{ padding:10px; color:var(--n600); font-size:10.5px; }
+  .temporary-media-protected{
+    margin-top:8px; color:var(--n600); font-size:10px; line-height:1.45;
+    font-variant-numeric:tabular-nums;
+  }
+  .temporary-media-dialog-status{
+    min-height:31px; margin-top:9px; padding:6px 8px;
+    border:1px solid var(--n800); background:var(--inset);
+    color:var(--n500); font-size:10.5px; line-height:1.4;
+  }
+  .temporary-media-dialog-status[data-state="busy"]{ color:var(--a300); }
+  .temporary-media-dialog-status[data-state="changed"]{ color:var(--state-warn); border-color:var(--state-warn); }
+  .temporary-media-dialog-status[data-state="error"]{ color:var(--state-err); border-color:var(--state-err); }
+  .temporary-media-dialog-status[data-state="ready"]{ color:var(--state-ok); }
+  .temporary-media-confirm{ color:var(--state-err); }
+  .temporary-media-confirm:not(:disabled):hover{ border-color:var(--state-err); }
+  @media (max-width:620px){
+    .temporary-media-cleanup{ min-width:0; }
+    .temporary-media-category{ grid-template-columns:18px minmax(0,1fr); }
+    .temporary-media-category-count{ grid-column:2; }
+  }
+
+  /* ---- MIDI ---- */
+  .midi-device-name{ color:var(--n200); }
+  .midi-device-meta{ display:block; margin-top:1px; color:var(--n600); font-size:9.5px; }
+  #midiDevicesTable th:not(:first-child),
+  #midiDevicesTable td:not(:first-child){ width:82px; text-align:center; }
+  #midiDevicesTable td:first-child{ min-width:230px; }
+  #midiLog{ min-height:180px; }
+  #oscLog{ min-height:180px; }
+  .midi-log-entry{
+    display:grid;
+    grid-template-columns:70px 40px minmax(150px,1fr) 80px minmax(160px,1.4fr);
+    gap:8px; padding:3px 6px;
+    border-bottom:1px solid var(--n800);
+    color:var(--n400); font:10.5px/1.35 Consolas,monospace;
+  }
+  .midi-log-entry[data-direction="out"]{ color:#bea7df; }
+  .midi-log-entry[data-kind="clock"]{ color:#c6a863; }
+  .midi-log-empty{ padding:30px 10px; color:var(--n600); text-align:center; }
+  .osc-log-entry{
+    display:grid;
+    grid-template-columns:72px 40px minmax(220px,1fr) minmax(130px,.7fr);
+    gap:8px; padding:3px 6px;
+    border-bottom:1px solid var(--n800);
+    color:var(--n400); font:10.5px/1.35 Consolas,monospace;
+  }
+  .osc-log-entry[data-direction="out"]{ color:#bea7df; }
+
+  /* ---- Callouts ---- */
+  .pref-callout{
+    max-width:620px; margin:8px 0 14px; padding:8px 10px;
+    border-left:3px solid var(--a500);
+    background:color-mix(in srgb,var(--a900) 22%,transparent);
+    color:var(--n450); font-size:10.5px; line-height:1.5;
+  }
+  .pref-code{ font-family:Consolas,monospace; color:var(--a300); word-break:break-all; }
+  .pref-table-select{ outline:1px solid var(--a500); outline-offset:-1px; background:color-mix(in srgb,var(--a900) 30%,transparent); }
+
+  /* ---- DMX ---- */
+  #dmxInputsTable input[type=number]{ width:64px; }
+  #dmxInputsTable input[type=text]{ width:150px; }
+  #dmxOutputsTable td:nth-child(3){ font-family:Consolas,monospace; }
+  #dmxOutputsTable tr[data-state="warning"] td{ background:color-mix(in srgb,#d0a25f 8%,transparent); }
+  .dmx-route-warning{ display:block; max-width:220px; margin-top:2px; color:#d0a25f; font-size:9px; line-height:1.25; white-space:normal; }
+  .dmx-channel-grid{ display:grid; grid-template-columns:repeat(16,minmax(27px,1fr)); gap:2px; padding:8px; min-width:500px; }
+  .dmx-channel{
+    height:22px; border:1px solid var(--n800); background:var(--inset);
+    color:var(--n600); font:9px/20px Consolas,monospace; text-align:center;
+    cursor:pointer; border-radius:var(--radius-sm); transition:all var(--pref-anim);
+  }
+  .dmx-channel:hover{ border-color:var(--a600); }
+  .dmx-channel[data-active="true"]{ border-color:var(--a500); background:color-mix(in srgb,var(--a700) 60%,var(--inset)); color:var(--n100); }
+  .dmx-channel[data-recent="true"]{ box-shadow:inset 0 0 0 1px #d0a25f; }
+  .dmx-channel[aria-selected="true"]{ outline:1px solid var(--a200); outline-offset:1px; }
+  .dmx-monitor-body{ display:grid; grid-template-columns:minmax(520px,1fr) 250px; min-height:330px; }
+  .dmx-history{ border-left:1px solid var(--n800); min-width:0; }
+  .dmx-history h4{ margin:0; padding:8px; color:var(--n300); background:var(--head); }
+  .dmx-history-list{ max-height:300px; overflow:auto; font:10px/1.45 Consolas,monospace; }
+  .dmx-history-entry{ display:grid; grid-template-columns:68px 46px 1fr; gap:5px; padding:3px 7px; border-bottom:1px solid var(--n800); color:var(--n400); }
+  #dmxNodesTable td:nth-child(2){ font-family:Consolas,monospace; }
+
+  /* ---- Recording ---- */
+  .recording-dependent[aria-disabled="true"]{ opacity:.46; }
+  .recording-dependent[aria-disabled="true"] :is(input,select,button){ pointer-events:none; }
+  .recording-summary{
+    width:min(760px,100%); display:grid;
+    grid-template-columns:minmax(260px,.8fr) minmax(340px,1.2fr);
+    border:1px solid var(--n800); background:var(--inset); border-radius:var(--radius-sm);
+  }
+  .recording-live{ padding:12px; border-right:1px solid var(--n800); }
+  /* De-shouted, together with the toUpperCase() in preferences-system.js that
+     was shouting the same text a second time. The strings are Recording /
+     Completed / Error / Bridge unavailable -- state readouts, which Resolume
+     writes in Title Case. Its all-caps set is transport buttons (RECORD, STOP,
+     PAUSE), acronyms, and the LOW MEMORY!! alarm; a readout is none of those. */
+  .recording-live-state{ color:var(--n200); font-size:13px; letter-spacing:.01em; }
+  .recording-live-state[data-state="recording"]{ color:#d56c72; }
+  .recording-live-state[data-state="completed"]{ color:#77c48d; }
+  .recording-live-state[data-state="error"]{ color:#d56c72; }
+  .recording-live-metrics{ margin-top:8px; color:var(--n500); font:10.5px/1.6 Consolas,monospace; white-space:pre-line; }
+  .recording-history{ min-width:0; }
+  .recording-history-head{ height:30px; display:flex; align-items:center; gap:8px; padding:0 8px; border-bottom:1px solid var(--n800); color:var(--n300); }
+  .recording-history-head .tb-btn{ margin-left:auto; height:22px; min-height:22px; }
+  #recordingHistoryTable{ width:100%; table-layout:fixed; }
+  #recordingHistoryTable th:nth-child(1){ width:70px; }
+  #recordingHistoryTable th:nth-child(2){ width:72px; }
+  #recordingHistoryTable th:nth-child(4){ width:62px; }
+  #recordingHistoryTable th:nth-child(5){ width:58px; }
+  #recordingHistoryBody td{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .recording-actions{ display:flex; gap:6px; margin:8px 0 0 200px; }
+  .recording-extension{ flex:0 0 72px; color:var(--a300); font:10.5px/24px Consolas,monospace; }
+  @media (max-width:900px){ .recording-summary{ grid-template-columns:1fr; } .recording-live{ border-right:0; border-bottom:1px solid var(--n800); } }
+
+  /* ---- Focus & a11y ---- */
+  .side-tab:focus-visible{ outline:1px solid var(--color-accent); outline-offset:-2px; }
+  .audio-restart{ color:#d0a25f; }
+  .audio-unavailable{ opacity:.48; }
+  .audio-unavailable :is(input,select,button){ pointer-events:none; }
+
+  .mobile-pairing{ max-width:520px; }
+  .mobile-pairing p{ line-height:1.5; }
+  .mobile-pairing-actions{ display:flex; gap:8px; margin-top:12px; }
+  .mobile-pairing-qr:empty{ display:none; }
+  .mobile-pairing-qr select{ width:100%; margin:8px 0; }
+  .mobile-pairing-qr img{ display:block; width:260px; max-width:100%; margin:12px auto; image-rendering:pixelated; }
+  .mobile-pairing-qr a{ display:block; color:var(--a200); word-break:break-all; font-size:10px; }
+
+  .appearance-type-panel,.appearance-library-panel{ width:auto; max-width:none; }
+  .appearance-section-note{ margin:5px 0 10px; color:var(--n500); font-size:10.5px; line-height:1.55; max-width:720px; }
+  .appearance-scale-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:4px 0; }
+  .appearance-scale-row label{ min-width:92px; font-weight:600; }
+  .appearance-scale-row input{ flex:1; min-width:100px; max-width:260px; accent-color:var(--color-accent); }
+  .appearance-scale-small{ font-size:10px; color:var(--n500); }
+  .appearance-scale-large{ font-size:17px; color:var(--n300); }
+  .appearance-scale-row output{ width:36px; font-variant-numeric:tabular-nums; }
+  .appearance-library-tags{ display:flex; flex-wrap:wrap; gap:6px; }
+  .appearance-library-tags span{ border:1px solid var(--n800); border-radius:3px; padding:3px 7px; color:var(--n400); font-size:9.5px; background:var(--inset); }
+  .appearance-savebar{ position:sticky; bottom:0; z-index:5; display:flex; flex-wrap:wrap; align-items:center; gap:8px; border:1px solid var(--n800); border-radius:4px; background:var(--panel); padding:12px 118px 12px 12px; margin-top:12px; box-shadow:0 -4px 14px #0002; }
+  .appearance-savebar>div{ flex:1; min-width:180px; }
+  .appearance-savebar strong{ font-size:11px; color:var(--n200); }
+  .appearance-savebar p{ margin:4px 0 0; font-size:10px; color:var(--n500); line-height:1.4; }
+  .appearance-savebar [data-state="saved"]{ color:var(--state-ok); }
+  .appearance-savebar [data-state="error"]{ color:var(--state-err); }
+  .appearance-savebar .tb-btn{ height:28px; padding:0 10px; }
+  #appearanceSave{ background:var(--color-accent) !important; color:var(--appearance-on-accent,#fff) !important; border-color:var(--color-accent); font-weight:600; }
+
+  @media (max-width:760px){
+    :root{ --pref-nav-w:120px; }
+    .win-content{ padding:8px 14px 14px; }
+    .formrow label{ flex-basis:130px; width:130px; min-width:130px; }
+  }
+</style>
+<!-- Loaded last: the shared Appearance sheet remaps the remaining legacy
+     dark-only surfaces after this page's historical inline preferences skin. -->
+<link rel="stylesheet" href="openlive-appearance.css?v=liquid-glass-3">
+</head>
+<body>
+<div class="win-root">
+  <div class="win-title"><span class="showave-brand-lockup--title" data-showave-brand="live"></span>
+    <span style="color:var(--n600)">Preferences</span>
+    <span style="margin-left:auto"><a class="plainlink" href="index.html">← back to SHOWAVE Live</a></span></div>
+  <div class="win-main">
+   <div class="pref-side">
+    <nav class="side-tabs" id="tabs" role="tablist" aria-label="Preferences categories" aria-orientation="vertical">
+      <div class="side-tab active" data-t="general">General</div>
+      <div class="side-tab" data-t="appearance">Appearance</div>
+      <div class="side-tab" data-t="remote-controller">Remote Controller</div>
+      <div class="side-tab" data-t="audio">Audio</div>
+      <div class="side-tab" data-t="video">Video</div>
+      <div class="side-tab" data-t="midi">MIDI</div>
+      <div class="side-tab" data-t="osc">OSC</div>
+      <div class="side-tab" data-t="dmx">DMX</div>
+      <div class="side-tab" data-t="recording">Recording</div>
+      <div class="side-tab" data-t="streaming">Streaming</div>
+      <div class="side-tab" data-t="cliprender">Clip Rendering</div>
+      <div class="side-tab" data-t="defaults">Defaults</div>
+      <div class="side-tab" data-t="feedback">Feedback</div>
+      <div class="side-tab" data-t="webserver">Webserver</div>
+      <div class="side-tab" data-t="registration">Registration</div>
+    </nav>
+    <!-- The status panel. Arena's own Preferences window has no such box — these
+         notes are OpenLive's, and they exist because this clone says what it
+         cannot do instead of pretending. Consolidating them into one corner is
+         therefore a layout choice, not a parity claim, and is labelled as an
+         extension the way the other OpenLive-only rows on this page are.
+         Contents are mirrored from the hidden .pref-status nodes by
+         preferences-status-panel.js; nothing writes here directly. -->
+    <aside class="pref-help" id="prefStatus" aria-label="Status for this tab">
+      <div class="pref-help-t">
+        <span class="pref-help-dot" id="prefStatusDot" aria-hidden="true"></span>
+        <span id="prefStatusTitle">Status</span>
+        <span class="pref-step">
+          <button type="button" id="prefStatusPrev" title="Previous note" aria-label="Previous note">‹</button>
+          <span class="pref-help-n" id="prefStatusCount"></span>
+          <button type="button" id="prefStatusNext" title="Next note" aria-label="Next note">›</button>
+        </span>
+      </div>
+      <div class="pref-help-b" id="prefStatusBody" role="status" aria-live="polite"></div>
+    </aside>
+   </div>
+    <div class="win-content">
+
+      <section data-tab="remote-controller" hidden>
+        <h2>Remote Controller</h2>
+        <div class="formgroup mobile-pairing" data-sw-mobile-settings data-sw-mobile-private>
+          <h3>Scan QR Code to Mirror This Show</h3>
+          <p>Connect your phone, tablet or laptop to the same network as this computer, then scan the QR code below. Your device opens the live desktop mirror automatically.</p>
+          <div class="mobile-pairing-qr" data-sw-mobile-qr></div>
+          <p data-sw-mobile-status role="status" aria-live="polite">Open this tab to show your controller QR code.</p>
+          <div class="mobile-pairing-actions">
+            <button class="tb-btn" type="button" data-sw-mobile-retry>Show QR code</button>
+            <button class="tb-btn" type="button" data-sw-mobile-stop disabled>Stop mirroring</button>
+          </div>
+          <p class="hint">The mirror keeps the complete horizontal desktop layout. This computer runs the Show, media and outputs; edits from either device appear on both. Anyone with this code can operate this Show.</p>
+        </div>
+      </section>
+
+      <section data-tab="general" data-system-managed>
+        <h2>General</h2>
+        <div class="formgroup"><h3>Panel Updates</h3>
+          <div class="formrow"><label for="generalPanelUpdates">Update clip panel on external triggers</label><input id="generalPanelUpdates" type="checkbox" checked></div>
+          <div class="formrow"><label for="generalClipStartOffset">Clip Start Offset</label><input id="generalClipStartOffset" type="number" min="0" max="10000" step="1" value="0"><span class="hint">ms</span></div>
+          <div class="pref-status" id="generalTriggerStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Scrolling</h3>
+          <div class="formrow"><label for="generalScrollSelection">Scroll Layers and Clips into view</label><input id="generalScrollSelection" type="checkbox" checked></div>
+        </div>
+        <div class="formgroup"><h3>Font</h3>
+          <div class="formrow"><label for="generalUnicodeFont">Use Arial Unicode MS</label><input id="generalUnicodeFont" type="checkbox"></div>
+          <div class="pref-status" id="generalFontStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Software Updates</h3>
+          <div class="formrow"><label for="generalCheckUpdates">Check for updates once a day</label><input id="generalCheckUpdates" type="checkbox" checked></div>
+          <div class="formrow"><label for="generalReleaseChannel">Release Channel <span class="hint">SHOWAVE</span></label><select id="generalReleaseChannel"><option>Stable</option><option>Beta</option></select>
+            <button class="tb-btn" id="generalCheckNow" type="button">Check now</button></div>
+          <div class="pref-status" id="generalUpdateStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Startup Screen <span class="hint">SHOWAVE</span></h3>
+          <div class="formrow"><label for="generalStartupScreen">Show splash screen on startup</label><input id="generalStartupScreen" type="checkbox" checked></div>
+        </div>
+        <div class="formgroup"><h3>Quit Confirmation</h3>
+          <div class="formrow"><label for="generalQuitConfirmation">Display Quit Confirmation on close</label><input id="generalQuitConfirmation" type="checkbox" checked></div>
+          <div class="pref-status" id="generalQuitStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Pioneer DJ Network Interface <span class="hint">SHOWAVE</span></h3>
+          <div class="formrow"><label for="generalPioneerInterface">Interface</label><select id="generalPioneerInterface"><option>Automatic</option><option>No interface</option><option>Ethernet: 192.168.1.20</option></select></div>
+        </div>
+      </section>
+
+      <section data-tab="appearance" data-appearance-managed hidden>
+        <h2>Appearance</h2>
+        <div class="formgroup appearance-panel">
+          <div class="appearance-toolbar">
+            <div class="appearance-toolbar-copy">
+              <h3>Theme</h3>
+              <p>Choose one palette for every SHOWAVE interface. Dark and Light keep their own accent and base.</p>
+            </div>
+            <fieldset class="appearance-mode" aria-label="Appearance mode">
+              <legend>Appearance mode</legend>
+              <div class="appearance-segments">
+                <label class="appearance-segment">
+                  <input id="appearanceModeDark" type="radio" name="appearanceMode" value="dark">
+                  <span>Dark</span>
+                </label>
+                <label class="appearance-segment">
+                  <input id="appearanceModeLight" type="radio" name="appearanceMode" value="light">
+                  <span>Light</span>
+                </label>
+              </div>
+            </fieldset>
+          </div>
+
+          <fieldset class="appearance-theme-fieldset">
+            <legend class="appearance-visually-hidden">Theme choices</legend>
+            <div class="appearance-grid" id="appearanceThemeGrid" role="radiogroup" aria-label="Theme choices">
+              <label class="appearance-choice" data-theme-choice="gx-classic">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="gx-classic"
+                  aria-label="GX Classic. Dark accent #FA1E4E, base #251F33. Light accent #FA1E4E, base #E6E3ED.">
+                <span class="appearance-card" style="--ap-dark-accent:#FA1E4E;--ap-dark-base:#251F33;--ap-light-accent:#FA1E4E;--ap-light-base:#E6E3ED">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="GX Classic" class="appearance-card-name">GX Classic</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="ultraviolet">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="ultraviolet"
+                  aria-label="Ultraviolet. Dark accent #7D46F2, base #101015. Light accent #8635FF, base #E3E4F1.">
+                <span class="appearance-card" style="--ap-dark-accent:#7D46F2;--ap-dark-base:#101015;--ap-light-accent:#8635FF;--ap-light-base:#E3E4F1">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Ultraviolet" class="appearance-card-name">Ultraviolet</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="sub-zero">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="sub-zero"
+                  aria-label="Sub Zero. Dark accent #4461EE, base #0C0C0E. Light accent #1652E9, base #D8E0E4.">
+                <span class="appearance-card" style="--ap-dark-accent:#4461EE;--ap-dark-base:#0C0C0E;--ap-light-accent:#1652E9;--ap-light-base:#D8E0E4">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Sub Zero" class="appearance-card-name">Sub Zero</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="frutti-di-mare">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="frutti-di-mare"
+                  aria-label="Frutti Di Mare. Dark accent #FF7070, base #181E39. Light accent #FF5959, base #E2E1EF.">
+                <span class="appearance-card" style="--ap-dark-accent:#FF7070;--ap-dark-base:#181E39;--ap-light-accent:#FF5959;--ap-light-base:#E2E1EF">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Frutti Di Mare" class="appearance-card-name">Frutti Di Mare</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="purple-haze">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="purple-haze"
+                  aria-label="Purple Haze. Dark accent #AEFF3C, base #09060B. Light accent #2CB40D, base #E8E5EB.">
+                <span class="appearance-card" style="--ap-dark-accent:#AEFF3C;--ap-dark-base:#09060B;--ap-light-accent:#2CB40D;--ap-light-base:#E8E5EB">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Purple Haze" class="appearance-card-name">Purple Haze</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="vaporwave">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="vaporwave"
+                  aria-label="Vaporwave. Dark accent #00E5C3, base #1C121C. Light accent #5540BF, base #EDE3EC.">
+                <span class="appearance-card" style="--ap-dark-accent:#00E5C3;--ap-dark-base:#1C121C;--ap-light-accent:#5540BF;--ap-light-base:#EDE3EC">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Vaporwave" class="appearance-card-name">Vaporwave</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="rose-quartz">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="rose-quartz"
+                  aria-label="Rose Quartz. Dark accent #FF708D, base #271723. Light accent #EB4E9A, base #F9ECF0.">
+                <span class="appearance-card" style="--ap-dark-accent:#FF708D;--ap-dark-base:#271723;--ap-light-accent:#EB4E9A;--ap-light-base:#F9ECF0">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Rose Quartz" class="appearance-card-name">Rose Quartz</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="coming-soon">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="coming-soon"
+                  aria-label="Coming Soon. Dark accent #EEDE00, base #173235. Light accent #00A4CD, base #E3ECEE.">
+                <span class="appearance-card" style="--ap-dark-accent:#EEDE00;--ap-dark-base:#173235;--ap-light-accent:#00A4CD;--ap-light-base:#E3ECEE">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Coming Soon" class="appearance-card-name">Coming Soon</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="hackerman">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="hackerman"
+                  aria-label="Hackerman. Dark accent #00ED3B, base #1B221D. Light accent #009D5E, base #E4ECEA.">
+                <span class="appearance-card" style="--ap-dark-accent:#00ED3B;--ap-dark-base:#1B221D;--ap-light-accent:#009D5E;--ap-light-base:#E4ECEA">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Hackerman" class="appearance-card-name">Hackerman</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="lambda">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="lambda"
+                  aria-label="Lambda. Dark accent #FF9900, base #2D3432. Light accent #F07C00, base #E7E9E8.">
+                <span class="appearance-card" style="--ap-dark-accent:#FF9900;--ap-dark-base:#2D3432;--ap-light-accent:#F07C00;--ap-light-base:#E7E9E8">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Lambda" class="appearance-card-name">Lambda</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="after-eight">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="after-eight"
+                  aria-label="After Eight. Dark accent #5AEDBC, base #2E2824. Light accent #00A870, base #ECE8E4.">
+                <span class="appearance-card" style="--ap-dark-accent:#5AEDBC;--ap-dark-base:#2E2824;--ap-light-accent:#00A870;--ap-light-base:#ECE8E4">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="After Eight" class="appearance-card-name">After Eight</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="pay-to-win">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="pay-to-win"
+                  aria-label="Pay-To-Win. Dark accent #F6C955, base #201D19. Light accent #E79F03, base #ECE9E4.">
+                <span class="appearance-card" style="--ap-dark-accent:#F6C955;--ap-dark-base:#201D19;--ap-light-accent:#E79F03;--ap-light-base:#ECE9E4">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Pay-To-Win" class="appearance-card-name">Pay-To-Win</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="white-wolf">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="white-wolf"
+                  aria-label="White Wolf. Dark accent #CCCCCC, base #292929. Light accent #292929, base #E8E8E8.">
+                <span class="appearance-card" style="--ap-dark-accent:#CCCCCC;--ap-dark-base:#292929;--ap-light-accent:#292929;--ap-light-base:#E8E8E8">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="White Wolf" class="appearance-card-name">White Wolf</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="underwave">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="underwave"
+                  aria-label="Underwave. Dark accent #5E65CC, base #121221. Light accent #4937E8, base #CFD1ED.">
+                <span class="appearance-card" style="--ap-dark-accent:#5E65CC;--ap-dark-base:#121221;--ap-light-accent:#4937E8;--ap-light-base:#CFD1ED">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Underwave" class="appearance-card-name">Underwave</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="drive-by">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="drive-by"
+                  aria-label="Drive-by. Dark accent #B4F3C9, base #141F1D. Light accent #20A732, base #31343F.">
+                <span class="appearance-card" style="--ap-dark-accent:#B4F3C9;--ap-dark-base:#141F1D;--ap-light-accent:#20A732;--ap-light-base:#31343F">
+                  <span class="appearance-card-chip" aria-hidden="true"></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Drive-by" class="appearance-card-name">Drive-by</span>
+                </span>
+              </label>
+
+              <label class="appearance-choice" data-theme-choice="custom">
+                <input class="appearance-theme-input" type="radio" name="appearanceTheme" value="custom"
+                  aria-label="Custom theme, the Liquid Glass default. Edit separate dark and light accent and base colors.">
+                <span class="appearance-card">
+                  <span class="appearance-card-chip" id="appearanceCustomDarkBaseSwatch" data-mode="dark" aria-hidden="true" style="--ap-base:var(--color-bg);--ap-accent:var(--color-accent)"><i class="appearance-card-dot" id="appearanceCustomDarkAccentSwatch" style="--ap-accent:var(--color-accent)"></i></span>
+                  <span class="appearance-card-chip" id="appearanceCustomLightBaseSwatch" data-mode="light" aria-hidden="true" style="--ap-base:var(--color-bg);--ap-accent:var(--color-accent)"><i class="appearance-card-dot" id="appearanceCustomLightAccentSwatch" style="--ap-accent:var(--color-accent)"></i></span>
+                  <span class="appearance-card-check" aria-hidden="true">✓</span>
+                  <span title="Custom" class="appearance-card-name">Custom</span>
+                  <span class="appearance-visually-hidden" id="appearanceCustomDarkSummary">Dark custom</span>
+                  <span class="appearance-visually-hidden" id="appearanceCustomLightSummary">Light custom</span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="appearance-custom" id="appearanceCustomControls" hidden>
+            <legend>Custom Colors</legend>
+            <div class="appearance-custom-grid">
+              <div class="appearance-color-field">
+                <label for="appearanceCustomDarkAccent">Dark Accent</label>
+                <div class="appearance-color-control"><input id="appearanceCustomDarkAccent" type="color" value="#0A84FF"><output class="appearance-color-value" for="appearanceCustomDarkAccent">#0A84FF</output></div>
+              </div>
+              <div class="appearance-color-field">
+                <label for="appearanceCustomDarkBase">Dark Base</label>
+                <div class="appearance-color-control"><input id="appearanceCustomDarkBase" type="color" value="#000000"><output class="appearance-color-value" for="appearanceCustomDarkBase">#000000</output></div>
+              </div>
+              <div class="appearance-color-field">
+                <label for="appearanceCustomLightAccent">Light Accent</label>
+                <div class="appearance-color-control"><input id="appearanceCustomLightAccent" type="color" value="#007AFF"><output class="appearance-color-value" for="appearanceCustomLightAccent">#007AFF</output></div>
+              </div>
+              <div class="appearance-color-field">
+                <label for="appearanceCustomLightBase">Light Base</label>
+                <div class="appearance-color-control"><input id="appearanceCustomLightBase" type="color" value="#E5E5EA"><output class="appearance-color-value" for="appearanceCustomLightBase">#E5E5EA</output></div>
+              </div>
+            </div>
+            <div class="appearance-custom-actions">
+              <p class="appearance-custom-help">Preview changes immediately. Save appearance to keep them after restarting.</p>
+              <button class="tb-btn" id="appearanceCustomReset" type="button">Reset Custom</button>
+            </div>
+            <!-- The derivation solves the neutral ramp and the chrome ink for WCAG
+                 AA 4.5:1 against the surfaces they land on. A user-chosen base can
+                 sit where that is unreachable in either ink direction; when it
+                 does, this prints the ratio actually reached rather than letting
+                 the theme apply as if it had passed. Filled by
+                 preferences-appearance.js from the resolved contrast report. -->
+            <p class="appearance-contrast-report" id="appearanceContrastReport" role="status" aria-live="polite" hidden></p>
+          </fieldset>
+          <p class="appearance-status" id="appearanceStatus" role="status" aria-live="polite"></p>
+        </div>
+        <div class="formgroup appearance-type-panel">
+          <fieldset class="appearance-typography" id="appearanceTypography">
+            <legend>Interface fonts</legend>
+            <p class="appearance-save-help">Use fonts already installed on this PC, including your independently licensed Canva favourites. No font files are downloaded or copied. Broadcast graphics keep their template fonts and sizes.</p>
+            <div class="appearance-font-picker">
+              <label for="appearanceFontSearch">Find a font</label>
+              <input id="appearanceFontSearch" type="search" placeholder="Search installed fonts…" autocomplete="off" aria-controls="appearanceFontFamily">
+              <label for="appearanceFontFamily">Font family</label>
+              <select id="appearanceFontFamily"><option value="system">SHOWAVE default</option></select>
+              <div class="appearance-font-inventory"><span id="appearanceFontInventory" role="status">Loading fonts from this PC…</span><button class="tb-btn" id="appearanceFontRefresh" type="button">Refresh list</button></div>
+            </div>
+            <div class="appearance-font-settings">
+              <div class="appearance-font-setting"><label for="appearanceFontScale">Text size</label><div class="appearance-font-scale"><input id="appearanceFontScale" type="range" min="75" max="150" step="5" value="100"><output id="appearanceFontScaleValue" for="appearanceFontScale">100%</output></div></div>
+              <div class="appearance-font-setting"><label for="appearanceFontWeight">Weight</label><select id="appearanceFontWeight"><option value="default">SHOWAVE default</option><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semibold</option><option value="700">Bold</option></select></div>
+              <label class="appearance-font-italic" for="appearanceFontItalic"><input id="appearanceFontItalic" type="checkbox">Italic</label>
+            </div>
+            <div class="appearance-font-sample" aria-label="Font preview"><strong>SHOWAVE Live</strong><span>The show starts here. Aa Bb Cc · 0123456789</span></div>
+            <div class="appearance-custom-actions"><p class="appearance-custom-help">Text changes across your SHOWAVE windows immediately.</p><button class="tb-btn" id="appearanceFontScaleReset" type="button">Default size</button><button class="tb-btn" id="appearanceFontReset" type="button">Reset fonts</button></div>
+          </fieldset>
+        </div>
+        <div class="formgroup appearance-library-panel">
+          <h3>Design library</h3>
+          <p class="appearance-section-note">Use <strong>Elements…</strong> in Files, Sources or Broadcast to add shapes, frames, arrows and online icons. Browse online fonts in Broadcast’s Theme and text editors.</p>
+          <div class="appearance-library-tags"><span>Offline shapes</span><span>Online elements</span><span>Shared design fonts</span></div>
+        </div>
+        <div class="appearance-savebar">
+          <div><strong id="appearanceSaveLabel">Appearance preview</strong><p id="appearanceSaveStatus" role="status" aria-live="polite">Save your palette and text size for this browser.</p></div>
+          <button class="tb-btn" id="appearanceRestoreDefault" type="button">Dark default</button>
+          <button class="tb-btn appearance-save-button" id="appearanceSave" type="button">Save appearance</button>
+        </div>
+      </section>
+
+      <section data-tab="audio" data-audio-managed hidden>
+        <h2>Audio</h2>
+        <div class="formgroup"><h3>Output</h3>
+          <div class="formrow"><label for="audioOutputDevice">Audio output device</label>
+            <select id="audioOutputDevice"></select><button class="tb-btn" id="asioSettings" type="button" hidden>ASIO Settings…</button></div>
+          <div class="formrow"><label for="masterOutputChannels">Master Output Channels</label><select id="masterOutputChannels"></select></div>
+          <div class="formrow"><label for="previewOutputChannels">Preview Output Channels</label><select id="previewOutputChannels"></select></div>
+          <div class="formrow"><label for="masterOutputDelay">Master Output Delay</label>
+            <input id="masterOutputDelay" type="range" min="0" max="500" step="1" value="0"><output class="audio-value" id="masterOutputDelayValue">0 ms</output></div>
+          <div class="formrow"><label for="audioSampleRate">Sample Rate</label><select id="audioSampleRate"></select><span class="audio-value">Hz</span></div>
+          <p class="audio-input-safety" id="audioSampleRateNote">Running Show and Studio keep their current rate. Reopen their windows to apply a new rate.</p>
+          <div class="formrow"><label for="audioBufferSize">Buffer Size</label><select id="audioBufferSize"></select><span class="audio-value">samples</span></div>
+          <div class="audio-status" id="audioOutputStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Input</h3>
+          <div class="formrow"><label for="audioInputDevice">Audio Input Device</label><select id="audioInputDevice"></select>
+            <button class="tb-btn" id="audioInputRefresh" type="button">Refresh</button></div>
+          <div class="formrow"><label></label><button class="tb-btn" id="audioInputArm" type="button"
+            aria-pressed="false" aria-describedby="audioInputSafety">Arm Input</button></div>
+          <div class="formrow"><label for="externalFftChannels">External Audio FFT Input</label><select id="externalFftChannels"></select></div>
+          <div class="formrow"><label for="audioFftGain">Audio FFT Input Gain</label>
+            <input id="audioFftGain" type="range" min="0" max="200" step="1" value="50"><output class="audio-value" id="audioFftGainValue">50%</output></div>
+          <!-- Stereo, like OBS. One summed meter hides the case that matters
+               most on a live input: a cable pulled on one side, or a source
+               that is silently mono. Two meters make that visible at a glance.
+               L is the left channel, R the right; on a mono device both show
+               the same value and the status line says so. -->
+          <div class="formrow"><label>External FFT Level</label>
+            <span class="audio-meters" id="audioInputMeters">
+              <span class="audio-meterrow"><b class="audio-ch">L</b><span class="audio-input-meter" id="audioInputMeterShellL" role="meter" aria-label="External FFT input level, left channel" aria-valuemin="-60" aria-valuemax="0" aria-valuenow="-60"><span class="audio-meter-lane" aria-hidden="true"><i class="audio-meter-fill" id="audioInputMeterL"></i><i class="audio-meter-vu" id="audioInputVuL"></i><i class="audio-meter-peak-line" id="audioInputPeakL"></i><i class="audio-meter-input" id="audioInputInstantL"></i></span></span></span>
+              <span class="audio-meterrow"><b class="audio-ch">R</b><span class="audio-input-meter" id="audioInputMeterShellR" role="meter" aria-label="External FFT input level, right channel" aria-valuemin="-60" aria-valuemax="0" aria-valuenow="-60"><span class="audio-meter-lane" aria-hidden="true"><i class="audio-meter-fill" id="audioInputMeterR"></i><i class="audio-meter-vu" id="audioInputVuR"></i><i class="audio-meter-peak-line" id="audioInputPeakR"></i><i class="audio-meter-input" id="audioInputInstantR"></i></span></span></span>
+              <span class="audio-input-scale" aria-hidden="true"><span>−60</span><span>−42</span><span>−24</span><span>−12</span><span>−6</span><span>0</span></span>
+            </span>
+            <output class="audio-value" id="audioInputLevel">No signal</output></div>
+          <div class="audio-status" id="audioInputStatus" role="status"></div>
+          <div class="audio-input-safety" id="audioInputSafety" role="note"><strong>INPUT METER ONLY.</strong>
+            The microphone drives these L/R bars and External Audio FFT analysis. It is never sent live to Audio Output,
+            the Show, programme recording, or streaming. To hear-test it, choose a recording time below, record,
+            then choose Play Back.</div>
+        </div>
+        <!-- The Zoom check, in the order that makes each half of the verdict
+             decidable: hear a known sound (needs no permission at all, because
+             setSinkId('default') works before anything is granted), then record
+             yourself, then hear it back on the same output. The L/R bars above
+             run throughout — a record button with no meter turns a two-second
+             diagnosis into a ten-second one, and it is the meter that tells you
+             the microphone is muted BEFORE you wait for a silent playback. -->
+        <div class="formgroup"><h3>Sound Test <span class="hint">SHOWAVE</span></h3>
+          <div class="formrow"><label>Speakers</label>
+            <button class="tb-btn" id="audioTestSpeakers" type="button">Test Speakers</button>
+            <output class="audio-value" id="audioTestSpeakersValue">Idle</output></div>
+          <div class="formrow"><label for="audioTestDuration">Recording time</label>
+            <input id="audioTestDuration" type="number" min="1" max="60" step="1" value="3"
+              inputmode="numeric" aria-describedby="audioTestDurationUnit">
+            <span class="audio-value" id="audioTestDurationUnit" style="text-align:left;flex-basis:110px">seconds (1–60)</span></div>
+          <div class="formrow"><label>Microphone test</label>
+            <button class="tb-btn" id="audioTestRecord" type="button">Record 3 s</button>
+            <button class="tb-btn" id="audioTestPlay" type="button">Play Back</button>
+            <output class="audio-value" id="audioTestRecordValue">No recording</output></div>
+          <div class="formrow"><label>Progress</label>
+            <span class="audio-meter audio-progress" id="audioTestProgressBar" role="progressbar"
+              aria-label="Sound test progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="audioTestProgress"></i></span>
+            <output class="audio-value" id="audioTestStage">Idle</output></div>
+          <div class="audio-status" id="audioTestStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>SMPTE Timecode Input</h3>
+          <div class="formrow"><label for="smpteInput1">SMPTE Timecode Input 1</label><span class="audio-inline-select">
+            <select id="smpteInput1" aria-label="SMPTE input 1 channel"></select><select id="smpteFps1" aria-label="SMPTE input 1 framerate"></select></span></div>
+          <div class="formrow"><label>Status 1</label><span class="audio-value" id="smpteStatus1" style="flex-basis:360px;text-align:left">No input</span></div>
+          <div class="formrow"><label for="smpteInput2">SMPTE Timecode Input 2</label><span class="audio-inline-select">
+            <select id="smpteInput2" aria-label="SMPTE input 2 channel"></select><select id="smpteFps2" aria-label="SMPTE input 2 framerate"></select></span></div>
+          <div class="formrow"><label>Status 2</label><span class="audio-value" id="smpteStatus2" style="flex-basis:360px;text-align:left">No input</span></div>
+          <div class="formrow"><label for="smpteOutput">SMPTE Timecode Output</label><span class="audio-inline-select">
+            <select id="smpteOutput"></select><select id="smpteOutputFps" aria-label="SMPTE output framerate"></select></span></div>
+          <div class="formrow"><label for="smpteOsc">Enable SMPTE out via OSC</label><input id="smpteOsc" type="checkbox"></div>
+          <div class="audio-status" id="smpteStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>VST Plugin Directories</h3>
+          <div class="formrow"><label for="vstDirectoryList">Directories</label><select id="vstDirectoryList" size="4"></select></div>
+          <div class="formrow"><label for="vstDirectoryPath">Directory</label><input id="vstDirectoryPath" type="text" value="C:\Program Files\VSTPlugins"><button class="tb-btn" id="vstAddPath" type="button">Add</button></div>
+          <div class="formrow"><label></label><button class="tb-btn" id="vstAddDirectory" type="button">Add Directory…</button>
+            <button class="tb-btn" id="vstRemoveDirectory" type="button">Remove</button><button class="tb-btn" id="vstRescan" type="button">Rescan</button></div>
+          <div class="audio-status" id="vstStatus" role="status"></div>
+        </div>
+      </section>
+
+      <section data-tab="video" data-video-managed hidden>
+        <h2>Video</h2>
+        <div class="formgroup"><h3>FreeFrame (FFGL) Plugin Directories</h3>
+          <div class="formrow"><label for="ffglDirectoryList">Directories</label><select id="ffglDirectoryList" size="4"></select></div>
+          <div class="formrow"><label for="ffglDirectoryPath">Directory</label><input id="ffglDirectoryPath" type="text" value="Documents\Resolume Arena\Extra Effects"><button class="tb-btn" id="ffglAddPath" type="button">Add</button></div>
+          <div class="formrow"><label></label><button class="tb-btn" id="ffglAddDirectory" type="button">Add Directory…</button><button class="tb-btn" id="ffglRemoveDirectory" type="button">Remove</button><button class="tb-btn" id="ffglRescan" type="button">Rescan</button></div>
+          <div class="formrow"><label for="ffglPluginList">Discovered plugins</label><select id="ffglPluginList" size="5"></select></div>
+          <div class="formrow"><label for="ffglPluginKind">Plugin type</label><select id="ffglPluginKind"><option value="effect">Effect</option><option value="source">Source</option></select><button class="tb-btn" id="ffglTogglePlugin" type="button">Disable Plugin</button></div>
+          <div class="video-status" id="ffglStatus" role="status"></div>
+          <div class="video-builtin">Bundled: ChromaKey, FFGLBarShift, FFGLEdgeDetection, FFGLStopMotion,
+            FFGLWaveWarp, SyzGL_Fragment, SyzGL_Goo, SyzGL_Iterate, SyzGL_Kaleidoscope,
+            SyzGL_RadialBlur, SyzGL_Ripples, SyzGL_Stripper, SyzGL_Tunnel, SyzGL_VideoWall.</div>
+        </div>
+        <div class="formgroup"><h3>DMA Textures</h3>
+          <div class="formrow"><label for="dmaTextureMode">Mode</label><select id="dmaTextureMode"><option>Force ON</option><option>Force OFF</option><option>Autodetect</option></select></div>
+          <div class="formrow"><label for="dmaNvidiaProfile">Use Custom NVidia Profile</label><input id="dmaNvidiaProfile" type="checkbox"></div>
+          <div class="formrow"><label></label><button class="tb-btn" id="dmaResetRecommended" type="button">Reset to Recommended</button></div>
+          <div class="video-status" id="dmaStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Temporary Media <span class="hint">SHOWAVE</span></h3>
+          <div class="formrow"><label>Cleanup preview</label><span class="temporary-media-summary" id="temporaryMediaSummary">Checking local temporary media…</span><button class="tb-btn" id="temporaryMediaRefresh" type="button">Refresh</button></div>
+          <div class="formrow"><label></label><button class="tb-btn" id="temporaryMediaReview" type="button">Review &amp; Clean…</button></div>
+          <div class="video-builtin">PowerPoint slide exports are deleted automatically after each import and are not part of the legacy prepared-media cache.</div>
+          <div class="video-status" id="temporaryMediaStatus" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section data-tab="midi" data-midi-managed hidden>
+        <h2>MIDI</h2>
+        <div class="formgroup"><h3>Devices <span style="float:right;display:flex"><button class="tb-btn" id="midiRefresh" type="button">Enable / Refresh</button><button class="tb-btn" id="midiMonitorOpen" type="button">Monitor</button></span></h3>
+          <table class="datatable" id="midiDevicesTable">
+            <thead><tr><th>Device</th><th>Input</th><th>Clock In</th><th>Output</th></tr></thead>
+            <tbody id="midiDevicesBody"></tbody></table>
+          <div class="midi-status" id="midiDevicesStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>MIDI Middle C</h3>
+          <div class="formrow"><label for="midiMiddleC">Middle C (note 60)</label><select id="midiMiddleC"><option>Legacy</option><option>C3</option><option>C4</option></select></div>
+          <div class="midi-status" id="midiMiddleCStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>MIDI Clock</h3>
+          <div class="formrow"><label for="midiClockStopMode">On Clock Stop</label><select id="midiClockStopMode"><option>Start/Stop</option><option>Switch to Manual</option></select></div>
+          <div class="midi-status" id="midiClockStatus" role="status"></div>
+        </div>
+      </section>
+
+      <section data-tab="osc" data-system-managed hidden>
+        <h2>OSC</h2>
+        <div class="formgroup"><h3>Input <button class="tb-btn" id="oscMonitorOpen" style="float:right" type="button">Monitor</button></h3>
+          <div class="formrow"><label for="oscInputEnabled">OSC Input</label><input id="oscInputEnabled" type="checkbox" checked></div>
+          <div class="formrow"><label for="oscInputPort">Incoming Port</label><input id="oscInputPort" type="number" min="1" max="65535" value="7000"></div>
+          <div class="formrow"><label for="oscZeroconf">Announce with ZeroConf</label><input id="oscZeroconf" type="checkbox" checked></div>
+          <div class="pref-status" id="oscInputStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Output</h3>
+          <div class="formrow"><label for="oscOutputEnabled">OSC Output</label><input id="oscOutputEnabled" type="checkbox"></div>
+          <div class="formrow"><label for="oscOutputDestination">Destination</label><select id="oscOutputDestination"><option>Localhost</option><option>Broadcast</option><option>Manual IP</option></select></div>
+          <div class="formrow"><label for="oscOutputAddress">Outgoing Address</label><input id="oscOutputAddress" type="text" value="127.0.0.1"></div>
+          <div class="formrow"><label for="oscOutputPort">Outgoing Port</label><input id="oscOutputPort" type="number" min="1" max="65535" value="7001"></div>
+          <div class="formrow"><label for="oscBundles">Use Bundles</label><input id="oscBundles" type="checkbox" checked></div>
+          <div class="pref-status" id="oscOutputStatus" role="status"></div>
+        </div>
+        <div class="pref-callout">Preferences configures OSC transport. Incoming fixed addresses control the shared Show model; outgoing selection belongs to <b>Shortcuts → Edit OSC</b>. A native UDP bridge is required for traffic outside this browser application.</div>
+      </section>
+
+      <section data-tab="dmx" data-system-managed hidden>
+        <h2>DMX</h2>
+        <div class="formgroup"><h3>Art-Net</h3>
+          <div class="formrow"><label for="dmxNetworkAdapter">Network Adapter</label><select id="dmxNetworkAdapter"><option value="automatic">Automatic</option></select><button class="tb-btn" id="dmxRefreshAdapters" type="button">Refresh</button></div>
+          <div class="formrow"><label for="dmxNodeName">Art-Net Node Name</label><input id="dmxNodeName" type="text" value="SHOWAVE Live"></div>
+          <div class="formrow"><label for="dmxOutputFramerate">Output Framerate</label><input id="dmxOutputFramerate" type="range" min="1" max="60" value="40"><output id="dmxOutputFramerateValue">40</output><span class="hint">fps</span></div>
+          <div class="formrow"><label for="dmxOutputDelay">Output Delay</label><input id="dmxOutputDelay" type="range" min="0" max="200" value="40"><output id="dmxOutputDelayValue">40</output><span class="hint">ms</span></div>
+          <div class="formrow"><label for="dmxSendArtSync">Send ArtSync</label><input id="dmxSendArtSync" type="checkbox"><span class="hint">saved output configuration</span></div>
+          <div class="pref-status" id="dmxArtNetStatus" role="status"></div>
+          <div class="pref-status" id="dmxBridgeStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Detected Art-Net Nodes <button class="tb-btn" id="dmxPollNodes" style="float:right" type="button">Poll Nodes</button></h3>
+          <table class="datatable" id="dmxNodesTable">
+            <thead><tr><th>Node</th><th>IP Address</th><th>Report</th><th>Ports</th><th>Last Seen</th></tr></thead>
+            <tbody id="dmxNodesBody"><tr><td colspan="5" class="hint">No bridge node report received.</td></tr></tbody></table>
+          <div class="pref-status" id="dmxNodeStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Output Lumiverses <span class="hint">from SHOWAVE Map</span></h3>
+          <table class="datatable" id="dmxOutputsTable">
+            <thead><tr><th>Output Lumiverse</th><th>Output Device</th><th>Target IP</th><th>Subnet</th><th>Universe</th><th>Out</th></tr></thead>
+            <tbody id="dmxOutputsBody"></tbody></table>
+          <div class="formrow" style="margin-top:8px"><label></label><a class="tb-btn plainlink" id="dmxOpenAdvancedOutput" href="advanced-output.html">Open SHOWAVE Map</a></div>
+          <div class="pref-status" id="dmxOutputStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>DMX Inputs <button class="tb-btn" id="dmxMonitorOpen" style="float:right" type="button">Monitor</button></h3>
+          <table class="datatable" id="dmxInputsTable">
+            <thead><tr><th>Input Lumiverse</th><th>Channel Offset</th><th>Subnet</th><th>Universe</th><th>Enabled</th></tr></thead>
+            <tbody id="dmxInputsBody"></tbody></table>
+          <div class="formrow" style="margin-top:8px"><button class="tb-btn" id="dmxAddInput" type="button">New Input</button><button class="tb-btn" id="dmxRemoveInput" type="button">Remove</button></div>
+          <div class="pref-status" id="dmxInputStatus" role="status"></div>
+        </div>
+        <div class="pref-callout">Preferences owns the shared adapter, node timing and DMX inputs. Output Lumiverses, target IPs, fixtures, Auto Span and Align Output are owned by <b>SHOWAVE Map</b> and shown here as a live read-only summary. DMX shortcuts use explicit Learn mappings and presets.</div>
+      </section>
+
+      <section data-tab="recording" data-system-managed hidden>
+        <h2>Recording</h2>
+        <div class="formgroup"><h3>Destination</h3>
+          <div class="formrow"><label for="snapshotDirectory">Snapshot Output Directory</label><input id="snapshotDirectory" type="text" value="Documents\Resolume Arena\Recorded"><button class="tb-btn" id="snapshotBrowse" type="button">Browse…</button></div>
+          <div class="formrow"><label for="recordingDirectory">Recording Output Directory</label><input id="recordingDirectory" type="text" value="Documents\Resolume Arena\Recorded"><button class="tb-btn" id="recordingBrowse" type="button">Browse…</button></div>
+          <div class="formrow"><label for="recordingFileName">File Name Template</label><input id="recordingFileName" type="text" value="Resolume_{date}_{time}"><span class="recording-extension" id="recordingExtension">.mov</span></div>
+          <div class="formrow"><label for="recordingFolderMode">Organize Recordings</label><select id="recordingFolderMode"><option>Single Folder</option><option>Daily Subfolder</option><option>Session Subfolder</option></select></div>
+        </div>
+        <div class="formgroup"><h3>Media &amp; Post Recording</h3>
+          <div class="formrow"><label for="recordVideo">Record Video</label><input id="recordVideo" type="checkbox" checked></div>
+          <div class="formrow"><label for="recordAudio">Record Audio</label><input id="recordAudio" type="checkbox" checked></div>
+          <div class="formrow"><label for="recordingAfter">After Recording</label><select id="recordingAfter"><option>Do Nothing</option><option>Place in Empty Clip</option><option>Reveal in File Browser</option><option>Place in Empty Clip and Reveal</option></select></div>
+        </div>
+        <div class="formgroup recording-dependent" id="recordingVideoGroup"><h3>Video</h3>
+          <div class="formrow recording-preset-row"><label for="recordingPreset">Preset</label><select id="recordingPreset"><option>DXV 3 Normal Quality No Alpha</option><option>DXV 3 Normal Quality With Alpha</option><option>DXV 3 High Quality No Alpha</option><option>DXV 3 High Quality With Alpha</option><option>H264 High Quality</option><option>H264 Medium Quality</option><option>H264 Low Quality</option><option>Motion JPEG</option><option>ProRes 422 Normal Quality</option><option>ProRes 422 High Quality</option><option>ProRes 4444</option><option>Custom</option></select><button class="tb-btn" id="recordingPresetSave" type="button" title="Save the current video and audio encoding settings as a named preset">Save Current…</button><button class="tb-btn" id="recordingPresetDelete" type="button" title="Factory presets cannot be deleted">Delete</button></div>
+          <div class="formrow"><label for="recordingContainer">Container</label><select id="recordingContainer"></select></div>
+          <div class="formrow"><label for="recordingCodec">Video Codec</label><select id="recordingCodec"><option>DXV 3</option><option>H.264</option><option>Motion JPEG</option><option>ProRes</option></select></div>
+          <div class="formrow"><label for="recordingQuality">Quality / Profile</label><select id="recordingQuality"></select></div>
+          <div class="formrow"><label for="recordingAlpha">Include Alpha Channel</label><input id="recordingAlpha" type="checkbox"></div>
+          <div class="formrow"><label for="recordingFrameRate">Frame Rate</label><select id="recordingFrameRate"><option value="Composition">Show</option><option value="24">24 fps</option><option value="25">25 fps</option><option value="29.97">29.97 fps</option><option value="30">30 fps</option><option value="50">50 fps</option><option value="59.94">59.94 fps</option><option value="60">60 fps</option></select></div>
+          <div class="formrow"><label for="recordingVideoBitrate">H.264 Target Bitrate</label><input id="recordingVideoBitrate" type="range" min="5" max="120" step="1" value="35"><output class="audio-value" id="recordingVideoBitrateValue">35 Mbps</output></div>
+        </div>
+        <div class="formgroup recording-dependent" id="recordingAudioGroup"><h3>Audio</h3>
+          <div class="formrow"><label for="recordingAudioCodec">Audio Codec</label><select id="recordingAudioCodec"><option value="PCM (WAV)">PCM (WAV)</option></select></div>
+          <div class="formrow"><label for="recordingAudioSampleRate">Sample Rate</label><select id="recordingAudioSampleRate"><option value="44100">44100 Hz</option><option value="48000">48000 Hz</option><option value="96000">96000 Hz</option></select></div>
+          <div class="formrow"><label for="recordingAudioBitDepth">Audio Bit Depth</label><select id="recordingAudioBitDepth"><option value="16">16 bit</option><option value="24">24 bit</option><option value="32">32 bit float</option></select></div>
+          <div class="formrow"><label for="recordingAudioChannels">Channels</label><select id="recordingAudioChannels"><option>Stereo</option><option>Mono</option><option>Master Output</option></select></div>
+        </div>
+        <div class="formgroup"><h3>Configuration</h3>
+          <div class="pref-status" id="recordingStatus" role="status"></div>
+          <div class="recording-actions"><button class="tb-btn" id="recordingReset" type="button">Reset Defaults</button><button class="tb-btn" id="recordingRestore" type="button">Restore at Open</button></div>
+        </div>
+        <div class="formgroup" style="width:min(760px,100%)"><h3>Recorder Runtime &amp; History</h3>
+          <div class="recording-summary">
+            <div class="recording-live"><div class="recording-live-state" id="recordingRuntimeState" data-state="unavailable">BRIDGE UNAVAILABLE</div><div class="recording-live-metrics" id="recordingRuntimeMetrics">No native recorder report received.</div></div>
+            <div class="recording-history"><div class="recording-history-head">Recent jobs <button class="tb-btn" id="recordingHistoryClear" type="button" title="Ask SHOWAVE Live to clean up simulated recording metadata and linked placeholders">Clear via Live</button></div><table class="datatable" id="recordingHistoryTable"><thead><tr><th>Ended</th><th>Result</th><th>File</th><th>Duration</th><th>Dropped</th></tr></thead><tbody id="recordingHistoryBody"></tbody></table></div>
+          </div>
+        </div>
+        <div class="pref-callout">SHOWAVE Live records the Show or mapped output without interrupting playback. The default video path is QuickTime with DXV 3; PCM audio is written as WAV. Factory profiles are immutable; <b>Save Current…</b> stores a reusable named video/audio profile and <b>Custom</b> remains the unsaved ad-hoc state. Each Job snapshots these settings when it starts. Runtime and history may come from SHOWAVE Live’s explicitly labelled browser simulation or a native bridge. The simulation never creates or claims a native file; only a native bridge can confirm disk output and operating-system post actions.</div>
+      </section>
+
+      <section data-tab="streaming" data-streaming-managed hidden>
+        <h2>Streaming <span class="hint">SHOWAVE Broadcast</span></h2>
+        <!-- OAuth application registration is a SHOWAVE distribution concern.
+             Operators only see connected accounts and the two account-login entry points. -->
+        <div class="formgroup"><h3>Streaming accounts</h3>
+          <div class="formrow"><label>Connected</label><div class="pref-readonly" id="streamAccountsList">reading…</div></div>
+          <div class="formrow"><label>Sign-in setup</label><div class="pref-readonly">Managed by this SHOWAVE distribution</div></div>
+          <div class="formrow"><label></label><a class="tb-btn on plainlink" href="advanced-output.html">Open SHOWAVE Map</a><a class="tb-btn plainlink" href="broadcast.html">Open Broadcast</a></div>
+          <div class="pref-status" id="streamAccountStatus" role="status"></div>
+          <div class="pref-callout">Choose <b>+ Add Channel</b> in SHOWAVE Map or Broadcast, then sign
+            in on the platform's own page and approve SHOWAVE once. Connected channels appear
+            automatically in every Broadcast; operators do not enter OAuth developer settings,
+            ingest URLs, or stream keys on this path. A provider marked unavailable requires a
+            SHOWAVE distribution update.</div>
+        </div>
+        <div class="formgroup"><h3>Streaming Setup</h3>
+          <div class="formrow"><label for="streamTransport">Preferred Transport</label><select id="streamTransport"><option value="WHIP">WHIP / WebRTC</option><option value="RTMPS">RTMPS via native egress</option><option value="OBS">OBS handoff</option></select></div>
+          <div class="formrow"><label for="streamQuality">Default Quality</label><select id="streamQuality"><option value="720p30">1280 × 720 · 30 fps</option><option value="1080p30">1920 × 1080 · 30 fps</option><option value="1080p60">1920 × 1080 · 60 fps</option></select></div>
+          <div class="formrow"><label for="streamBitrate">Target Video Bitrate</label><input id="streamBitrate" type="range" min="1" max="20" step="0.5" value="6"><output id="streamBitrateValue">6 Mbps</output></div>
+          <div class="formrow"><label></label><a class="tb-btn on plainlink" href="broadcast.html">Open Broadcast</a></div>
+          <div class="pref-status" id="streamSetupStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Network Readiness</h3>
+          <div class="formrow"><label>Browser Estimate</label><span id="streamNetworkEstimate">Not measured</span><button class="tb-btn" id="streamSpeedTest" type="button">Run Speed Test</button></div>
+          <div class="formrow"><label>Recommended Headroom</label><span id="streamHeadroom">N/A</span></div>
+          <div class="pref-status" id="streamSpeedStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Pull Links &amp; Clips</h3>
+          <div class="formrow"><label for="streamReplaySeconds">Rolling Clip Buffer</label><select id="streamReplaySeconds"><option value="0">Off</option><option value="30">30 seconds</option><option value="60">60 seconds</option><option value="120">2 minutes</option></select></div>
+          <div class="formrow"><label for="streamAutoImportClips">Import finished clips into Files</label><input id="streamAutoImportClips" type="checkbox" checked></div>
+          <div class="formrow"><label>Pull Link</label><span>Requires SHOWAVE cloud relay or native HLS egress (not connected in this build)</span></div>
+          <div class="pref-status" id="streamClipStatus" role="status"></div>
+        </div>
+        <div class="pref-callout">This tab stores operator preferences, never an OAuth client secret, access token, stream key, or pull-link token. Platform OAuth terminates in the local helper so credentials never enter browser code. The speed test runs only when you press Run Speed Test, may request up to 48.4 MiB of test payload plus protocol overhead, and can be cancelled with Stop Speed Test. It uses Cloudflare's public measurement endpoint and measures this browser's internet path, not the final ingest host. Packet loss is not measured; verify the chosen destination before a critical show.</div>
+      </section>
+
+      <section data-tab="cliprender" data-system-managed hidden>
+        <h2>Clip Rendering</h2>
+        <div class="formgroup"><h3>Destination</h3>
+          <div class="formrow"><label for="clipRenderDirectory">File Output Directory</label><input id="clipRenderDirectory" type="text" value="Documents\Resolume Arena\Renders"><button class="tb-btn" id="clipRenderBrowse" type="button">Browse…</button></div>
+        </div>
+        <div class="formgroup"><h3>Preset &amp; Codec</h3>
+          <div class="formrow"><label for="clipRenderPreset">Preset</label><select id="clipRenderPreset"><option>DXV 3 Normal Quality</option><option>DXV 3 High Quality</option><option>Motion JPEG</option><option>ProRes 422</option><option>Custom</option></select></div>
+          <div class="formrow"><label for="clipRenderCodec">Video Codec</label><select id="clipRenderCodec"><option>DXV 3</option><option>Motion JPEG</option><option>ProRes</option><option>PNG Sequence</option></select></div>
+          <div class="formrow"><label for="clipRenderFormat">Format</label><select id="clipRenderFormat"><option>Normal Quality, No Alpha</option><option>Normal Quality, With Alpha</option><option>High Quality, No Alpha</option><option>High Quality, With Alpha</option></select></div>
+          <div class="formrow"><label for="clipRenderAudio">Include Audio</label><input id="clipRenderAudio" type="checkbox" checked></div>
+          <div class="formrow"><label for="clipRenderSampleRate">Audio Sample Rate</label><select id="clipRenderSampleRate"><option value="44100">44100 Hz</option><option value="48000">48000 Hz</option><option value="96000">96000 Hz</option></select></div>
+          <div class="formrow"><label for="clipRenderBitDepth">Audio Bit Depth</label><select id="clipRenderBitDepth"><option value="16">16 bit</option><option value="24">24 bit</option><option value="32">32 bit float</option></select></div>
+          <div class="pref-status" id="clipRenderStatus" role="status"></div>
+        </div>
+        <div class="pref-callout">Clip rendering is offline and uses the Clip’s transport, speed, Show resolution and frame rate. Timeline and BPM Sync are supported; live inputs, NDI, Feedback, Video Router, SMPTE/Denon transports and audio-only Jobs are rejected before entering the Queue.</div>
+      </section>
+
+      <section data-tab="defaults" data-system-managed hidden>
+        <h2>Defaults</h2>
+        <div class="formgroup"><h3>Video Clips</h3>
+          <div class="formrow"><label for="defaultVideoTransport">Default Video Clip Transport</label><select id="defaultVideoTransport" class="pm-transport"></select></div>
+          <div class="formrow"><label for="defaultVideoPlayMode">Default Video Clip Play Mode</label><select id="defaultVideoPlayMode" class="pm-play"></select></div>
+          <div class="formrow"><label for="defaultVideoPlayAway">Default Video Play Mode Away</label><select id="defaultVideoPlayAway" class="pm-away"></select></div>
+        </div>
+        <div class="formgroup"><h3>Audio Clips</h3>
+          <div class="formrow"><label for="defaultAudioTransport">Default Audio Clip Transport</label><select id="defaultAudioTransport" class="pm-transport"></select></div>
+          <div class="formrow"><label for="defaultAudioPlayMode">Default Audio Clip Play Mode</label><select id="defaultAudioPlayMode" class="pm-play"></select></div>
+          <div class="formrow"><label for="defaultAudioPlayAway">Default Audio Play Mode Away</label><select id="defaultAudioPlayAway" class="pm-away"></select></div>
+        </div>
+        <div class="formgroup"><h3>Layers</h3>
+          <div class="formrow"><label for="defBlend">Default Layer Blend Mode</label><select id="defBlend"></select></div>
+        </div>
+        <div class="formgroup"><h3>Tempo</h3>
+          <div class="formrow"><label for="defaultTempoNudge">Tempo Nudge Range</label><input id="defaultTempoNudge" type="range" min="1" max="100" value="10"><output id="defaultTempoNudgeValue">10</output>%</div>
+          <div class="pref-status" id="defaultsStatus" role="status"></div>
+        </div>
+      </section>
+
+      <section data-tab="feedback" data-system-managed hidden>
+        <h2>Feedback</h2>
+        <div class="formgroup"><h3>Tell us what you think</h3>
+          <div class="formrow"><label for="feedbackName">Your Name</label><input id="feedbackName" type="text" autocomplete="name"></div>
+          <div class="formrow"><label for="feedbackEmail">Email Address</label><input id="feedbackEmail" type="text" inputmode="email" autocomplete="email"></div>
+          <div class="formrow"><label for="feedbackRemember">Remember contact on this computer</label><input id="feedbackRemember" type="checkbox"></div>
+          <div class="formrow"><label for="feedbackMessage">Feedback</label></div>
+          <textarea id="feedbackMessage" style="width:100%;height:110px;background:var(--inset);border:1px solid var(--n800);color:var(--n300);padding:6px;border-radius:var(--radius-sm)" placeholder="Bug reports, feature requests, love letters…"></textarea>
+          <div class="formrow"><label for="feedbackIncludeLog">Include diagnostic log</label><input id="feedbackIncludeLog" type="checkbox"><button class="tb-btn" id="feedbackViewLog" type="button">View Log</button></div>
+          <div class="formrow" style="margin-top:8px"><button class="tb-btn on" id="feedbackSend" type="button">Send</button><button class="tb-btn" id="feedbackClear" type="button">Clear</button></div>
+          <div class="pref-status" id="feedbackStatus" role="status"></div>
+        </div>
+        <div class="pref-callout">No feedback endpoint is bundled with this static clone. Send validates the form and copies a complete feedback package for an external support channel; it never pretends that a server accepted the message. Diagnostic logs can include page names, device routes and network addresses.</div>
+      </section>
+
+      <section data-tab="webserver" data-system-managed hidden>
+        <h2>Webserver</h2>
+        <div class="formgroup"><h3>Enable Webserver &amp; REST API</h3>
+          <div class="formrow"><label for="webserverEnabled">Enabled</label><input id="webserverEnabled" type="checkbox"></div>
+          <div class="formrow"><label for="webserverAddress">Listen Address</label><input id="webserverAddress" type="text" value="0.0.0.0"></div>
+          <div class="formrow"><label for="webserverPort">Listen Port</label><input id="webserverPort" type="number" min="1" max="65535" value="8080"></div>
+          <div class="formrow"><label for="webserverRoot">Root Directory</label><input id="webserverRoot" type="text" value="Documents\Resolume Arena\Webserver">
+            <button class="tb-btn" id="webserverBrowse" type="button">Browse…</button></div>
+          <div class="formrow"><label>API Address</label><a class="plainlink pref-code" id="webserverApiUrl" href="#">http://127.0.0.1:8080/api/v1</a></div>
+          <div class="pref-status" id="webserverHostStatus" role="status"></div>
+        </div>
+        <div class="formgroup"><h3>Resolume Compatibility <span class="hint">SHOWAVE Live client</span></h3>
+          <div class="formrow"><label for="webserverTargetHost">Resolume Arena Host</label><input id="webserverTargetHost" type="text" value="127.0.0.1:8080"><button class="tb-btn" id="webserverConnect" type="button">Connect</button><button class="tb-btn" id="webserverProbe" type="button">Probe</button></div>
+          <div class="pref-status" id="webserverConnectionStatus" role="status"></div>
+        </div>
+        <div class="pref-callout">A static browser page cannot bind a TCP listener. These hosting settings mirror native Resolume Arena and are shared with every SHOWAVE window; the Resolume Arena Host field is the compatibility endpoint used by the live client. Root folders are network-visible when native hosting is enabled and must not contain a folder named <b>API</b>.</div>
+      </section>
+
+      <!-- The Bandwidth tab is rebuilt in the Streaming section once destinations
+           exist. The tab it replaces measured genuinely, but only ever against
+           Restream's own ingest hosts and their proprietary /speedtest endpoints,
+           so it could not be pointed at a user's own destination. A bandwidth
+           figure that is not measured toward the ingest you will actually stream
+           to is not a bandwidth figure, so nothing is shown here in the meantime
+           rather than a number that would not mean what it says. -->
+
+      <section data-tab="registration" data-system-managed hidden>
+        <h2>Registration</h2>
+        <div class="formgroup"><h3>Product Identity</h3>
+          <div class="formrow"><label>Product</label><span>SHOWAVE Live</span></div>
+          <div class="formrow"><label>Publisher</label><span>Afro Unity Group</span></div>
+          <div class="formrow"><label>Creator</label><span>Godrick Sankofa <span class="hint">Agaba Godrick</span></span></div>
+          <div class="formrow"><label>Status</label><span id="registrationStatusText">Native Resolume registration unavailable</span></div>
+          <div class="formrow"><label>Credentials</label><span>Never stored by this browser application</span></div>
+          <div class="formrow">
+            <button class="tb-btn" id="registrationCheck" type="button">Check Capability</button>
+            <button class="tb-btn" id="registrationDeactivate" type="button" disabled>Unregister Native Resolume</button>
+          </div>
+          <div class="pref-status" id="registrationStatus" role="status"></div>
+        </div>
+        <div class="pref-callout">Native registration is machine-scoped and verified by Resolume’s licensing service. SHOWAVE does not read, copy, activate, deactivate or display native serials. Use the installed Resolume Arena application for consequential license operations.</div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- Destructive cleanup is always previewed.  The server accepts category ids
+     and its own snapshot token only; the browser never submits a filesystem
+     path, so this dialog cannot be turned into a general delete surface. -->
+<div class="overlay" id="temporaryMediaCleanupOverlay" aria-hidden="true">
+  <div class="dialog temporary-media-cleanup" id="temporaryMediaCleanupDialog" role="alertdialog" aria-modal="true" aria-labelledby="temporaryMediaCleanupTitle" aria-describedby="temporaryMediaProtection temporaryMediaPowerPoint temporaryMediaDialogStatus" tabindex="-1">
+    <div class="fw-title"><span id="temporaryMediaCleanupTitle">Clean Temporary Media</span><button class="x" id="temporaryMediaClose" type="button" aria-label="Cancel temporary media cleanup">✕</button></div>
+    <div class="fw-body">
+      <p class="temporary-media-protection" id="temporaryMediaProtection">Only SHOWAVE-owned temporary media is removed. Original media, Shows, presets, recordings, notes and browser libraries are never removed.</p>
+      <p class="temporary-media-powerpoint" id="temporaryMediaPowerPoint">PowerPoint slide exports are deleted automatically after each import and are not part of the legacy prepared-media cache.</p>
+      <div class="temporary-media-total"><span>Selected cleanup preview</span><strong id="temporaryMediaDialogTotal">0 files · 0 B</strong></div>
+      <fieldset class="temporary-media-categories" id="temporaryMediaCategories"><legend>Select categories</legend><div class="temporary-media-empty">Checking temporary media…</div></fieldset>
+      <div class="temporary-media-protected" id="temporaryMediaProtected">Protected working media will be reported separately.</div>
+      <div class="temporary-media-dialog-status" id="temporaryMediaDialogStatus" role="status" aria-live="assertive" data-state="busy">Checking SHOWAVE-owned temporary media…</div>
+    </div>
+    <div class="btnrow"><button class="tb-btn" id="temporaryMediaCancel" type="button">Cancel</button><button class="tb-btn temporary-media-confirm" id="temporaryMediaConfirm" type="button" disabled>Clean 0 files</button></div>
+  </div>
+</div>
+
+<!-- ASIO driver settings are represented inside the clone. Native driver
+     control panels are outside the browser and remain clearly identified. -->
+<div class="overlay" id="asioDialog">
+  <div class="dialog" style="min-width:520px">
+    <div class="fw-title">ASIO Settings <span class="x" data-close-overlay="asioDialog">✕</span></div>
+    <div class="fw-body">
+      <!-- No hardcoded driver name. Nothing the browser enumerates reports an
+           ASIO driver, so this dialog is unreachable in practice; shipping a
+           literal "Focusrite USB ASIO" was the last of the invented device
+           names. The element is filled from the selected device or left blank. -->
+      <div class="formrow"><label>Driver</label><strong id="asioDriverName">N/A</strong></div>
+      <div class="formrow"><label for="asioSampleRate">Sample Rate</label><select id="asioSampleRate"></select></div>
+      <div class="formrow"><label for="asioBufferSize">Buffer Size</label><select id="asioBufferSize"></select></div>
+      <div class="audio-status" style="margin-left:200px" data-state="warning">The web clone stores and shares these settings. Opening the vendor's native ASIO control panel requires the installed desktop driver.</div>
+    </div>
+    <div class="btnrow"><button class="tb-btn" data-close-overlay="asioDialog" type="button">Cancel</button>
+      <button class="tb-btn on" id="asioApply" type="button">Apply</button></div>
+  </div>
+</div>
+
+<!-- MIDI / OSC monitors -->
+<div class="overlay" id="midiMon">
+  <div class="dialog" style="min-width:720px">
+    <div class="fw-title">MIDI Monitor <span style="margin-left:auto;display:flex;gap:4px"><select id="midiMonitorDirection"><option value="all">Input + Output</option><option value="in">Input</option><option value="out">Output</option><option value="clock">Clock</option></select><button class="tb-btn" id="midiMonitorPause" type="button">Pause</button><button class="tb-btn" id="midiMonitorClear" type="button">Clear</button></span><span class="x" data-close-overlay="midiMon">✕</span></div>
+    <div class="fw-body" style="max-height:340px;overflow:auto" id="midiLog"><div class="midi-log-empty">No MIDI traffic yet. Enable an input or output device to begin monitoring.</div></div>
+    <div class="statusline"><span id="midiMonitorStatus">0 in · 0 out</span></div>
+  </div>
+</div>
+<div class="overlay" id="oscMon">
+  <div class="dialog" style="min-width:760px">
+    <div class="fw-title">OSC Monitor <span style="margin-left:auto;display:flex;gap:4px"><select id="oscMonitorDirection"><option value="all">Input + Output</option><option value="in">Input</option><option value="out">Output</option></select><button class="tb-btn" id="oscMonitorPause" type="button">Pause</button><button class="tb-btn" id="oscMonitorClear" type="button">Clear</button></span><span class="x" data-close-overlay="oscMon">✕</span></div>
+    <div class="fw-body" style="max-height:320px;overflow:auto" id="oscLog"><div class="midi-log-empty">No OSC traffic yet. Only real shared or bridged messages appear here.</div></div>
+    <div class="formrow" style="padding:0 8px"><label for="oscTestAddress" style="flex-basis:90px;min-width:90px">Test Input</label><input id="oscTestAddress" type="text" value="/composition/tempocontroller/tempo"><input id="oscTestValue" type="text" value="120" style="width:90px;flex:0 0 90px"><button class="tb-btn" id="oscTestInject" type="button">Inject</button></div>
+    <div class="statusline"><span id="oscMonitorStatus">0 in · 0 out · 0/200 retained</span></div>
+  </div>
+</div>
+<div class="overlay" id="dmxMon">
+  <div class="dialog" style="min-width:850px">
+    <div class="fw-title">Art-Net Monitor <span style="margin-left:auto;display:flex;gap:4px"><select id="dmxMonitorAdapter" aria-label="Monitor adapter"></select><select id="dmxMonitorSubnet" aria-label="DMX subnet"></select><select id="dmxMonitorUniverse" aria-label="DMX universe"></select><select id="dmxMonitorBank" aria-label="DMX channel bank"><option value="0">Channels 1–256</option><option value="1">Channels 257–512</option></select><button class="tb-btn" id="dmxMonitorToggle" type="button">Arm</button><button class="tb-btn" id="dmxMonitorClear" type="button">Clear</button></span><span class="x" data-close-overlay="dmxMon">✕</span></div>
+    <div class="fw-body dmx-monitor-body"><div class="dmx-channel-grid" id="dmxChannelGrid" aria-label="256-channel DMX bank"></div><aside class="dmx-history"><h4 id="dmxHistoryTitle">Channel history</h4><div class="dmx-history-list" id="dmxHistoryList"><div class="midi-log-empty">Select a channel.</div></div></aside></div>
+    <div class="statusline"><span id="dmxMonitorStatus">Disarmed · 0 mapped · 0 unmapped · shared bridge traffic only</span></div>
+  </div>
+</div>
+
+<!-- the option-list authority: 62 choice parameters captured off a running
+     Arena, generated by tools/build-arena-choices.py. The Defaults tab reads
+     its play mode / transport / play-away / blend lists straight out of it. -->
+<script src="arena-choices.js?v=choices-1"></script>
+<script src="openlive-hub.js?v=hub-recording-4"></script>
+<script src="openlive-midi-runtime.js?v=midi-system-3"></script>
+<script>
+/* The Defaults tab used to declare its OWN copies of these four lists rather
+   than reading the ones the mixer uses, and every copy had drifted:
+     play mode   invented 'Restart' (that is a playmodeaway value) and was in
+                 the wrong order — Arena is Loop, Bounce, Random, Play Once &
+                 Clear, Play Once & Hold
+     transport   merged SMPTE 1 / SMPTE 2 into one 'SMPTE' and dropped
+                 Denon DJ and Pioneer DJ
+     play away   showed From Start / Pick-up / Relative Pick-up; Arena's labels
+                 are Restart / Continue / Relative (the stored VALUES here were
+                 already right, so only the display was wrong)
+     blend       49 entries including 'HV Blur' and 'Transform', which are
+                 EFFECTS, not blend modes, and missing all ten 50-variants
+   They now come from arenaChoice(), i.e. straight out of the live capture, so
+   the Defaults tab and the mixer can no longer disagree. */
+const PLAY_MODES = arenaChoice('/layers/#/clips/#/transport/controls/playmode',
+  ['Loop','Bounce','Random','Play Once & Clear','Play Once & Hold']);
+const TRANSPORTS = arenaChoice('/layers/#/clips/#/transporttype',
+  ['Timeline','BPM Sync','SMPTE 1','SMPTE 2','Denon DJ','Pioneer DJ']);
+/* value stays the Arena token; only the label was ever wrong, so they match now */
+const PLAY_AWAY = arenaChoice('/layers/#/clips/#/transport/controls/playmodeaway',
+  ['Restart','Continue','Relative']).map(v => [v, v]);
+const BLEND_MODES = arenaChoice('/layers/#/video/mixer/Blend Mode', []);
+document.querySelectorAll('.pm-play').forEach(s => PLAY_MODES.forEach(v => s.appendChild(new Option(v,v))));
+document.querySelectorAll('.pm-transport').forEach(s => TRANSPORTS.forEach(v => s.appendChild(new Option(v,v))));
+document.querySelectorAll('.pm-away').forEach(s => PLAY_AWAY.forEach(([value,label]) => s.appendChild(new Option(label,value))));
+BLEND_MODES.forEach(v => document.getElementById('defBlend').appendChild(new Option(v,v)));
+document.getElementById('defBlend').value = 'Add';
+document.querySelectorAll('input[type=range]').forEach(r => r.addEventListener('input', () => {
+  const o = r.parentElement.querySelector('output'); if(o) o.value = r.value;
+}));
+
+const tabs = document.querySelectorAll('.side-tab');
+const tabNames = [...tabs].map(tab => tab.dataset.t);
+function go(requested, options = {}){
+  const t = tabNames.includes(requested) ? requested : 'general';
+  tabs.forEach(x => {
+    const active = x.dataset.t === t;
+    x.classList.toggle('active', active);
+    x.setAttribute('aria-selected', String(active));
+    x.tabIndex = active ? 0 : -1;
+  });
+  document.querySelectorAll('[data-tab]').forEach(s => s.hidden = s.dataset.tab !== t);
+  if(options.hash !== false && location.hash !== `#${t}`) history.replaceState(null, '', `#${t}`);
+  if(options.focus) [...tabs].find(tab => tab.dataset.t === t)?.focus();
+}
+tabs.forEach((tab, index) => {
+  tab.id = `preferences-tab-${tab.dataset.t}`;
+  tab.setAttribute('role', 'tab');
+  tab.setAttribute('aria-controls', `preferences-${tab.dataset.t}`);
+  tab.addEventListener('click', () => go(tab.dataset.t));
+  tab.addEventListener('keydown', event => {
+    if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); go(tab.dataset.t); return; }
+    let next = index;
+    if(event.key === 'ArrowDown' || event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+    else if(event.key === 'ArrowUp' || event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+    else if(event.key === 'Home') next = 0;
+    else if(event.key === 'End') next = tabs.length - 1;
+    else return;
+    event.preventDefault(); go(tabs[next].dataset.t, { focus:true });
+  });
+});
+document.querySelectorAll('[data-tab]').forEach(section => {
+  section.id = `preferences-${section.dataset.tab}`;
+  section.setAttribute('role', 'tabpanel');
+  section.setAttribute('aria-labelledby', `preferences-tab-${section.dataset.tab}`);
+});
+addEventListener('hashchange', () => go(location.hash.slice(1), { hash:false }));
+go(location.hash.slice(1) || 'general');
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('mousedown', e => { if(e.target === o) o.classList.remove('show'); }));
+</script>
+<script src="preferences-appearance.js?v=interface-fonts-2"></script>
+<!-- Real audio devices, a true stereo meter and the sound test. The device lists
+     on this tab used to be four hardcoded names ("Speakers (Realtek HD)",
+     "ASIO — Focusrite USB", "Microphone (USB)", "Line In", "Focusrite USB
+     Input") and not one of them was ever enumerated — the same defect just fixed
+     for displays. Nothing happens at load: no enumerate, no AudioContext, no
+     getUserMedia until the tab asks or the operator clicks. -->
+<!-- openlive-clock.js is loaded HERE, not only on index.html. Without it
+     openlive-audio's metering loop falls back to requestAnimationFrame, which
+     the browser stops calling the moment this window is not in front — measured:
+     both meter bars froze at 0% for 800 ms while armed, with the readout stuck
+     on "No signal". The Audio tab is exactly the window an operator leaves open
+     behind the mixer while they check a cable. -->
+<script src="openlive-clock.js?v=clock-1"></script>
+<script src="openlive-audio-output.js?v=programme-routing-1"></script>
+<script src="openlive-audio.js?v=audio-3"></script>
+<script src="openlive-speed-test.js?v=network-speed-1"></script>
+<script src="preferences-audio.js?v=mic-test-duration-1"></script>
+<script src="preferences-video.js?v=temporary-media-cleanup-1"></script>
+<script src="preferences-midi.js?v=midi-system-3"></script>
+<script src="preferences-network.js?v=preferences-network-8"></script>
+<script src="preferences-streaming.js?v=streaming-settings-1"></script>
+<script src="preferences-system.js?v=preferences-system-7"></script>
+<script src="openlive-integrations.js?v=recording-lifecycle-6"></script>
+<script src="utility-hub-adapters.js?v=fixture-contract-2"></script>
+<!-- Last, so every module that writes a status note has already registered its
+     nodes and its first values before the mirror takes its initial reading. -->
+<script src="preferences-status-panel.js?v=status-corner-2"></script>
+</body>
+</html>

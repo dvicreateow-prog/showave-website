@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<script src="openlive-projects.js"></script>
+<meta charset="utf-8">
+<title>SHOWAVE Live: Afro Unity Group</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="showave-brand.js?v=home-info-4"></script>
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=appearance-home-2"></script>
+<script>
+/* Same reasoning as the script loader at the end of the body: re-request the
+   stylesheets each load so edits show up without a manual hard refresh. */
+document.write(['arena.css','nocturne.css','openlive-appearance.css','presenter.css','openlive-design-library.css']
+  .map(h => `<link rel="stylesheet" href="${h}?v=${Date.now()}">`).join(''));
+</script>
+<link rel="stylesheet" href="openlive-start-splash.css">
+<link rel="stylesheet" href="openlive-cover-editor.css">
+<link rel="stylesheet" href="openlive-areas.css">
+<link rel="stylesheet" href="openlive-phone-mirror.css">
+<link rel="stylesheet" href="openlive-source-rail.css">
+<link rel="stylesheet" href="openlive-performance.css?v=status-panel-1">
+<noscript><link rel="stylesheet" href="arena.css"><link rel="stylesheet" href="nocturne.css"><link rel="stylesheet" href="openlive-appearance.css?v=appearance-home-2"></noscript>
+<style> #app{ display:flex; flex-direction:column; height:100vh; } </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== MENU BAR ===== -->
+  <header id="menubar">
+    <button type="button" id="showaveHomeButton" class="showave-brand-lockup--nav"
+      data-showave-brand="live" aria-label="Open SHOWAVE Home"
+      title="Open Home" style="border:0;background:none;color:inherit;cursor:pointer"></button>
+    <div id="menus" style="display:flex"></div>
+    <div class="mb-right"><span id="mbMsg"></span></div>
+  </header>
+
+  <!-- ===== TOP: layer strips + clip grid ===== -->
+  <div id="topArea">
+    <div id="leftCol">
+      <!-- RESTORED, against the note that used to sit here. That note claimed
+           "Arena has no Composition caption" and deleted this bar; the real
+           Arena 7.27.1 screenshot shows it plainly, top-left above the eject /
+           B / M / S row. The misalignment it was blamed for was real but
+           misdiagnosed: the caption made the LEFT header two rows tall while
+           the column header on the right stayed one, so the two sides could not
+           line up. Both sides are two rows now - caption + controls here,
+           trigger icon + column name there - and they share the same tokens so
+           they cannot drift apart again. -->
+      <div class="comp-bar">Show</div>
+      <div class="comp-row">
+        <button class="btn sq" id="cEject" title="Eject all">✕</button>
+        <button class="btn sq" id="cBypass" title="Bypass output">B</button>
+        <div class="spacer"></div>
+        <div class="vfad hfad m" id="cM" style="height:20px;width:83px" title="Master"><i style="width:100%"></i><b>M</b></div>
+        <!-- The 8x16 red #cWarn chip that used to sit here is GONE, and it was
+             a real bug rather than a cosmetic one. It was an in-flow flex
+             child shown whenever Master < 100%, so the moment you touched the
+             Master fader it appeared and pushed everything after it 9px right
+             (8 wide + the 1px gutter): Speed 126 -> 135, the six transport
+             buttons 207..312 -> 216..321, and the last one ending at 341,
+             nine pixels past the strip's own 332 edge. This file already
+             carries the same lesson for the two .spacer divs a few lines up —
+             they are display:none rather than width:0 because "a zero-width
+             flex child still takes a gap either side".
+             Nothing is lost. composition.htm says the Master "will show red
+             when not set to 100%", and that is the fader's own TRACK: pull the
+             fill back and the muted red behind it is what shows. 6.svg draws
+             exactly that and draws no chip — fill #ff3131 to 65%, track
+             #a97c7c for the rest, inside one grey slab. See #cM in arena.css. -->
+        <!-- composition.htm: "The S slider controls the speed of all playing
+             clips at the same time." A slider, and speed — not a Solo button,
+             which is what this said while driving comp speed underneath. -->
+        <div class="vfad hfad m" id="cSpeed" style="height:20px;width:80px"
+          title="Speed: all playing clips at once. No effect on BPM-synced clips, which follow the master clock. [composition.htm]"><i style="width:25%"></i><b>S</b></div>
+        <div class="spacer"></div>
+        <!-- SIX, and in this order. Layout Buttons/6.svg and 1.svg both draw
+             the composition transport as ⏮ ⏸ ⏭ ⏪ ⏹ ⏩, measured at relX
+             205.4, 227.0, 248.4, 270.0, 291.3 and 313.0 — six 20px controls
+             on the strip's 21px pitch, the last one ending flush at 333 with
+             the T/Alpha column above it. This clone drew five and stopped at
+             291, which left the whole width of that last column empty and is
+             the gap that was reported ("above the T we should have two
+             buttons").
+             The sixth is ⏹ Stop. It is not an invention: requestPlayState()
+             already takes 'Play', 'Pause' and 'Stop', and Stop was reachable
+             only from the bottom transport bar (#tStop) — the composition row
+             exposed Pause and nothing else. Same call, same behaviour
+             (resync, then eject all), now where the drawing puts it.
+             The other five keep the functions they had; only their glyphs
+             move to the drawing's, which is what makes the row read as one
+             transport instead of two half-sets. -->
+        <button class="btn sq" id="cPrev" title="Previous cue">⏮</button>
+        <button class="btn sq" id="cPause" title="Pause">⏸</button>
+        <button class="btn sq" id="cNext" title="Next cue">⏭</button>
+        <button class="btn sq" id="cFirst" title="First cue">⏪</button>
+        <button class="btn sq" id="cStop" title="Stop: resync and eject every playing Clip [composition.htm]">⏹</button>
+        <button class="btn sq" id="cLast" title="Last cue">⏩</button>
+      </div>
+      <div id="layers" style="flex:1;overflow-y:auto"></div>
+    </div>
+    <div id="gridCol">
+      <div id="gridTable"></div>
+    </div>
+  </div>
+
+  <!-- ===== crossfader + decks ===== -->
+  <div id="xfRow">
+    <div class="xf-left">
+      <button class="btn sq xf-side" id="xfSideA" type="button" aria-label="Crossfade to bus A" title="Crossfade to bus A">A</button>
+      <input type="range" id="xfader" min="0" max="100" value="0">
+      <button class="btn sq xf-side" id="xfSideB" type="button" aria-label="Crossfade to bus B" title="Crossfade to bus B">B</button>
+    </div>
+    <div id="deckRow" role="tablist" aria-label="Show Banks"></div>
+    <div id="deckControls" role="group" aria-label="Bank navigation">
+      <button class="btn sq" id="deckPrev" type="button" aria-label="Previous open Bank" title="Previous open Bank">◀</button>
+      <button class="btn sq" id="deckMenu" type="button" aria-label="Open and closed Banks" title="Open and closed Banks" aria-haspopup="menu">≡</button>
+      <button class="btn sq" id="deckNext" type="button" aria-label="Next open Bank" title="Next open Bank">▶</button>
+    </div>
+  </div>
+
+  <!-- ===== TRANSPORT TOOLBAR ===== -->
+  <div id="transport">
+    <div class="bpm-pie" id="pie" title="Beat indicator"></div>
+    <button class="btn sq on" id="tPlay" title="Play">▶</button>
+    <button class="btn sq" id="tPause" title="Pause">‖</button>
+    <button class="btn sq" id="tStop" title="Stop">■</button>
+    <span class="lbl">BPM</span>
+    <div class="bpm-num" id="bpm">120</div>
+    <button class="btn sq" id="bMinus">−</button>
+    <button class="btn sq" id="bPlus">+</button>
+    <button class="btn sq" id="bNudgeD" title="Nudge down">⊣</button>
+    <button class="btn sq" id="bNudgeU" title="Nudge up">⊢</button>
+    <button class="btn sq" id="bHalf">/2</button>
+    <button class="btn sq" id="bDouble">×2</button>
+    <button class="btn" id="bTap">TAP</button>
+    <button class="btn" id="bResync">RESYNC</button>
+    <button class="btn sq" id="bMetro" title="Metronome">♪</button>
+    <button class="btn sq" id="bUndo" title="Undo">↶</button>
+    <button class="btn sq" id="bRedo" title="Redo">↷</button>
+    <div class="audio-mixer-compact" id="audioMixerCompact">
+      <div class="audio-compact-meter audio-desktop-meter" id="audioDesktopMeter" role="meter"
+        aria-label="Desktop Audio stereo level, inactive"
+        aria-valuemin="-60" aria-valuemax="0" aria-valuenow="-60"
+        title="Desktop Audio stereo meter: select the speaker button to start">
+        <span class="audio-meter-lane left" aria-hidden="true"><i class="audio-meter-fill"></i><i class="audio-meter-vu"></i><i class="audio-meter-peak-line"></i><i class="audio-meter-input"></i></span>
+        <span class="audio-meter-lane right" aria-hidden="true"><i class="audio-meter-fill"></i><i class="audio-meter-vu"></i><i class="audio-meter-peak-line"></i><i class="audio-meter-input"></i></span>
+      </div>
+      <button class="btn audio-compact-control audio-desktop-toggle" id="audioDesktopToggle" type="button"
+        aria-label="Add Desktop Audio" aria-pressed="false" title="Add Desktop Audio">
+        <svg class="audio-compact-icon" aria-hidden="true" viewBox="0 0 16 16">
+          <path d="M2 6h3l3-3v10l-3-3H2z"/>
+          <path class="audio-speaker-waves" d="M10 5c1.5 1.5 1.5 4.5 0 6M12 3c3 3 3 7 0 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          <path class="audio-speaker-slash" d="M10 6l4 4m0-4l-4 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="audio-link-controls" id="audioLinkControls">
+        <button class="btn audio-preferences-link" id="audioPreferencesLink" type="button"
+          aria-label="Open Audio Preferences" title="Open Audio Preferences">AUDIO</button>
+        <button class="btn audio-mixer-toggle" id="audioMixerToggle" type="button"
+          aria-label="Open Audio Mixer" aria-expanded="false" aria-controls="audioMixerPopover"
+          title="Open Audio Mixer"><span aria-hidden="true">&#9662;</span></button>
+      </div>
+      <button class="btn audio-compact-control audio-compact-mic" id="audioCompactMic" type="button"
+        aria-label="Start microphone input meter" aria-pressed="false"
+        title="Start microphone input meter: never routed to audio output">
+        <svg class="audio-compact-icon" aria-hidden="true" viewBox="0 0 16 16">
+          <rect x="5" y="1.5" width="6" height="9" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M3.5 8.5a4.5 4.5 0 0 0 9 0M8 13v2M5.5 15h5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="audio-compact-meter audio-mic-meter" id="audioMicMeter" role="meter"
+        aria-label="Microphone stereo input level, inactive" aria-valuemin="-60" aria-valuemax="0" aria-valuenow="-60"
+        title="Microphone input meter: never routed to audio output">
+        <span class="audio-meter-lane left" aria-hidden="true"><i class="audio-meter-fill"></i><i class="audio-meter-vu"></i><i class="audio-meter-peak-line"></i><i class="audio-meter-input"></i></span>
+        <span class="audio-meter-lane right" aria-hidden="true"><i class="audio-meter-fill"></i><i class="audio-meter-vu"></i><i class="audio-meter-peak-line"></i><i class="audio-meter-input"></i></span>
+      </div>
+    </div>
+    <!-- BROADCAST. Arena has a Record Panel and no stream control at all
+         (streaming.htm: "It's not possible to directly stream from Resolume" -
+         that is OBS's job over NDI). Broadcast is the union name over Arena's
+         Record half and SHOWAVE's stream half; inside the panel every Arena
+         control keeps its Arena name. Captions RECORD / WRITING... / STOP are
+         Arena's own strings, reference/docs/gui/English.txt:23-25.
+         Sits immediately before OFF AIR so control and status read as one
+         cluster: [BROADCAST v] [OFF AIR] [NET]. -->
+    <div class="broadcast-controls" id="broadcastControls" role="group"
+      aria-label="Broadcast: Record and Stream">
+      <button class="btn broadcast-record" id="broadcastRecord" type="button"
+        data-state="idle" aria-pressed="false"
+        aria-label="Broadcast: start recording the Show"
+        title="Broadcast: record the Show to disk. Click to start, click again to stop.">
+        <svg class="broadcast-icon" aria-hidden="true" viewBox="0 0 18 18">
+          <circle class="broadcast-dot" cx="9" cy="9" r="3.2"/>
+          <path d="M4.2 13.8a6.8 6.8 0 0 1 0-9.6M13.8 4.2a6.8 6.8 0 0 1 0 9.6"/>
+        </svg>
+        <span class="broadcast-label">BROADCAST</span>
+      </button>
+      <button class="btn broadcast-toggle" id="broadcastToggle" type="button"
+        aria-label="Open the Broadcast panel" aria-expanded="false" aria-controls="brTabs"
+        title="Open the Broadcast panel"><span aria-hidden="true">&#9662;</span></button>
+    </div>
+    <output class="broadcast-elapsed" id="broadcastElapsed" role="status"
+      aria-live="polite" aria-atomic="true" hidden></output>
+    <div class="stream-air-status" id="streamAirStatus" data-state="off" data-live="false"
+      role="status" aria-live="polite" aria-atomic="true"
+      aria-label="Streaming status: Off Air"
+      title="OFF AIR: no confirmed WHIP or OBS stream is active">
+      <svg class="stream-air-icon" aria-hidden="true" viewBox="0 0 18 18">
+        <circle class="stream-air-dot" cx="9" cy="9" r="2"/>
+        <path d="M5.8 5.8a4.5 4.5 0 0 0 0 6.4M12.2 5.8a4.5 4.5 0 0 1 0 6.4"/>
+        <path d="M3.4 3.4a8 8 0 0 0 0 11.2M14.6 3.4a8 8 0 0 1 0 11.2"/>
+      </svg>
+      <span class="stream-air-label">OFF AIR</span>
+      <span class="stream-air-cue" aria-hidden="true"></span>
+    </div>
+    <button class="btn network-speed-toggle" id="networkSpeedTestToggle" type="button"
+      aria-label="Open Internet Speed Test" aria-expanded="false" aria-controls="networkSpeedWindow"
+      title="Open Internet Speed Test">
+      <svg aria-hidden="true" viewBox="0 0 18 18"><path d="M3 12a6 6 0 1 1 12 0"/><path d="m9 11 3-4"/><circle cx="9" cy="12" r="1.2"/></svg>
+      <span>NET</span>
+    </button>
+    <div class="fft">
+      <span class="lbl" style="text-align:right;line-height:1.05">FFT<br>GAIN</span>
+      <div class="dial" id="fftDial"></div>
+      <div class="swatch" id="fftSwatch" title="FFT level"></div>
+    </div>
+  </div>
+
+  <section id="networkSpeedWindow" class="network-speed-window" data-state="ready" data-phase="ready" data-slide="landing"
+    aria-busy="false" hidden role="dialog" aria-modal="false"
+    aria-labelledby="networkSpeedTitle" aria-describedby="networkSpeedDisclosure">
+    <header class="network-speed-titlebar" id="networkSpeedTitlebar" tabindex="0"
+      aria-label="Internet Speed Test window. Use arrow keys to move this window.">
+      <span id="networkSpeedTitle" class="network-speed-title">Internet Speed Test</span>
+      <span id="networkSpeedStatus" class="network-speed-status" role="status" aria-live="polite" aria-atomic="true">Ready</span>
+      <button type="button" class="audio-mixer-window-button" id="networkSpeedClose"
+        aria-label="Close Internet Speed Test" title="Close Internet Speed Test">×</button>
+    </header>
+    <div class="network-speed-body">
+      <div class="network-speed-surface">
+        <div class="network-speed-heading">
+          <div class="network-speed-brand">
+            <svg class="network-speed-brand-mark" aria-hidden="true" viewBox="0 0 28 28">
+              <circle cx="14" cy="14" r="11"/><path d="M7.5 17.5a7.5 7.5 0 0 1 13 0M14 15.5l4.5-5"/><circle cx="14" cy="15.5" r="1.4"/>
+            </svg>
+            <div><span class="network-speed-kicker">SHOWAVE CONNECTION CHECK</span>
+              <h2>Browser-path performance</h2></div>
+          </div>
+          <span class="network-speed-provider"><i aria-hidden="true"></i>CLOUDFLARE EDGE</span>
+        </div>
+
+        <div class="network-speed-runline">
+          <ol class="network-speed-steps" aria-label="Internet speed test steps">
+            <li id="networkSpeedStepDownload" data-speed-step="download" data-step-state="pending" aria-label="Step 1 of 3: Download"><span aria-hidden="true">1</span><b>DOWNLOAD</b></li>
+            <li id="networkSpeedStepUpload" data-speed-step="upload" data-step-state="pending" aria-label="Step 2 of 3: Upload"><span aria-hidden="true">2</span><b>UPLOAD</b></li>
+            <li id="networkSpeedStepResults" data-speed-step="results" data-step-state="pending" aria-label="Step 3 of 3: Results"><span aria-hidden="true">3</span><b>RESULTS</b></li>
+          </ol>
+          <span class="network-speed-run-state" aria-hidden="true"><i></i><span id="networkSpeedPhaseVisual">READY FOR MANUAL TEST</span></span>
+          <progress id="networkSpeedProgress" class="network-speed-progress" max="100" value="0" aria-label="Internet speed test progress"></progress>
+          <button type="button" id="networkSpeedCompactControl" class="network-speed-compact-control"
+            aria-label="Stop Internet speed test" title="Stop Internet speed test" hidden>STOP</button>
+        </div>
+
+        <div class="network-speed-slide-viewport">
+        <section id="networkSpeedLandingSlide" class="network-speed-slide network-speed-landing-slide"
+          data-speed-slide="landing" role="group" aria-labelledby="networkSpeedLandingTitle" aria-hidden="false">
+          <div class="network-speed-preflight">
+            <header class="network-speed-preflight-copy">
+              <span><i aria-hidden="true"></i> MANUAL PREFLIGHT</span>
+              <h3 id="networkSpeedLandingTitle">Check this browser path before live output</h3>
+              <p>Run one operator-started pass to measure download, upload and latency through the automatic Cloudflare edge.</p>
+            </header>
+
+            <aside class="network-speed-preflight-hero network-speed-start-dock" aria-label="Start the manual Internet speed test">
+              <div class="network-speed-start-rings" aria-hidden="true"><i></i><i></i><i></i></div>
+              <button type="button" id="networkSpeedStart" class="network-speed-start"
+                aria-label="Start Internet speed test">GO</button>
+              <span class="network-speed-start-hint">PRESS TO TEST</span>
+              <small>Manual test · never runs automatically</small>
+            </aside>
+
+            <div class="network-speed-preflight-facts" role="list" aria-label="Internet speed test behavior">
+              <article role="listitem">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/><circle cx="5" cy="12" r="2"/></svg>
+                <div><b>Browser route</b><small>HTTPS test traffic only</small></div>
+              </article>
+              <article role="listitem">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9M12 3v9l6 3"/><circle cx="12" cy="12" r="2"/></svg>
+                <div><b>Three stages</b><small>Download, upload, results</small></div>
+              </article>
+              <article role="listitem">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 10V8a6 6 0 0 1 12 0v2M5 10h14v11H5zM9 15h6"/></svg>
+                <div><b>Operator controlled</b><small>Close or press STOP to cancel</small></div>
+              </article>
+            </div>
+            <p class="network-speed-preflight-note"><i aria-hidden="true"></i>This checks the browser-to-edge path, not the selected streaming ingest.</p>
+          </div>
+        </section>
+
+        <section id="networkSpeedDownloadSlide" class="network-speed-slide" data-speed-slide="download"
+          role="group" aria-labelledby="networkSpeedStepDownload" aria-hidden="true" hidden inert>
+        <header class="network-speed-scene-head">
+          <span class="network-speed-scene-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13"/><path d="M16 8v14m0 0-5-5m5 5 5-5"/></svg>
+          </span>
+          <div class="network-speed-scene-copy">
+            <span>STEP 1 <i aria-hidden="true"></i> RECEIVE</span>
+            <h3 id="networkSpeedDownloadSceneTitle">Measure download capacity</h3>
+            <p>Receiving generated test data from the automatic edge.</p>
+          </div>
+          <span class="network-speed-scene-badge"><i aria-hidden="true"></i>DOWNLOAD</span>
+        </header>
+        <div class="network-speed-dashboard">
+          <div class="network-speed-slide-slot" data-speed-slide-slot="download">
+          <div class="network-speed-results" id="networkSpeedResultsSurface">
+            <div class="network-speed-throughput" role="group" aria-label="Download and upload throughput">
+              <article class="network-speed-metric download">
+                <span class="network-speed-metric-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v11m0 0-4-4m4 4 4-4"/></svg></span>
+                <div><span>DOWNLOAD <small>Mbps</small></span><output id="networkSpeedDownload" aria-label="Download speed in megabits per second">N/A</output></div>
+              </article>
+              <article class="network-speed-metric upload">
+                <span class="network-speed-metric-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 18V7m0 0-4 4m4-4 4 4"/></svg></span>
+                <div><span>UPLOAD <small>Mbps</small></span><output id="networkSpeedUpload" aria-label="Upload speed in megabits per second">N/A</output></div>
+              </article>
+            </div>
+
+            <div class="network-speed-latencies" role="group" aria-label="Ping latency in milliseconds">
+              <span class="network-speed-latency-label">PING <small>ms</small></span>
+              <span class="network-speed-latency-item idle"><i class="idle" aria-hidden="true"></i>IDLE <output id="networkSpeedIdleLatency" aria-label="Idle latency in milliseconds">N/A</output></span>
+              <span class="network-speed-latency-item download"><i class="download" aria-hidden="true"></i>DOWNLOAD <output id="networkSpeedDownloadLatency" aria-label="Download latency in milliseconds">N/A</output></span>
+              <span class="network-speed-latency-item upload"><i class="upload" aria-hidden="true"></i>UPLOAD <output id="networkSpeedUploadLatency" aria-label="Upload latency in milliseconds">N/A</output></span>
+              <span class="network-speed-latency-item jitter network-speed-jitter"><i class="jitter" aria-hidden="true"></i>JITTER <output id="networkSpeedJitter" aria-label="Jitter in milliseconds">N/A</output></span>
+            </div>
+
+            <div class="network-speed-quality-grid" role="group" aria-label="Estimated workload quality">
+              <article class="network-quality-card" data-network-quality="browsing" data-tone="unknown" data-score="0">
+                <span class="network-quality-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8h20M6 6h.01M9 6h.01M7 13h4m-4 3h7"/></svg></span>
+                <span>BROWSING</span><b class="network-quality-rating">Waiting</b><small class="network-quality-detail">Run a test</small>
+                <span class="network-quality-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              </article>
+              <article class="network-quality-card" data-network-quality="gaming" data-tone="unknown" data-score="0">
+                <span class="network-quality-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 8h10a5 5 0 0 1 4 8l-1 2a2 2 0 0 1-3 .4L15 16H9l-2 2.4a2 2 0 0 1-3-.4l-1-2a5 5 0 0 1 4-8Z"/><path d="M7 12h4M9 10v4M16 11h.01M18 13h.01"/></svg></span>
+                <span>GAMING</span><b class="network-quality-rating">Waiting</b><small class="network-quality-detail">Run a test</small>
+                <span class="network-quality-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              </article>
+              <article class="network-quality-card" data-network-quality="streaming" data-tone="unknown" data-score="0">
+                <span class="network-quality-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m10 9 5 3-5 3ZM5 18h14"/></svg></span>
+                <span>STREAMING</span><b class="network-quality-rating">Waiting</b><small class="network-quality-detail">Run a test</small>
+                <span class="network-quality-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              </article>
+              <article class="network-quality-card" data-network-quality="videoCall" data-tone="unknown" data-score="0">
+                <span class="network-quality-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="2" y="5" width="14" height="14" rx="2"/><path d="m16 10 6-3v10l-6-3ZM6 16c.5-2 1.7-3 3-3s2.5 1 3 3M9 8.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></svg></span>
+                <span>VIDEO CALL</span><b class="network-quality-rating">Waiting</b><small class="network-quality-detail">Run a test</small>
+                <span class="network-quality-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+              </article>
+            </div>
+
+            <div class="network-speed-stage">
+              <span class="network-speed-gauge-label" id="networkSpeedGaugeLabel">NO TRANSFER YET</span>
+              <div class="network-speed-gauge" id="networkSpeedGauge" role="meter" aria-label="Current transfer speed"
+                aria-valuemin="0" aria-valuemax="1000" aria-valuenow="0" aria-valuetext="No speed measured">
+                <svg viewBox="0 0 300 286" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="networkSpeedGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0" stop-color="#f2cf57"/><stop offset=".42" stop-color="#42d9b2"/><stop offset=".72" stop-color="#4ba9e8"/><stop offset="1" stop-color="#a76bea"/>
+                    </linearGradient>
+                    <linearGradient id="networkSpeedNeedleGradient" x1="0" y1="1" x2="0" y2="0">
+                      <stop offset="0" stop-color="#f6f7fb" stop-opacity=".16"/><stop offset="1" stop-color="#f6f7fb" stop-opacity=".94"/>
+                    </linearGradient>
+                    <filter id="networkSpeedGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                  </defs>
+                  <path class="network-speed-gauge-track" pathLength="100" d="M60.9 232.1 A126 126 0 1 1 239.1 232.1"/>
+                  <path class="network-speed-gauge-arc" id="networkSpeedGaugeArc" pathLength="100" d="M60.9 232.1 A126 126 0 1 1 239.1 232.1"/>
+                  <path class="network-speed-gauge-inner" d="M72.2 220.8 A110 110 0 1 1 227.8 220.8"/>
+                  <g class="network-speed-gauge-marks">
+                    <path d="M63 227l9-8M27 168l11-2M36 92l10 4M79 43l6 10M150 17v12M221 43l-6 10M264 92l-10 4M273 168l-11-2M237 227l-9-8"/>
+                  </g>
+                  <g class="network-speed-gauge-ticks">
+                    <text x="47" y="253">0</text><text x="20" y="171">5</text><text x="21" y="91">10</text>
+                    <text x="70" y="30">50</text><text x="150" y="12">100</text><text x="230" y="30">250</text>
+                    <text x="279" y="91">500</text><text x="280" y="171">750</text><text x="253" y="253">1000</text>
+                  </g>
+                  <g class="network-speed-needle" id="networkSpeedGaugeNeedle">
+                    <path d="M145 143h10l-3-103h-4z"/><circle cx="150" cy="143" r="10"/><circle class="network-speed-needle-core" cx="150" cy="143" r="4"/>
+                  </g>
+                </svg>
+                <div class="network-speed-gauge-readout">
+                  <output id="networkSpeedGaugeValue">N/A</output>
+                  <span class="network-speed-gauge-unitline">
+                    <span class="network-speed-gauge-direction" aria-hidden="true">
+                      <svg class="network-speed-direction-download" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><path d="M10 5v9m0 0-3-3m3 3 3-3"/></svg>
+                      <svg class="network-speed-direction-upload" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><path d="M10 15V6m0 0-3 3m3-3 3 3"/></svg>
+                    </span>
+                    <span id="networkSpeedGaugeUnit">Mbps</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+        </section>
+
+        <section id="networkSpeedUploadSlide" class="network-speed-slide" data-speed-slide="upload"
+          role="group" aria-labelledby="networkSpeedStepUpload" aria-hidden="true" hidden inert>
+          <header class="network-speed-scene-head">
+            <span class="network-speed-scene-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13"/><path d="M16 24V10m0 0-5 5m5-5 5 5"/></svg>
+            </span>
+            <div class="network-speed-scene-copy">
+              <span>STEP 2 <i aria-hidden="true"></i> SEND</span>
+              <h3 id="networkSpeedUploadSceneTitle">Measure upload capacity</h3>
+              <p>Sending generated test data; no personal files are used.</p>
+            </div>
+            <span class="network-speed-scene-badge"><i aria-hidden="true"></i>UPLOAD</span>
+          </header>
+          <div class="network-speed-dashboard"><div class="network-speed-slide-slot" data-speed-slide-slot="upload"></div></div>
+        </section>
+
+        <section id="networkSpeedResultsSlide" class="network-speed-slide" data-speed-slide="results"
+          role="group" aria-labelledby="networkSpeedStepResults" aria-hidden="true" hidden inert>
+          <header class="network-speed-scene-head">
+            <span class="network-speed-scene-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13"/><path d="m10 16 4 4 8-9"/></svg>
+            </span>
+            <div class="network-speed-scene-copy">
+              <span>STEP 3 <i aria-hidden="true"></i> REVIEW</span>
+              <h3 id="networkSpeedResultsSceneTitle">Connection result</h3>
+              <p>Review this browser path before starting live output.</p>
+            </div>
+            <span class="network-speed-scene-badge"><i aria-hidden="true"></i>RESULTS</span>
+          </header>
+          <div class="network-speed-result-dashboard">
+            <aside class="network-speed-result-dock" aria-label="Run the Internet speed test again">
+              <div class="network-speed-result-rings" aria-hidden="true"><i></i><i></i><i></i></div>
+              <button type="button" id="networkSpeedResultStart" class="network-speed-result-start"
+                data-speed-action="restart" aria-label="Run Internet speed test again"
+                aria-describedby="networkSpeedResultStartHint"><span>GO</span></button>
+              <strong id="networkSpeedResultStartHint">RUN AGAIN</strong>
+              <small>Manual test · never runs automatically</small>
+            </aside>
+            <div class="network-speed-slide-slot" data-speed-slide-slot="results"></div>
+          </div>
+
+        <article class="network-quality-card network-speed-headroom" id="networkSpeedHeadroom" data-tone="unknown" data-score="0">
+          <span class="network-speed-headroom-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 18h16M6 15v3m4-7v7m4-11v11m4-8v8"/></svg></span>
+          <div><span>LIVE OUTPUT HEADROOM</span><small>Compared with your saved SHOWAVE Broadcast bitrate</small></div>
+          <b class="network-quality-rating">Waiting</b><small class="network-quality-detail">For 6 Mbps live output</small>
+        </article>
+
+        <dl class="network-speed-details" aria-label="Connection and server details">
+          <div><dt>CONNECTION</dt><dd id="networkSpeedConnection">Browser HTTPS requests</dd></div>
+          <div><dt>SERVER</dt><dd id="networkSpeedServer"><i class="network-speed-detail-dot" aria-hidden="true"></i>Cloudflare automatic edge</dd></div>
+          <div><dt>MEASURED PAYLOAD</dt><dd id="networkSpeedData">N/A</dd></div>
+          <div><dt>MEASURED</dt><dd id="networkSpeedMeasuredAt">Not measured</dd></div>
+        </dl>
+        </section>
+        </div>
+        <p id="networkSpeedSummary" class="network-speed-summary"></p>
+        <p id="networkSpeedDisclosure" class="network-speed-disclosure">Runs only when you press GO and may request up to 48.4 MiB of test payload, plus protocol overhead. This estimates this browser’s path to Cloudflare. It does not test your selected streaming ingest. Packet loss is not measured. Close the window or press STOP to cancel.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="audioMixerPopover" class="audio-mixer-popover layout-vertical" hidden
+    aria-label="Audio Mixer">
+    <header class="audio-mixer-titlebar" id="audioMixerTitlebar">
+      <span class="audio-mixer-title">Audio Mixer</span>
+      <span class="audio-mixer-state" id="audioMixerState" role="status" aria-live="polite">NO ACTIVE AUDIO</span>
+      <button type="button" class="audio-mixer-window-button" id="audioMixerClose" aria-label="Close Audio Mixer" title="Close Audio Mixer">×</button>
+    </header>
+    <div class="audio-mixer-toolbar">
+      <div class="audio-mixer-scope" role="group" aria-label="Audio mixer channel visibility">
+        <button type="button" class="tb-btn small on" data-audio-scope="active" aria-pressed="true">ACTIVE</button>
+        <button type="button" class="tb-btn small" data-audio-scope="all" aria-pressed="false">ALL LAYERS</button>
+      </div>
+      <button type="button" class="tb-btn small" id="audioAddDesktop">+ DESKTOP AUDIO</button>
+      <button type="button" class="tb-btn small" id="audioAddMic"
+        aria-label="Start microphone input meter"
+        title="Start microphone input meter: never routed to audio output">+ MIC METER</button>
+      <span id="audioMixerFormat">Audio engine idle</span>
+    </div>
+    <div class="audio-mixer-rows" id="audioMixerRows"></div>
+    <footer class="audio-mixer-footer">
+      <button type="button" class="audio-mixer-footer-button" id="audioMixerHidden">0 hidden</button>
+      <span class="audio-mixer-footer-spacer"></span>
+      <button type="button" class="btn" id="audioMixerResume">START AUDIO</button>
+      <button type="button" class="btn" id="audioMixerReset">RESET MIXER</button>
+      <button type="button" class="audio-mixer-footer-button" id="audioMixerLayout" aria-label="Use horizontal Audio Mixer layout" title="Switch layout">⇆</button>
+      <button type="button" class="audio-mixer-footer-button" id="audioMixerAdvanced" aria-label="Advanced Audio Properties" title="Advanced Audio Properties">⚙</button>
+      <button type="button" class="audio-mixer-footer-button audio-mixer-options" id="audioMixerOptions" aria-haspopup="menu" aria-expanded="false">Options ▾</button>
+    </footer>
+  </section>
+
+  <div id="audioAdvancedOverlay" class="audio-advanced-overlay" hidden>
+    <section class="audio-advanced-dialog" role="dialog" aria-modal="true"
+      aria-labelledby="audioAdvancedTitle" aria-describedby="audioAdvancedDescription">
+      <header class="audio-advanced-titlebar">
+        <span id="audioAdvancedTitle">Advanced Audio Properties</span>
+        <button type="button" class="audio-mixer-window-button" id="audioAdvancedClose" aria-label="Close Advanced Audio Properties">×</button>
+      </header>
+      <p id="audioAdvancedDescription" class="audio-advanced-description">Audio properties for the current Show mix. SHOWAVE records and streams one programme audio track.</p>
+      <div class="audio-advanced-table-wrap">
+        <table class="audio-advanced-table">
+          <thead><tr><th>Source</th><th>Status</th><th>Volume</th><th>Mute</th><th>Balance</th><th>Audio Monitoring</th><th>Track 1</th></tr></thead>
+          <tbody id="audioAdvancedRows"></tbody>
+        </table>
+      </div>
+      <footer><button type="button" class="btn" id="audioAdvancedDone">Close</button></footer>
+    </section>
+  </div>
+
+  <!-- ===== BOTTOM ===== -->
+  <div id="bottom">
+
+    <!-- three monitors -->
+    <div class="mon">
+      <div class="mon-head">Preview Monitor</div>
+      <div class="mon-body"><canvas id="monPreview" width="320" height="180"></canvas></div>
+      <div class="mon-foot"><span id="fPreview">Preview: Clip</span>
+        <span style="margin-left:auto"></span>
+        <select class="sel-box" id="monFitPreview"><option>Fit</option><option>Fill</option><option>Stretch</option><option>1:1</option></select>
+        <span class="ic" title="Transform widget">✋</span>
+        <span class="ic" data-gear="preview" title="Monitor options">⚙</span></div>
+    </div>
+    <div class="mon">
+      <div class="mon-head">Show Monitor</div>
+      <div class="mon-body"><canvas id="monComp" width="320" height="180"></canvas></div>
+      <div class="mon-foot"><span id="fComposition">Show: 1920x1080</span>
+        <span style="margin-left:auto"></span>
+        <span class="ic" data-gear="comp" title="Monitor options">⚙</span></div>
+    </div>
+    <div class="mon">
+      <div class="mon-head">Layer Monitor</div>
+      <div class="mon-body"><canvas id="monLayer" width="320" height="180"></canvas></div>
+      <div class="mon-foot"><span id="fLayer">Layer 2: 1920x1080</span>
+        <span style="margin-left:auto"></span>
+        <select class="sel-box" id="monFitLayer"><option>Fit</option><option>Fill</option><option>Stretch</option></select>
+        <span class="ic" title="Transform widget">✋</span>
+        <span class="ic" data-gear="layer" title="Monitor options">⚙</span></div>
+    </div>
+
+    <!-- properties -->
+    <div id="props">
+      <div class="ptabs" id="propTabs">
+        <div class="ptab" data-p="pComp">Show</div>
+        <div class="ptab" data-p="pGroup">Group</div>
+        <div class="ptab on" data-p="pLayer">Layer</div>
+        <div class="ptab" data-p="pClip">Clip</div>
+        <div class="ptab" data-p="pColumn">Cue</div>
+      </div>
+      <div class="pname">
+        <input type="text" id="pTitle" value="Layer 2">
+        <span class="ic" title="Quick search">🔍</span>
+        <button type="button" class="ic panel-menu-button" id="pOptions"
+          title="Layer Menu" aria-label="Layer Menu" aria-haspopup="menu"
+          aria-expanded="false">⚙</button>
+      </div>
+      <div class="pbody" id="pbody"></div>
+      <!-- THE PRESENT TAB IS A STATIC SIBLING OF #pbody, NOT A RENDERED PANE,
+           and the distinction is load-bearing. Panes are HTML STRINGS written
+           with `#pbody.innerHTML = ...` on every render.panel() — which fires
+           from ~54 call sites plus the parameter subscription, i.e. any Bypass
+           or blend-mode change. This markup is bound ONCE AT LOAD by id
+           (#powerpointLiveConnect, the four [data-powerpoint-time-action],
+           and mouseenter/mouseleave/focusin/focusout on the panel), so putting
+           it inside #pbody would detach it on the first unrelated repaint:
+           the node would survive in memory with its listeners intact, nothing
+           would throw, and paintPowerpointTimePanel() early-returns when it
+           cannot find the panel — a blank tab that reports success. Exactly
+           the failure CLAUDE.md forbids.
+           As a sibling it is never re-created. buildPanel() toggles `hidden`
+           between this and #pbody, #props is already a flex column and
+           .pbody is flex:1, so it needs no layout work.
+           COST, stated: #powerpointLiveState is a live region, and a hidden
+           subtree does not announce. While Present is not the open tab, slide
+           changes the 2s poll discovers are not read out. That follows from
+           putting the panel in a tab at all, not from this implementation. -->
+      <div class="pbody" id="pbodyPresent" hidden>
+        <div class="presentation-paths" role="tablist" aria-label="Presentation input">
+          <button type="button" class="tb-btn small on" id="presentationDeckTab" role="tab" aria-selected="true" aria-controls="presentationDeckPath">Imported deck</button>
+          <button type="button" class="tb-btn small" id="presentationLiveTab" role="tab" aria-selected="false" aria-controls="presentationLivePath">Live input</button>
+        </div>
+        <div id="presentationDeckPath" role="tabpanel" aria-labelledby="presentationDeckTab">
+        <section class="sect presentation-section" aria-labelledby="presentationDocumentHeading">
+          <h3 id="presentationDocumentHeading">Presentation input</h3>
+          <div class="presentation-toolbar">
+            <button type="button" class="tb-btn small" id="presentationImportPdf">Import PDF</button>
+            <button type="button" class="tb-btn small" id="presentationImportPowerpoint">Import PowerPoint</button>
+            <button type="button" class="tb-btn small" id="presentationBrowseFiles">Files</button>
+          </div>
+          <input type="file" id="presentationPdfFile" accept=".pdf,application/pdf" hidden>
+          <input type="file" id="presentationPowerpointFile" accept=".pptx,.ppsx,.pptm,.ppsm" hidden>
+          <p class="hint presentation-detail" id="presentationImportState" role="status" aria-live="polite">Drag a PDF or PowerPoint onto an empty Clip Slot. OpenLive plays the original file independently; no installed Office application is required.</p>
+          <div class="presentation-toolbar">
+            <button type="button" class="tb-btn small" id="presentationLoadImported" disabled>Load to empty slot</button>
+            <button type="button" class="tb-btn small" id="presentationPinSelected" disabled>Use selected Clip</button>
+            <button type="button" class="tb-btn small" id="presentationInspectClip" disabled>Clip inspector</button>
+          </div>
+          <div class="presentation-session-bar">
+            <strong id="presentationLocalTitle">No presentation pinned</strong>
+            <small id="presentationLocalScope">Select a document Clip, then Use selected Clip.</small>
+            <button type="button" class="tb-btn small" id="presentationSendToShow" disabled>Send to Show</button>
+            <button type="button" class="tb-btn small presentation-player-button" id="presentationDetach" title="Open the web presentation player" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx=".5"/><path d="M2 5h12M9 8h3v3H9z"/></svg>Presentation player</button>
+            <button type="button" class="tb-btn small" id="presentationRelease" disabled>Release</button>
+          </div>
+          <p class="hint presentation-detail" id="presentationLocalState" role="status" aria-live="polite">The presenter follows its pinned Clip while the operator changes selection.</p>
+          <p class="hint presentation-detail presentation-player-status" id="presentationPlayerStatus" role="status" aria-live="polite">Open the web presenter for slides, notes and presentation controls.</p>
+          <div id="presentationSessionHost"></div>
+          <div id="presentationEmbeddedControls" class="presentation-toolbar" hidden role="group" aria-label="Embedded media playback">
+            <button type="button" class="tb-btn small" data-presentation-media="playMedia">Play media</button>
+            <button type="button" class="tb-btn small" data-presentation-media="pauseMedia">Pause media</button>
+            <button type="button" class="tb-btn small" data-presentation-media="stopMedia">Stop media</button>
+            <small id="presentationEmbeddedState" role="status" aria-live="polite"></small>
+          </div>
+          <details id="presentationDeckDetails" class="presentation-notes" hidden><summary>Deck details</summary>
+            <p id="presentationDeckCompatibility" class="hint presentation-detail"></p>
+            <div id="presentationDeckLinks" class="presentation-toolbar" aria-label="Slide links"></div>
+          </details>
+        </section>
+        </div>
+        <div id="presentationLivePath" role="tabpanel" aria-labelledby="presentationLiveTab" hidden>
+        <section class="sect presentation-section" aria-labelledby="presentationLiveHeading">
+          <h3 id="presentationLiveHeading">Live presentation input</h3>
+          <p class="hint presentation-detail">Share a browser tab, screen or window as a live source. Import PowerPoint or PDF in Imported deck for OpenLive slide controls and private notes.</p>
+          <div hidden inert aria-hidden="true">
+        <div class="ct-body presentation-time" id="powerpointTimePanel" aria-label="PowerPoint Live controls">
+          <div class="ct-cell presentation-time-status">
+            <small id="powerpointLiveTitle">PowerPoint Live</small>
+            <b id="powerpointLivePosition">-- / --</b>
+          </div>
+          <div class="ct-cell presentation-time-actions">
+            <small id="powerpointLiveState" role="status" aria-live="polite" tabindex="-1">Not connected</small>
+            <div class="presentation-time-buttons">
+              <button type="button" class="tb-btn small" id="powerpointLiveConnect" title="Start or connect to the active PowerPoint Slide Show">CONNECT</button>
+              <button type="button" class="tb-btn small presenter-transport" data-powerpoint-time-action="first" aria-label="First slide" title="First slide" disabled><span class="presenter-icon" aria-hidden="true"></span></button>
+              <button type="button" class="tb-btn small presenter-transport" data-powerpoint-time-action="previous" aria-label="Previous slide" title="Previous slide" disabled><span class="presenter-icon" aria-hidden="true"></span></button>
+              <button type="button" class="tb-btn small presenter-transport" data-powerpoint-time-action="next" aria-label="Next slide" title="Next slide" disabled><span class="presenter-icon" aria-hidden="true"></span></button>
+              <button type="button" class="tb-btn small presenter-transport" data-powerpoint-time-action="last" aria-label="Last slide" title="Last slide" disabled><span class="presenter-icon" aria-hidden="true"></span></button>
+              <button type="button" class="tb-btn small presenter-transport" data-powerpoint-time-action="play" aria-label="Resume slide show" title="Resume slide show" disabled><span class="presenter-icon" aria-hidden="true"></span></button>
+              <button type="button" class="tb-btn small presenter-transport" data-powerpoint-time-action="pause" aria-label="Pause slide show" title="Pause slide show" disabled><span class="presenter-icon" aria-hidden="true"></span></button>
+              <button type="button" class="tb-btn small presenter-transport" data-powerpoint-time-action="end" aria-label="End slide show" title="End slide show" disabled><span class="presenter-icon" aria-hidden="true"></span></button>
+            </div>
+          </div>
+        </div>
+          <div class="presentation-toolbar">
+            <button type="button" class="tb-btn small presentation-player-button" id="presentationNativeController" title="Open a small presentation player above the workspace" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx=".5"/><path d="M2 5h12M9 8h3v3H9z"/></svg>Presentation player</button>
+            <button type="button" class="tb-btn small" id="presentationNativeView" disabled>Presenter View</button>
+            <button type="button" class="tb-btn small" id="powerpointLiveRefresh">Refresh status</button>
+          </div>
+          <p class="hint presentation-detail presentation-player-status" id="presentationNativePlayerStatus" role="status" aria-live="polite">Open the player, then pair a USB clicker there for independent slide control.</p>
+          <div class="presentation-native-monitors">
+            <figure><figcaption>Current <output id="presentationNativeCurrentNumber"></output></figcaption><canvas id="presentationNativeCurrent" width="320" height="180" aria-label="Captured PowerPoint feed"></canvas><small id="presentationNativeCurrentTitle">No slide</small></figure>
+            <figure><figcaption>Next <output id="presentationNativeNextNumber"></output></figcaption><div class="presentation-next-native" id="presentationNativeNextTitle">No next slide</div><small>Native previews in Presenter View</small></figure>
+          </div>
+          <details class="presentation-notes"><summary>Speaker notes · private</summary><pre id="presentationNativeNotes">Connect a presentation to read its notes.</pre></details>
+          <details class="presentation-notes"><summary>Deck contents</summary><p class="presentation-detail" id="presentationNativeContents">Native PowerPoint handles embedded media, links and animations.</p></details>
+          <div class="presentation-toolbar" role="group" aria-label="Native pointer tools">
+            <button type="button" class="tb-btn small" data-powerpoint-time-action="arrow" disabled>Arrow</button>
+            <button type="button" class="tb-btn small" data-powerpoint-time-action="laser" disabled>Laser</button>
+            <button type="button" class="tb-btn small" data-powerpoint-time-action="pen" disabled>Pen</button>
+            <button type="button" class="tb-btn small" data-powerpoint-time-action="eraser" disabled>Eraser</button>
+            <button type="button" class="tb-btn small" data-powerpoint-time-action="hide-pointer" disabled>Hide pointer</button>
+            <button type="button" class="tb-btn small" data-powerpoint-time-action="erase-ink" disabled>Clear ink</button>
+          </div>
+          <p class="hint presentation-detail" id="presentationNativeTools">PowerPoint's native laser and slide zoom are available in its Slide Show toolbar.</p>
+          </div>
+          <h3>Audience feed</h3>
+          <div class="presentation-toolbar">
+            <button type="button" class="tb-btn small" id="presentationCaptureWindow">Capture window</button>
+            <button type="button" class="tb-btn small" id="presentationPinCapture" disabled>Use selected capture</button>
+            <button type="button" class="tb-btn small" id="presentationNativeSend" disabled>Send to Show</button>
+            <button type="button" class="tb-btn small" id="presentationBrowseSources">Sources</button>
+            <button type="button" class="tb-btn small" id="presentationInspectCapture" disabled>Inspector</button>
+          </div>
+          <p class="hint presentation-detail" id="powerpointLiveGuide">Choose an audience-only window in the browser sharing picker. OpenLive requires no installed presentation application.</p>
+          <p class="hint presentation-detail" id="powerpointCaptureState" role="status" aria-live="polite">Slide control and captured video are separate. Choose the Slide Show window in the browser capture picker.</p>
+        </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- clip time + browser -->
+    <div id="rightCol">
+      <div class="ct-head">
+        <span class="ct-head-label">Clip Time</span>
+      </div>
+      <div class="ct-body">
+        <!-- CLASSES ALONGSIDE THE IDS, not instead of them. paintClipTime()
+             writes through the classes so every surface showing this value is
+             written by one statement and cannot drift. The ids stay because
+             arena-help.js keys three help entries on #clipTime, #ctLabel and
+             #sysTime, and reference/conformance-assertions.json cites them by
+             name — dropping them would strand both. -->
+        <div class="ct-cell"><small>System Time</small><b id="sysTime" class="ct-systime">00:00:00</b></div>
+        <div class="ct-cell" style="text-align:right">
+          <small id="ctLabel" class="ct-clabel">Selected Clip</small><b id="clipTime" class="ct-cliptime"
+            role="button" tabindex="0"
+            title="Click to switch between elapsed and remaining [clip-time-panel.htm]">N/A</b>
+          <!-- Its OWN attribute, not data-gear: that one routes to
+               monitorMenuItems() and would open a monitor menu here. It was a
+               bare span with cursor:pointer, no id and no data attribute —
+               the one gear in the window that advertised a click and did
+               nothing, and the only control clip-time-panel.htm documents on
+               this panel ("enable or disable the clocks you require"). -->
+          <span class="ic" data-cliptime-gear title="Clip Time options"
+            role="button" tabindex="0"
+            style="float:right;color:#777;cursor:pointer">⚙</span></div>
+      </div>
+      <!-- The Presentation head and #powerpointTimePanel that stood here have
+           moved into #props as the "Present" tab. Clip Time above STAYS: a
+           running timecode is the one thing you want without clicking. -->
+      <div class="br-tabs" id="brTabs" role="tablist" aria-label="Browser panels">
+        <button type="button" class="ptab on" data-b="bFiles" role="tab" aria-selected="true" tabindex="0">Files</button>
+        <button type="button" class="ptab" data-b="bSlices" role="tab" aria-selected="false" tabindex="-1">Slices</button>
+        <button type="button" class="ptab" data-b="bComps" role="tab" aria-selected="false" tabindex="-1">Shows</button>
+        <button type="button" class="ptab" data-b="bEffects" role="tab" aria-selected="false" tabindex="-1">Effects</button>
+        <button type="button" class="ptab" data-b="bSources" role="tab" aria-selected="false" tabindex="-1">Sources</button>
+        <button type="button" class="ptab" data-b="bRecord" role="tab" aria-selected="false" tabindex="-1">Broadcast</button>
+        <!-- Backed by a truthful local handoff panel. Explicit activation
+             opens the complete independently-owned product; roving arrow-key
+             focus only selects this Browser state. -->
+        <button type="button" class="ptab" id="openGSL5RightPanel" data-b="bGSL5"
+          data-open-gsl5="gsl5.html" role="tab" aria-selected="false" tabindex="-1"
+          title="Browse GSL5 fixtures; Library opens the complete lighting workspace"
+          aria-label="GSL5">GSL5</button>
+      </div>
+      <!-- ONE ROW. These were three stacked 24px bars - tools, search, and the
+           Files tab's own + Folder / + Files pair nested inside #brFiles -
+           costing 72px of a panel whose job is to show a file tree. Merged into
+           a single .br-bar.
+           The Files actions come along but stay FILES-ONLY: they are lifted out
+           of #brFiles, so app.js has to hide them on the same condition it
+           hides that panel, or + Folder would appear over Slices, Effects and
+           Sources where it means nothing. See #brFilesActions in buildBrowser. -->
+      <div class="br-bar">
+        <button class="btn sq" title="Up one level">⬆</button>
+        <select class="sel-box" id="brRoot"></select>
+        <button type="button" class="btn sq" id="brFav" title="Show Favorites only" aria-label="Show Favorites only" aria-pressed="false">♥</button>
+        <button class="btn sq" id="brThumbs" title="Thumbnails">▦</button>
+        <select class="sel-box" id="brPluginFilter" aria-label="Filter Effects and Sources" hidden>
+          <option value="all">All items</option>
+          <option value="available">Available here</option>
+          <option value="video">Video</option>
+          <option value="audio">Audio</option>
+        </select>
+        <span class="br-search">
+          <input type="text" id="brSearch" aria-label="Search current browser panel" placeholder="Search…">
+          <button type="button" id="brSearchClear" aria-label="Clear search" title="Clear search" hidden>×</button>
+        </span>
+        <span class="brf-actions" id="brFilesActions">
+          <button type="button" id="brAddFolder" title="Add a folder from anywhere on this machine. It is kept for this session.">+ Folder…</button>
+          <button type="button" id="brAddFiles" title="Pick individual media files.">+ Files…</button>
+          <button type="button" id="brReconnect" hidden title="Your media folders need permission again after a restart.">Reconnect</button>
+        </span>
+        <button type="button" class="btn" id="brDesignElements" title="Browse shapes, frames, arrows and online icons. Add to Files, then drag to a Clip.">Elements…</button>
+        <!-- GSL5 tab only, and the exact counterpart of #brFilesActions above:
+             the Lights panel is where lights are browsed, so it is also where
+             a real fixture library gets added. Both inputs feed the ONE
+             importer, ShowaveGSL5Personalities.importFiles, which is the same
+             call the GSL5 window makes - there is no second ingest path. -->
+        <span class="brf-actions" id="brGSL5Actions" hidden>
+          <button type="button" id="brOpenLighting" title="Open the GSL5 show, patch and effect workspace">Library…</button>
+          <button type="button" id="brImportD4" title="Import individual Avolites personality files. Both formats are read: .d4 (Diamond 4, XML) and .R20 (Titan/Pearl, plain text). Manufacturers ship .R20 on their own download pages.">+ Fixture…</button>
+          <button type="button" id="brImportD4Folder" title="Import a whole folder of Avolites personalities, .d4 or .R20, at any depth. Titan installs its library to C:\Program Files\Avolites\Titan\FixtureLibrary, or D:\Titan Data\FixtureLibrary on Titan 6 and later; a manufacturer download unzips to a folder of its own.">+ Library…</button>
+        </span>
+      </div>
+      <!-- Kept out of .br-bar's flex flow: a file input is a control the
+           operator never sees, driven only by the two buttons above. -->
+      <input id="brD4Files" type="file" accept=".d4,.r20,.R20,application/xml,text/xml,text/plain" multiple hidden>
+      <input id="brD4Folder" type="file" accept=".d4,.r20,.R20,application/xml,text/xml,text/plain" webkitdirectory directory multiple hidden>
+      <!-- Files tab only. Until this existed the library was whatever
+           prepare-media.py had transcoded, and a VJ could not load one file of
+           their own. Hidden on every other browser tab by app.js. -->
+      <!-- RECORD PANEL [recording.htm]. Arena's own control set, in Arena's
+           own order and vocabulary: the record button, then Source, Media,
+           After Recording, Preset, Start and Duration. Shown only on the
+           Broadcast tab. Styling is this app's own - .prow is the same
+           parameter-row primitive the inspector panels use, and every colour
+           comes from a token. -->
+      <div class="record-panel" id="recordPanel" hidden aria-label="Record">
+        <!-- TWO HALVES, SIDE BY SIDE. Stacked, this measured 417px of content
+             into a 321px box and always scrolled - arena.css:1315 predicted
+             exactly that and accepted it. It does not have to be accepted: the
+             halves are 196px and 178px tall, so laid out as two columns the
+             panel is 196px and the scrollbar goes away. #rightCol is a fixed
+             378px (arena.css:2507), so there is no narrow case to fall back
+             for. Record takes the left column because it carries the one button
+             an operator hits under pressure. -->
+        <div class="rec-half rec-half-record">
+          <div class="record-sechead">Record</div>
+          <div class="record-transport">
+            <button type="button" class="btn record-big" id="recordBig"
+              data-state="idle" aria-pressed="false"
+              title="Start recording. Arena calls this the record button [recording.htm].">
+              <span class="record-big-dot" aria-hidden="true"></span>
+              <span class="record-big-label">RECORD</span>
+            </button>
+            <output class="record-readout" id="recordReadout" role="status"
+              aria-live="polite" aria-atomic="true">00:00</output>
+          </div>
+          <div class="record-rows" id="recordRows"></div>
+          <p class="record-note" id="recordNote"></p>
+        </div>
+        <!-- STREAM. The other half of Broadcast. Destinations are NOT edited
+             here: arena-data.js:612 already ruled that two surfaces setting the
+             same thing is worse than one, and the Destination list belongs to
+             the Broadcast screen in SHOWAVE Map. What belongs here is the half
+             an operator needs mid-show - is it on air, what is carrying it, and
+             one control that stops everything. -->
+        <div class="rec-half rec-half-stream">
+          <div class="record-sechead" id="streamHead">Stream</div>
+          <div class="record-rows" id="streamRows"></div>
+          <div class="record-transport stream-transport">
+            <button type="button" class="btn stream-stop" id="streamStopAll" disabled>STOP ALL</button>
+            <button type="button" class="btn stream-open" id="streamOpenStudio">Broadcast Studio…</button>
+          </div>
+          <p class="record-note" id="streamNote"></p>
+        </div>
+      </div>
+      <div class="br-files" id="brFiles" hidden>
+        <div class="brf-roots" id="brRoots"></div>
+      </div>
+      <div class="tree" id="brTree"></div>
+      <section class="br-workflow-detail" id="brWorkflowDetail" aria-label="Browser selection" hidden>
+        <div class="br-workflow-head">
+          <span id="brSelectionName">Select an item</span>
+          <span id="brSelectionCapability"></span>
+        </div>
+        <p id="brSelectionDescription">Preview an item, adjust it in the inspector, then apply it to a selected target.</p>
+        <div class="br-workflow-actions">
+          <button type="button" class="btn" id="brPreviewSelection" disabled>Preview</button>
+          <button type="button" class="btn" id="brClearPreview" disabled>Clear preview</button>
+          <span id="brWorkflowCount"></span>
+        </div>
+      </section>
+      <div class="hint-bar">
+        <div class="hb-title"><span id="hintTitle">Clip Handle</span><span class="x">✕</span></div>
+        <p id="hintText">Click the name of the clip to preview it and to drag the clip to a different
+          position in the Bank.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== STATUS BAR ===== -->
+  <div id="status">
+    <span><b>SHOWAVE Live</b> · Afro Unity Group · Godrick Sankofa</span>
+    <span style="margin-left:auto"></span>
+    <span>CPU <b class="v" data-s="cpu">0%</b></span>
+    <span>RAM <b class="v" data-s="ram">0%</b></span>
+    <span>VRAM <b class="v" data-s="vram">0%</b></span>
+    <span>FPS <b class="v" data-s="fps">0</b></span>
+    <span class="v" id="clock">00:00</span>
+  </div>
+</div>
+
+<!-- float panels -->
+<div class="floatwin" id="fwNotes" style="left:60px;top:120px">
+  <div class="fw-title">Notes <span class="x" data-close="fwNotes">✕</span></div>
+  <div class="fw-body"><textarea id="notes" style="width:280px;height:140px;background:var(--inset);
+    border:1px solid #000;color:#ccc;padding:6px" placeholder="Set times, cues, contacts…"></textarea></div>
+</div>
+<div class="floatwin" id="fwSlices" style="left:420px;top:150px">
+  <div class="fw-title">Slices <span class="x" data-close="fwSlices">✕</span></div>
+  <!-- Filled by renderSlicesPanel() in app.js from the real screen tree the
+       Advanced Output publishes over arena-bus. The invented contents that used
+       to sit here ("Screen 1 — Display 2", three slices, "Screen 2 — Virtual")
+       were replaced at first render, so they only ever showed for a frame — but
+       a file that carries fiction eventually gets read as the truth. -->
+  <div class="fw-body tree" style="padding:0;min-width:230px"></div>
+</div>
+
+<!-- dialogs -->
+<div class="overlay" id="dlgSettings" role="presentation">
+  <form class="dialog composition-settings" id="compositionSettingsForm" role="dialog" aria-modal="true"
+    aria-labelledby="compositionSettingsTitle" aria-describedby="compositionSettingsStatus" novalidate>
+    <div class="fw-title" id="compositionSettingsTitle">Show Settings
+      <button type="button" class="x" data-close="dlgSettings" aria-label="Close Show Settings">&times;</button></div>
+    <div class="fw-body">
+      <div class="formrow"><label for="setName">Name</label><input id="setName" type="text" autocomplete="off"></div>
+      <div class="formrow formrow-description"><label for="setDescription">Description</label>
+        <textarea id="setDescription" rows="3"></textarea></div>
+      <div class="formrow"><label for="setWidth">Size</label>
+        <div class="composition-size-fields">
+          <input id="setWidth" type="number" min="1" step="1" inputmode="numeric" aria-label="Show width"
+            aria-describedby="compositionSettingsStatus">
+          <span aria-hidden="true">x</span>
+          <input id="setHeight" type="number" min="1" step="1" inputmode="numeric" aria-label="Show height"
+            aria-describedby="compositionSettingsStatus">
+          <select id="setSize" aria-label="Show size preset" aria-describedby="compositionSettingsStatus"></select>
+        </div>
+      </div>
+      <div class="formrow"><label for="setFrameRate">FrameRate</label><select id="setFrameRate"><option>Auto</option><option>23.976</option>
+        <option>24</option><option>25</option><option>29.97</option><option>30</option><option>50</option>
+        <option>59.94</option><option>60</option></select></div>
+      <div class="formrow"><label for="setBitDepth">Color Depth</label><select id="setBitDepth"
+        aria-describedby="compositionSettingsStatus">
+        <option value="8">8 bit per channel</option><option value="16" disabled>16 bit per channel</option></select></div>
+      <p class="composition-settings-owner">Name and Description save as you type across linked views. Apply saves Size and FrameRate; closing keeps live metadata changes.</p>
+      <p class="composition-settings-status" id="compositionSettingsStatus" role="status" aria-live="polite"></p>
+    </div>
+    <div class="btnrow"><button type="button" class="btn" id="compositionSettingsCancel" data-close="dlgSettings">Cancel</button>
+      <button type="submit" class="btn on" id="setApply">Apply</button></div>
+  </form>
+</div>
+<div class="overlay" id="dlgNewComposition" role="presentation">
+  <div class="dialog composition-change-confirm" id="newCompositionDialog" role="alertdialog"
+    aria-modal="true" aria-labelledby="newCompositionTitle" aria-describedby="newCompositionMessage newCompositionStatus">
+    <div class="fw-title" id="newCompositionTitle">New Show!</div>
+    <div class="fw-body">
+      <p id="newCompositionMessage">Do you really want to create a new Show? All unsaved progress will be lost.</p>
+      <p class="composition-change-status" id="newCompositionStatus" role="status" aria-live="polite"></p>
+    </div>
+    <div class="btnrow">
+      <button type="button" class="btn" id="newCompositionCancel">Cancel</button>
+      <button type="button" class="btn" id="newCompositionDiscard">New</button>
+      <button type="button" class="btn on" id="newCompositionSave">Save &amp; New</button>
+    </div>
+  </div>
+</div>
+<!-- Secondary windows, opened in place.
+     Every one of these used to be window.open(url,'_blank'), which cost three
+     things: the popup blocker could refuse it, the deck's state lived in a
+     document the new tab could not see, and four of the pages
+     (advanced-output, wire, workspace, alley) have no title bar and no back
+     link, so reaching one by in-tab navigation stranded the user with a
+     window.close() the browser silently refuses.
+     An overlay has none of those failure modes: nothing is navigated away
+     from, nothing can be blocked, the deck keeps running behind, and closing
+     is guaranteed because it is one element going away. ArenaBus rides
+     BroadcastChannel, which crosses a same-origin iframe exactly as it crosses
+     a window, so the panel is live without any new plumbing.
+     The OUTPUT surface is deliberately NOT one of these — it belongs on a
+     projector, so it stays a real window. -->
+<div class="overlay" id="dlgPanel">
+  <div class="dialog panel-dialog">
+    <div class="fw-title"><span class="rlogo">◆</span> <span id="panelTitle">Panel</span>
+      <button type="button" class="panel-pop" id="panelPop"
+        title="Detach this into its own window for a second monitor.">Open in window</button>
+      <span class="x" data-close="dlgPanel" title="Close (Esc)">✕</span></div>
+    <div class="panel-body">
+      <iframe id="panelFrame" title="Panel"></iframe>
+      <!-- Advanced Output owns live presentation windows. Keep its browsing
+           context separate so opening Preferences or closing the editor UI
+           cannot tear down programme output. -->
+      <iframe id="advancedOutputFrame" title="SHOWAVE Map" hidden></iframe>
+      <!-- Lazy headless lighting processor. app.js keeps this unloaded while
+           the named external GSL5 Lighting Library window owns the runtime. -->
+      <iframe id="gsl5ServiceFrame" title="GSL5 Lighting Processor" hidden></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- Identify Displays. The number, the name and the size are filled by
+     identifyHere() in app.js from openlive-displays.js — the machine's real
+     displays. It used to be markup: a hardcoded "2 / Display 2 — 1920 × 1080
+     @ 60 Hz", which named a display this machine does not have and a refresh
+     rate no browser API reports. -->
+<div class="overlay" id="dlgIdentify" style="background:rgba(0,0,0,.85)">
+  <div style="text-align:center" id="identifyBody"></div>
+</div>
+
+<!-- The dev server (python -m http.server) sends no cache headers, so browsers
+     apply heuristic freshness and happily keep serving yesterday's app.js while
+     you are editing it. Loading the scripts with a per-load query defeats that.
+     `async = false` preserves execution order; the body is already parsed at
+     this point, so the DOM every script expects is present.
+     For a production build, replace the stamp with the build hash. -->
+<script>
+(() => {
+  const stamp = Date.now();
+  /* openlive-displays.js belongs on THIS page, not only on advanced-output.html.
+     The Output menu — Fullscreen, Windowed, Identify Displays — lives here, and
+     without the module it had no way to know what is plugged in, so it listed
+     three displays from a data file instead. */
+  ['openlive-hub.js','openlive-audio-output.js','openlive-midi-runtime.js','arena-bus.js','arena-data.js','arena-engine.js','arena-avc.js','arena-wire-presets.js','arena-presets.js','arena-shortcuts.js',
+   'arena-fx.js','openlive-transform3d.js','arena-catalog.js','arena-source-params.js','arena-wired-params.js','arena-plugin-catalog.js',
+   /* openlive-dxv.js loads BEFORE arena-media.js and arena-files.js because
+      both consult it when deciding whether a .mov can be played: DXV is the
+      codec every Resolume pack ships in, and the decode tier is what turns it
+      into pixels at native resolution. */
+   'openlive-dxv.js','openlive-chaser.js','openlive-timeline.js','arena-sources.js','openlive-performance.js','arena-media.js','vendor/fflate/fflate.min.js','openlive-powerpoint-player.js','openlive-documents.js','arena-files.js','openlive-content-player.js','openlive-content-player-view.js','openlive-presenter.js','openlive-presenter-native.js',
+   'arena-rulers.js','arena-live.js','openlive-displays.js','openlive-routing.js',
+   /* Streaming is an EXTENSION beyond Arena — streaming.htm's first sentence is
+      that Resolume cannot stream itself. It lives on the deck because the
+      Output menu is where an operator reaches for it, and it reads its pixels
+      from the Advanced Output iframe, which is same-origin. */
+   'openlive-stream.js','openlive-stream-ui.js','openlive-speed-test.js','network-speed-ui.js','gsl5-samples.js','gsl5-preview.js','gsl5-personalities.js','openlive-show-settings.js','openlive-show-info.js','openlive-photo-library.js','openlive-design-library.js','openlive-workspace-host.js','app.js','openlive-record-panel.js','openlive-broadcast-ui.js',
+   /* AFTER app.js, because it delegates to #gridCol and #layers and reads no
+      app.js symbol at all. It is the pointer half of the HOVER BLOOM block at
+      the end of arena.css; the two are separable on purpose. */
+   'openlive-hover-bloom.js','openlive-phone-mirror.js','openlive-areas.js','openlive-splash-cover.js','openlive-cover-editor.js','openlive-start-splash.js','openlive-source-icons.js','openlive-source-rail.js'].forEach(src => {
+    const s = document.createElement('script');
+    s.src = src + '?v=' + stamp;
+    s.async = false;
+    document.body.appendChild(s);
+  });
+})();
+</script>
+</body>
+</html>

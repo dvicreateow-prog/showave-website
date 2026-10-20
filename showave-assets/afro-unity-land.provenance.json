@@ -1,0 +1,75 @@
+{
+  "schema": "showave.afro-unity-land/7-fine-uniform",
+  "source": {
+    "relativePath": "openlive-main/Copy of AFRO UNITY(1).svg",
+    "sha256": "6955a55bf82c589090ee512d4f709021461b010f8df4d9b108dfd23e31208f99"
+  },
+  "mapping": {
+    "africaLogoBounds": [
+      55.666666666666664,
+      20.333333333333332,
+      280.6666666666667,
+      270.0
+    ],
+    "africaGeographicBounds": {
+      "west": -18.0,
+      "east": 52.0,
+      "north": 38.0,
+      "south": -35.0
+    },
+    "degreesPerLogoUnit": [
+      0.31111111111111106,
+      0.2923898531375167
+    ],
+    "logoNotGeographicData": true
+  },
+  "lattice": {
+    "spacing": 0.6,
+    "columns": 600,
+    "keyStride": 601,
+    "coverSolid": 0.45,
+    "coverThin": 0.25,
+    "pointSize": 0.003,
+    "previous": {
+      "spacing": 0.9,
+      "pointSize": 0.0045
+    }
+  },
+  "points": {
+    "count": 10613,
+    "byPart": {
+      "africa": 7442,
+      "afro": 2727,
+      "unityGroup": 444
+    },
+    "sha256": "1373da06099469b9a342e2f65259708e025a6aa61eb87b00da6b174a4b160032"
+  },
+  "clearance": {
+    "keyCount": 13478,
+    "realAfricaCells": 6963,
+    "letteringHaloCells": 3,
+    "sha256": "e84667e30bdfbcd2daa8c729dcaf59b2455c1130af366dc3700eec42f55a22c7"
+  },
+  "world": {
+    "unfiltered": 54604,
+    "kept": 45389,
+    "removed": 9215,
+    "madagascarKept": 138
+  },
+  "rendering": "uniform: drawn as ordinary land dots (same size, colour, opacity)",
+  "files": {
+    "afro-unity-land.js": {
+      "sha256": "221104023b71e27d2a74b3d1bd7e89e7b821029d059d53249a40b18cdc065397",
+      "bytes": 95524
+    },
+    "globe-land-dense.js": {
+      "sha256": "fca49aca5fac0b29f15283d263f8d527dcb0b66ceb58e2d83c88ce4e426c9c14",
+      "bytes": 605782
+    },
+    "afro-unity-world-map.svg": {
+      "sha256": "896a058b90f9c20a3721711bb3e6f3087738ff78a0656696fefcd9914321396b",
+      "bytes": 688713,
+      "dots": 44323
+    }
+  }
+}

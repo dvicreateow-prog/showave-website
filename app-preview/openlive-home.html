@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SHOWAVE Home</title>
+  <link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+  <script src="openlive-session-policy.js"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+  <script src="openlive-projects.js"></script>
+  <script src="openlive-appearance.js"></script>
+  <link rel="stylesheet" href="openlive-appearance.css">
+  <link rel="stylesheet" href="openlive-home.css">
+  <script src="openlive-home.js" defer></script>
+</head>
+<body>
+  <header class="home-header">
+    <a class="home-brand" href="#home" aria-label="SHOWAVE Home"><span class="showave-mark" aria-hidden="true"></span></a>
+    <span class="edition">Creative workspace</span>
+    <label class="workspace-search"><span class="sr-only">Find a show or workspace</span><input id="workspaceSearch" type="search" placeholder="Find a show or workspace" autocomplete="off"></label>
+  </header>
+  <div class="home-shell">
+    <aside class="home-sidebar">
+      <nav aria-label="Home navigation">
+        <a href="#home" data-view="home" aria-current="page"><span class="icon" style="--icon:url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjxzdmcgaGVpZ2h0PSIxNnB4IiB2aWV3Qm94PSIwIDAgMTYgMTYiIHdpZHRoPSIxNnB4IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPg0KICAgIDxwYXRoIGQ9Im0gMi41IDIuMDA3ODEyIHMgLTAuNSAwLjIyMjY1NyAtMC41IDAuNSB2IDAuOTg4MjgyIGMgMCAwLjI3MzQzNyAwLjUgMC41IDAuNSAwLjUgaCAxIHMgMC41IC0wLjIyNjU2MyAwLjUgLTAuNSB2IC0wLjk4ODI4MiBjIDAgLTAuMjc3MzQzIC0wLjUgLTAuNSAtMC41IC0wLjUgeiBtIDQgMCBjIC0wLjI3NzM0NCAwIC0wLjUgMC4yMjI2NTcgLTAuNSAwLjUgdiAwLjk4ODI4MiBjIDAgMC4yNzM0MzcgMC4yMjI2NTYgMC41IDAuNSAwLjUgaCA4IGMgMC4yNzczNDQgMCAwLjUgLTAuMjI2NTYzIDAuNSAtMC41IHYgLTAuOTg4MjgyIGMgMCAtMC4yNzczNDMgLTAuMjIyNjU2IC0wLjUgLTAuNSAtMC41IHogbSAtNCA1IHMgLTAuNSAwLjIyMjY1NyAtMC41IDAuNSB2IDAuOTg4MjgyIGMgMCAwLjI3MzQzNyAwLjUgMC41IDAuNSAwLjUgaCAxIHMgMC41IC0wLjIyNjU2MyAwLjUgLTAuNSB2IC0wLjk4ODI4MiBjIDAgLTAuMjc3MzQzIC0wLjUgLTAuNSAtMC41IC0wLjUgeiBtIDQgMCBzIC0wLjUgMC4yMjI2NTcgLTAuNSAwLjUgdiAwLjk4ODI4MiBjIDAgMC4yNzM0MzcgMC4yMjI2NTYgMC41IDAuNSAwLjUgaCA4IGMgMC4yNzczNDQgMCAwLjUgLTAuMjI2NTYzIDAuNSAtMC41IHYgLTAuOTg4MjgyIGMgMCAtMC4yNzczNDMgLTAuNSAtMC41IC0wLjUgLTAuNSB6IG0gLTQgNSBjIC0wLjI3NzM0NCAwIC0wLjUgMC4yMjI2NTcgLTAuNSAwLjUgdiAwLjk4ODI4MiBjIDAgMC4yNzM0MzcgMC41IDAuNSAwLjUgMC41IGggMSBzIDAuNSAtMC4yMjY1NjMgMC41IC0wLjUgdiAtMC45ODgyODIgYyAwIC0wLjI3NzM0MyAtMC4yMjI2NTYgLTAuNSAtMC41IC0wLjUgeiBtIDQgMCBjIC0wLjI3NzM0NCAwIC0wLjUgMC4yMjI2NTcgLTAuNSAwLjUgdiAwLjk4ODI4MiBjIDAgMC4yNzM0MzcgMC4yMjI2NTYgMC41IDAuNSAwLjUgaCA4IGMgMC4yNzczNDQgMCAwLjUgLTAuMjI2NTYzIDAuNSAtMC41IHYgLTAuOTg4MjgyIGMgMCAtMC4yNzczNDMgLTAuMjIyNjU2IC0wLjUgLTAuNSAtMC41IHogbSAwIDAiIGZpbGw9IiMwMDAwMDAiLz4NCjwvc3ZnPg0KDQo=)"></span>Home</a>
+        <a href="#recent" data-view="recent"><span class="icon" style="--icon:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS43IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Im0xNyAzIDQgNC00IDRtNC00SDhhNSA1IDAgMCAwLTUgNW00IDktNC00IDQtNG0tNCA0aDEzYTUgNSAwIDAgMCA1LTUiLz48L3N2Zz4NCg==)"></span>Recent Shows</a>
+        <a href="#workspaces" data-view="workspaces"><span class="icon" style="--icon:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiAzdjE4TTMgMTJoMThtLTEyLTYgMy0zIDMgM20tNiAxMiAzIDMgMy0zTTYgOWwtMyAzIDMgM20xMi02IDMgMy0zIDMiLz48L3N2Zz4NCg==)"></span>Workspaces</a>
+        <a href="#news" data-view="news"><span class="icon" style="--icon:url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS42IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Im0xMCA1IDkgNy05IDdWNVpNNCA3djEwTTcgNXYxNCIvPjwvc3ZnPg0K)"></span>What's new</a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="settings" type="button" data-workspace="preferences"><span class="icon" style="--icon:url(data:image/svg+xml;base64,PHN2ZyBmaWxsPSJjdXJyZW50Q29sb3IiIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgOTI0IDc5NiAyMDAgMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iOTI0IDc5NiAyMDAgMjAwIiB3aWR0aD0iMjAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Im0xMDQ5LjA3OCA5MDMuNDMxaC0zLjQ0N2MtMy4xMDQgMC01Ljg3NS0xLjk2My02LjkwNC00Ljg5MS0uNjI2LTEuNzkzLTEuMzU0LTMuNTM2LTIuMTc2LTUuMjI3LTEuMzYxLTIuODA2LS43OTktNi4xNjcgMS40MDQtOC4zNjlsMi4zODEtMi4zODJjNC4wMjktNC4wMjggNC4wMjktMTAuNTU2LjAwMi0xNC41ODNsLTEuNzE3LTEuNzE3Yy00LjAyNS00LjAyNC0xMC41NTctNC4wMjgtMTQuNTggMGwtMi40MzYgMi40MzNjLTIuMTkzIDIuMTk2LTUuNTM4IDIuNzY5LTguMzM2IDEuNDI1LTEuNjk2LS44MTEtMy40NDItMS41MzItNS4yMzYtMi4xNTUtMi45NDgtMS4wMTctNC45MjgtMy43OTUtNC45MjgtNi45MXYtMy4zN2MwLTUuNjkzLTQuNjE4LTEwLjMxLTEwLjMwOS0xMC4zMWgtMi40M2MtNS42OTUgMC0xMC4zMTIgNC42MTYtMTAuMzEyIDEwLjMxdjMuNDQ0YzAgMy4xMDctMS45NjIgNS44NzctNC44OTIgNi45MDYtMS43OTIuNjI3LTMuNTM0IDEuMzU0LTUuMjI0IDIuMTc2LTIuODAzIDEuMzYxLTYuMTY2Ljc5Ni04LjM3MS0xLjQwNmwtMi4zNzctMi4zODJjLTQuMDMtNC4wMjgtMTAuNTU4LTQuMDI4LTE0LjU4NCAwbC0xLjcxOSAxLjcxN2MtNC4wMjYgNC4wMjgtNC4wMjggMTAuNTU1IDAgMTQuNTgzbDIuNDM0IDIuNDMyYzIuMTkzIDIuMTk3IDIuNzY1IDUuNTQgMS40MjEgOC4zNDEtLjgxMiAxLjY5MS0xLjUzMiAzLjQ0LTIuMTUgNS4yMzQtMS4wMjEgMi45NDUtMy43OTggNC45MjYtNi45MTUgNC45MjZoLTMuMzY3Yy01LjY5NSAwLTEwLjMxMiA0LjYxNy0xMC4zMTIgMTAuMzEzdjIuNDI5YzAgNS42OTMgNC42MTcgMTAuMzEgMTAuMzEyIDEwLjMxaDMuNDQxYzMuMTA2IDAgNS44NzYgMS45NjMgNi45MDMgNC44OTMuNjMgMS43OTEgMS4zNTggMy41MzcgMi4xOCA1LjIyNyAxLjM2MSAyLjgwNC43OTUgNi4xNjQtMS40MDggOC4zNjdsLTIuMzc5IDIuMzgzYy00LjAyOSA0LjAyNy00LjAyNyAxMC41NTUgMCAxNC41ODJsMS43MTggMS43MThjNC4wMjUgNC4wMjMgMTAuNTUzIDQuMDI2IDE0LjU4LS4wMDNsMi40MzEtMi40MzJjMi4xOTUtMi4xOTQgNS41NC0yLjc2OCA4LjM0MS0xLjQyNCAxLjY5NC44MTMgMy40NDEgMS41MzMgNS4yMzYgMi4xNTUgMi45NDYgMS4wMTggNC45MjcgMy43OTUgNC45MjcgNi45MTN2My4zNjRjLS4wMDQgNS42OTkgNC42MTQgMTAuMzEzIDEwLjMxMSAxMC4zMTNoMi40MjdjNS42OTYgMCAxMC4zMTQtNC42MTQgMTAuMzExLTEwLjMwOXYtMy40NDVjMC0zLjEwNCAxLjk2Mi01Ljg3NSA0Ljg5Mi02LjkwNSAxLjc5Mi0uNjI4IDMuNTM3LTEuMzU0IDUuMjI5LTIuMTc1IDIuODAxLTEuMzYyIDYuMTY1LS43OTggOC4zNjggMS40MDRsMi4zNzkgMi4zOGM0LjAyNyA0LjAyOSAxMC41NTUgNC4wMjUgMTQuNTgzLjAwMmwxLjcxNy0xLjcxOGM0LjAyNy00LjAyNiA0LjAzLTEwLjU1NyAwLTE0LjU4MWwtMi40MzItMi40MzNjLTIuMTk3LTIuMTkzLTIuNzY4LTUuNTQtMS40MjYtOC4zMzcuODE0LTEuNjk2IDEuNTMzLTMuNDQ1IDIuMTU0LTUuMjQgMS4wMjEtMi45NDcgMy43OTUtNC45MjYgNi45MTQtNC45MjZoMy4zNjdjNS42OTUuMDAyIDEwLjMxLTQuNjE2IDEwLjMxLTEwLjMxMnYtMi40MjljLjAwMS01LjY5MS00LjYxMy0xMC4zMTMtMTAuMzA2LTEwLjMwOXptLTU3LjM4NCAzNi43MTZjLTEzLjg1MiAwLTI1LjA4MS0xMS4yMjctMjUuMDgxLTI1LjA3OCAwLTEzLjg1MyAxMS4yMjktMjUuMDggMjUuMDgxLTI1LjA4IDEzLjg1IDAgMjUuMDc5IDExLjIyOCAyNS4wNzkgMjUuMDgtLjAwMSAxMy44NTItMTEuMjI5IDI1LjA3OC0yNS4wNzkgMjUuMDc4eiIvPjxwYXRoIGQ9Im0xMTE3LjMwNyA4NDUuNDg3aC0xLjcyN2MtMi41NTcgMC00Ljg0Ny0xLjU4My01Ljc1Mi0zLjk3NC0uMjI5LS42MDktLjQ3OS0xLjIxMi0uNzQ2LTEuODA0LTEuMDUzLTIuMzI5LS41NTQtNS4wNyAxLjI1Ni02Ljg3NmwxLjIxOS0xLjIyMWMyLjYxMy0yLjYxMSAyLjYxMy02Ljg1MyAwLTkuNDY2bC0uNDczLS40NzNjLTIuNjEzLTIuNjEyLTYuODUyLTIuNjEyLTkuNDY1IDBsLTEuMjE5IDEuMjIxYy0xLjgwOSAxLjgwOS00LjU0NyAyLjMwOC02Ljg3NyAxLjI1OC0uNTkzLS4yNjgtMS4xOTItLjUxNi0xLjgwNS0uNzQ3LTIuMzg5LS45MDMtMy45NzUtMy4xOTYtMy45NzUtNS43NDh2LTEuNzI5YzAtMy42OTctMi45OTYtNi42OTItNi42ODktNi42OTJoLS42NjhjLTMuNjk4IDAtNi42OTYgMi45OTUtNi42OTYgNi42OTJ2MS43MjRjMCAyLjU1Ny0xLjU4MSA0Ljg1LTMuOTcyIDUuNzUzLS42MDkuMjMxLTEuMjE1LjQ3OS0xLjgwNS43NDctMi4zMjggMS4wNS01LjA2OS41NTEtNi44NzYtMS4yNTZsLTEuMjItMS4yMjFjLTIuNjExLTIuNjE0LTYuODU0LTIuNjEzLTkuNDY3LjAwMWwtLjQ3Mi40NzJjLTIuNjEzIDIuNjEzLTIuNjEzIDYuODUzIDAgOS40NjVsMS4yMTkgMS4yMmMxLjgwNiAxLjgwNiAyLjMxIDQuNTQ3IDEuMjU3IDYuODc2LS4yNjguNTkyLS41MTcgMS4xOTQtLjc0OCAxLjgwNC0uOTAzIDIuMzkxLTMuMTkzIDMuOTc3LTUuNzQ4IDMuOTc3aC0xLjcyN2MtMy42OTUtLjAwMi02LjY5MSAyLjk5Ny02LjY5MSA2LjY5di42NjljMCAzLjY5NiAyLjk5NiA2LjY5MyA2LjY5MSA2LjY5M2gxLjcyMmMyLjU1Ny0uMDAxIDQuODUgMS41ODIgNS43NTMgMy45NzMuMjMxLjYxMS40OCAxLjIxNS43NDcgMS44MDkgMS4wNTIgMi4zMjYuNTUyIDUuMDY1LTEuMjU1IDYuODcxbC0xLjIxOSAxLjIyNGMtMi42MTMgMi42MDktMi42MTMgNi44NTEgMCA5LjQ2M2wuNDc1LjQ3M2MyLjYxMSAyLjYxNCA2Ljg1MiAyLjYxNCA5LjQ2MyAwbDEuMjE3LTEuMjE5YzEuODA3LTEuODA2IDQuNTQ5LTIuMzA4IDYuODc3LTEuMjU1LjU5Mi4yNjkgMS4xOTcuNTE3IDEuODA5Ljc0OCAyLjM4OS45MDEgMy45NzQgMy4xOTMgMy45NzQgNS43NDd2MS43MjRjLS4wMDQgMy42OTQgMi45OTUgNi42OTIgNi42OTIgNi42OTJoLjY2OWMzLjY5MyAwIDYuNjkyLTIuOTk0IDYuNjkyLTYuNjkydi0xLjcyMWMwLTIuNTU2IDEuNTgyLTQuODQ5IDMuOTcxLTUuNzUyLjYxMi0uMjMgMS4yMTYtLjQ3OSAxLjgwOS0uNzQ2IDIuMzI2LTEuMDUzIDUuMDY4LS41NTEgNi44NzMgMS4yNTFsMS4yMjMgMS4yMjJjMi42MDkgMi42MTUgNi44NSAyLjYxNSA5LjQ2NSAwbC40NzMtLjQ3NWMyLjYxMS0yLjYxMSAyLjYxMS02Ljg1MSAwLTkuNDY0bC0xLjIyMS0xLjIyYy0xLjgwNS0xLjgwNi0yLjMwNy00LjU0Ny0xLjI1Ni02Ljg3NS4yNjgtLjU5LjUxOC0xLjE5NC43NDktMS44MDUuOTAxLTIuMzkxIDMuMTkxLTMuOTc2IDUuNzQ3LTMuOTc2aDEuNzI1YzMuNjk0LjAwNCA2LjY5MS0yLjk5NSA2LjY5NS02LjY5di0uNjY5Yy0uMDA0LTMuNjk3LTMtNi42OTMtNi42OTMtNi42OTN6bS0zNi41OSAyMS43NTNjLTguMTMxIDAtMTQuNzIzLTYuNTkyLTE0LjcyMy0xNC43MjRzNi41OTItMTQuNzI0IDE0LjcyMy0xNC43MjRjOC4xMzMgMCAxNC43MjUgNi41OTIgMTQuNzI1IDE0LjcyNHMtNi41OTIgMTQuNzI0LTE0LjcyNSAxNC43MjR6Ii8+PC9zdmc+DQo=)"></span>Preferences</button>
+        <span class="release" id="releaseVersion">Preview</span>
+      </div>
+    </aside>
+    <main id="main">
+      <div class="page-title"><div><p class="eyebrow">SHOWAVE / START</p><h1 id="pageHeading">Home</h1></div><span class="session-tag">Your creative desk</span></div>
+      <p id="homeStatus" class="home-status" role="status" aria-live="polite"></p>
+
+      <section id="actionsSection" class="actions-section" aria-labelledby="actionsHeading">
+        <div class="section-heading"><div><p class="section-kicker">GET STARTED</p><h2 id="actionsHeading">Your next show starts here</h2></div></div>
+        <div class="action-grid">
+          <button id="newShow" class="action-card action-primary" type="button" data-project-action="new">
+            <span class="action-symbol" aria-hidden="true">+</span><span class="action-copy"><strong>New Show</strong><span>Start with a blank show.</span></span><span class="action-arrow" aria-hidden="true">↗</span>
+          </button>
+          <button id="openShow" class="action-card" type="button" data-project-action="open">
+            <span class="action-symbol" aria-hidden="true">↗</span><span class="action-copy"><strong>Open Show</strong><span>Choose a saved show file.</span></span><span class="action-arrow" aria-hidden="true">↗</span>
+          </button>
+          <a class="action-card" href="#recent">
+            <span class="action-symbol" aria-hidden="true">◷</span><span class="action-copy"><strong>Recent Shows</strong><span>Pick up a show you opened before.</span></span><span class="action-arrow" aria-hidden="true">↗</span>
+          </a>
+          <button id="recoverLastSession" class="action-card" type="button" data-project-action="recover" disabled>
+            <span class="action-symbol" aria-hidden="true">↶</span><span class="action-copy"><strong>Recover Last Session</strong><span id="recoveryDetail">Checking for a recoverable show…</span></span><span class="action-arrow" aria-hidden="true">↗</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="recentSection" aria-labelledby="recentHeading">
+        <div class="section-heading"><div><p class="section-kicker">PICK UP WHERE YOU LEFT OFF</p><h2 id="recentHeading">Recent Shows</h2></div><a href="#recent" id="allRecent">View all</a></div>
+        <div id="recentList" class="recent-list"></div>
+        <p id="recentEmpty" class="empty">No recent shows yet. Open a saved show to see it here.</p>
+      </section>
+
+      <section id="workspaceSection" aria-labelledby="workspaceHeading">
+        <div class="section-heading"><div><p class="section-kicker">EXPLORE</p><h2 id="workspaceHeading">Workspaces</h2></div><span id="workspaceCount">6 workspaces</span></div>
+        <p class="section-intro">Each workspace focuses on a different part of creating and running a show.</p>
+        <div id="workspaceGrid" class="workspace-grid"></div>
+        <p id="noMatches" class="empty" hidden>No matching workspaces.</p>
+      </section>
+
+      <section id="newsSection" aria-labelledby="newsHeading" hidden>
+        <div class="section-heading"><div><p class="section-kicker">RELEASE NOTES</p><h2 id="newsHeading">What's new</h2></div><span>Preview</span></div>
+        <div class="news-list">
+          <article><span class="news-number">01</span><div><h3>A place to start</h3><p>Create, open and return to shows from Home.</p></div><span class="news-type">Home</span></article>
+          <article><span class="news-number">02</span><div><h3>Workspaces on demand</h3><p>Move into the workspace that fits the next part of your show.</p></div><span class="news-type">Workflow</span></article>
+        </div>
+      </section>
+      <footer class="home-footer"><span>Afro Unity Group</span><span>SHOWAVE Preview</span></footer>
+    </main>
+  </div>
+</body>
+</html>

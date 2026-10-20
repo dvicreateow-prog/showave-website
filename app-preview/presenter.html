@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>SHOWAVE Presenter</title><link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg"><script src="openlive-interface-typography.js?v=interface-fonts-1"></script><script src="openlive-appearance.js?v=interface-fonts-1"></script><link rel="stylesheet" href="presenter.css?v=rundown-media-2"></head>
+<body class="presenter-page"><main id="presenter"></main><script src="openlive-presenter.js?v=rundown-media-2"></script><script>
+(()=>{'use strict';const target=document.getElementById('presenter');let client,view,unsubscribeTheme,unsubscribeTitle;
+const query=new URLSearchParams(location.hash.slice(1)),sessionId=query.get('session'),capability=query.get('key'),hostId=query.get('host');
+history.replaceState(null,'',location.pathname);
+let host=null;
+for(const candidate of [window.opener,window.parent!==window?window.parent:null]){
+  try{if(candidate&&candidate.location.origin===location.origin&&candidate.OpenLivePresenter){host=candidate;break;}}catch(error){}
+}
+const closeView=()=>{if(host&&host===window.parent&&host!==window)host.postMessage({protocol:'showave.presenter.view/1',kind:'close',sessionId},location.origin);else window.close();};
+const embedded=host&&host===window.parent&&host!==window;
+let clickerState={available:false,status:'automatic',keys:[]};
+const sendView=(kind,payload={})=>host.postMessage({protocol:'showave.presenter.view/1',sessionId,kind,...payload},location.origin);
+const viewMessage=event=>{
+  if(!embedded||event.source!==host||event.origin!==location.origin||event.data?.protocol!=='showave.presenter.view/1'||event.data.sessionId!==sessionId)return;
+  if(event.data.kind==='layout')view?.setViewLayout(event.data.layout);
+  if(event.data.kind==='clicker'){
+    clickerState=event.data.state||{available:false,status:'automatic',keys:[]};view?.setClickerState(clickerState);
+  }
+};
+const ownsClickerKey=event=>{
+  if(!['paired','pairing'].includes(clickerState.status))return false;
+  const keys=clickerState.status==='pairing'?['PageUp','PageDown','ArrowLeft','ArrowRight']:clickerState.keys||[];
+  const normalize=key=>['Space','Spacebar'].includes(key)?' ':key;
+  return keys.some(key=>normalize(key)===normalize(event.key));
+};
+try{
+  if(embedded)document.body.classList.add('presenter-embedded');
+  OpenLivePresenter.inheritTheme(document,host);
+  unsubscribeTheme=host?.OpenLiveAppearance?.subscribe(()=>OpenLivePresenter.inheritTheme(document,host));
+  client=OpenLivePresenter.connect({sessionId,capability,hostId,
+    readFrame:n=>host?.OpenLivePresenter?.readSlideFrame(sessionId,capability,hostId,n),
+    readThumbnail:n=>host?.OpenLivePresenter?.readSlideThumbnail?.(sessionId,capability,hostId,n)});
+  view=OpenLivePresenter.mount(target,client,{detached:true,web:true,closeView,
+    ...(embedded?{setViewLayout:layout=>sendView('layout',{layout}),moveView:position=>sendView('move',position),nudgeView:delta=>sendView('nudge',delta),
+      clickerAction:action=>sendView('clicker',{action}),ownsClickerKey}:{}),
+    readConfidence:()=>host?.OpenLivePresenter?.readConfidence(sessionId,capability,hostId)});
+  if(embedded){window.addEventListener('message',viewMessage);sendView('ready');}
+  unsubscribeTitle=client.subscribe(state=>{document.title=state.phase==='ready'?'SHOWAVE Present: '+state.title:'SHOWAVE Presenter';});
+  window.addEventListener('pagehide',()=>{window.removeEventListener('message',viewMessage);unsubscribeTitle?.();unsubscribeTheme?.();view.destroy();client.close();},{once:true});
+}
+catch(error){
+  unsubscribeTheme?.();client?.close();target.className='presenter presenter-web presenter-empty-shell';
+  const empty=document.createElement('section');empty.className='presenter-empty';
+  const mark=document.createElement('span');mark.className='presenter-brand-mark';mark.setAttribute('aria-hidden','true');
+  const title=document.createElement('h1');title.textContent='Your presentation workspace';
+  const note=document.createElement('p');note.textContent=error.message||'Open Presenter from the pinned presentation in SHOWAVE.';
+  const help=document.createElement('p');help.className='presenter-muted';help.textContent='Open a PowerPoint or PDF Clip in SHOWAVE, then select its presentation player icon.';
+  const link=document.createElement('a');link.className='presenter-button';link.href='index.html';link.textContent='Open SHOWAVE';
+  empty.append(mark,title,note,help,link);target.appendChild(empty);
+}
+})();
+</script></body></html>

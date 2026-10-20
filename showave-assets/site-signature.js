@@ -5,7 +5,14 @@
   const bootKey = Symbol.for('showave.site.signature');
   if (window[bootKey]) return;
   const scriptURL = document.currentScript?.src || location.origin + '/showave-assets/site-signature.js';
-  const engineURL = new URL('africa-globe.js?v=smooth-1', scriptURL).href;
+  // The optional picture demos load independently of this page's globe scene.
+  if (!document.querySelector('script[data-showave-app-demos]')) {
+    const demos = document.createElement('script');
+    demos.src = new URL('app-demos.js?v=welcome-shell-2', scriptURL).href;
+    demos.dataset.showaveAppDemos = ''; demos.defer = true;
+    document.head.append(demos);
+  }
+  const engineURL = new URL('africa-globe.js?v=africa-mark-9', scriptURL).href;
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const headings = new WeakSet();
   let main, scene, stage, canvas, globe, enginePromise;

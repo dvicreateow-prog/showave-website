@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<title>Encoder Editor: SHOWAVE Broadcast</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<script src="showave-brand.js"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+  /* Page-specific only. Everything the shared sheets already theme is used
+     as-is, exactly as fixture-editor.html does — this window is that window's
+     structural sibling and must not invent a second visual language. */
+  .fe-left{ flex:0 0 236px; width:236px; min-width:236px; background:var(--panel);
+    border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; }
+  .fe-list{ flex:1 1 auto; overflow:auto; min-height:0; }
+  .fe-item{ padding:5px var(--space-3); cursor:default; border-bottom:1px solid var(--line);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .fe-item:hover{ background:color-mix(in srgb,var(--color-accent) 12%,transparent); }
+  .fe-item.on{ background:color-mix(in srgb,var(--color-accent) 22%,transparent); color:var(--n100); }
+  .fe-item .sub{ display:block; color:var(--n600); font-size:10.5px; }
+  .fe-foot{ flex:0 0 auto; display:flex; align-items:center; gap:4px;
+    padding:var(--space-2) var(--space-3); border-top:1px solid var(--line); }
+  .fe-note{ color:var(--n600); font-size:10.5px; margin-top:var(--space-2); line-height:1.45; }
+  .fe-sub{ color:var(--n600); }
+  .fe-warn{ color:var(--amber); }
+  .fe-bad{ color:var(--red); }
+  .fe-ok{ color:var(--color-accent); }
+  /* the validation pane — the reason this editor earns its keep */
+  .fe-right{ flex:0 0 300px; width:300px; min-width:300px; background:var(--panel);
+    border-left:1px solid var(--line); overflow:auto; padding:var(--space-3); min-height:0; }
+  .vrow{ display:flex; gap:8px; align-items:baseline; padding:3px 0;
+    border-bottom:1px solid var(--line2); }
+  .vrow .k{ flex:0 0 108px; color:var(--n500); font-size:10.5px; }
+  .vrow .v{ flex:1 1 auto; min-width:0; word-break:break-word; }
+  /* CASING. Resolume shouts in the string, never with a stylesheet: of the 878
+     keys in reference/docs/gui/English.txt exactly 25 are all-caps, and each is a
+     compact transport/action button (RECORD, STOP, TAP, RESYNC, LINK, PAUSE,
+     METRONOME, PICK, ADD), an alarm (LOW MEMORY!!) or an acronym. Section
+     headers, menu group headings, tab labels, column headers and state chips are
+     Title Case throughout the string table and all 83 manual pages. The blanket
+     text-transform rules in this window were removed for that reason and the
+     caps-tuned tracking relaxed with them; nocturne.css and windows.css, which
+     this window also loads, no longer shout their equivalents, so leaving these
+     would paint one class of element in two conventions in one window. */
+  .oo-ext{ margin-left:6px; padding:0 4px; border:1px solid var(--n700); border-radius:3px;
+    color:var(--n600); font-size:9px; letter-spacing:.01em; }
+</style>
+</head>
+<body>
+<div class="win-root">
+
+  <div class="win-title"><span data-showave-brand="map">SHOWAVE Map</span> Encoder Editor
+    <span class="fe-sub">encoder presets<span class="oo-ext">clone extension</span></span>
+    <span class="sp"></span>
+    <a class="plainlink" href="advanced-output.html">← back to SHOWAVE Map</a></div>
+
+  <div class="win-main">
+
+    <!-- ============ 1. the profile list ============ -->
+    <div class="fe-left">
+      <div class="browser-tools"><input type="text" id="eq" placeholder="Search encoders…"></div>
+      <div class="fe-list" id="encList"></div>
+      <div class="fe-foot">
+        <button class="tb-btn" type="button" id="newEnc" title="New encoder">+</button>
+        <button class="tb-btn" type="button" id="dupEnc" title="Duplicate encoder">⧉</button>
+        <button class="tb-btn" type="button" id="delEnc" title="Delete encoder">🗑</button>
+        <span class="sp"></span>
+        <span class="tb-label" id="encCount">0</span>
+      </div>
+    </div>
+
+    <!-- ============ 2. the profile properties ============ -->
+    <div class="win-content">
+      <h2 id="encTitle">N/A</h2>
+
+      <div class="formgroup"><h3>Encoder</h3>
+        <div class="formrow"><label>Name</label><input type="text" id="eName"></div>
+        <div class="hint">A personality, not a destination. Where this goes (WHIP, a file,
+          RTMP via the local helper) is set on the Broadcast, the way an Art-Net Target IP is
+          set on the Lumiverse and not on the Fixture.</div>
+      </div>
+
+      <div class="formgroup"><h3>Video</h3>
+        <div class="formrow"><label>Codec</label><select id="eCodec"></select></div>
+        <div class="formrow"><label>Rate control</label><select id="eRC"></select></div>
+        <div class="formrow"><label>Width</label><input type="number" id="eW" min="128" max="7680" step="2"><span class="unit">pixels</span></div>
+        <div class="formrow"><label>Height</label><input type="number" id="eH" min="128" max="4320" step="2"><span class="unit">pixels</span></div>
+        <div class="formrow"><label>Frame rate</label><input type="number" id="eFps" min="1" max="120"><span class="unit">fps</span></div>
+        <div class="formrow"><label>Bitrate</label><input type="number" id="eKbps" min="100" max="50000" step="100"><span class="unit">kbps</span></div>
+        <div class="formrow"><label>Keyframe interval</label><input type="number" id="eGop" min="0.5" max="10" step="0.5"><span class="unit">seconds</span></div>
+        <div class="fe-note">CBR is what RTMP ingests expect: the protocol has no bandwidth
+          negotiation, so a variable rate shows up at the far end as buffering rather than as
+          smaller files. A 2 second keyframe interval is the near-universal ingest requirement.</div>
+      </div>
+
+      <div class="formgroup"><h3>Audio</h3>
+        <div class="formrow"><label>Codec</label><select id="eACodec"></select></div>
+        <div class="formrow"><label>Sample rate</label><select id="eSR"></select></div>
+        <div class="formrow"><label>Bitrate</label><input type="number" id="eAKbps" min="32" max="320" step="8"><span class="unit">kbps</span></div>
+        <div class="fe-note">Audio is tapped from the Show master bus, post-fader. This is
+          the same signal the operator is monitoring.</div>
+      </div>
+
+      <div class="formgroup"><h3>Notes</h3>
+        <div class="formrow"><textarea id="eNotes" rows="3" style="flex:1 1 auto"></textarea></div>
+      </div>
+
+      <div class="formgroup"><h3>Library</h3>
+        <div class="formrow">
+          <button class="tb-btn" type="button" id="expEnc">Export XML…</button>
+          <button class="tb-btn" type="button" id="impEnc">Import XML…</button>
+          <input type="file" id="impFile" accept=".xml" hidden>
+        </div>
+        <div class="fe-note">Profiles are plain XML in <code>default/Encoder Library/</code>,
+          listed by <code>index.json</code> because a browser cannot enumerate a directory.
+          Edits here live in this browser; Export writes the file to put back in that folder.</div>
+      </div>
+    </div>
+
+    <!-- ============ 3. validation — measured, never asserted ============ -->
+    <div class="fe-right">
+      <h3 style="margin-bottom:var(--space-2)">Validation</h3>
+      <div id="vBody"></div>
+      <div class="fe-note" id="vNote"></div>
+    </div>
+
+  </div>
+
+  <div class="statusline">
+    <span class="el" id="stat">N/A</span>
+    <span class="sp"></span>
+    <span class="el" id="stat2"></span>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+/* ===========================================================================
+   Encoder Editor — the Fixture Editor's structural sibling.
+
+   fixture-editor.htm's model, applied to encoders: a list you add to, remove
+   from and rename; a properties pane; and a third pane that shows what you are
+   building. For a fixture that third pane is a pixel map. An encoder has no
+   picture, so its equivalent is the only thing that actually matters about an
+   encoder before showtime: WILL THIS CONFIGURATION RUN ON THIS MACHINE, and how
+   fast.
+
+   That pane calls VideoEncoder.isConfigSupported() and runs a short real encode.
+   It never prints a capability it has not just measured — the whole reason the
+   4K60 row can honestly say it is under realtime on this machine.
+   =========================================================================== */
+
+const $ = s => document.querySelector(s);
+const LIB = 'default/Encoder Library/';
+const STORE = 'openlive.encoders.v1';
+
+const VCODECS = [
+  ['avc1.640028', 'H.264 High @ L4.0'],
+  ['avc1.64001f', 'H.264 High @ L3.1'],
+  ['avc1.42E01F', 'H.264 Baseline @ L3.1'],
+  ['hev1.1.6.L93.B0', 'HEVC Main @ L3.1'],
+  ['hev1.1.6.L153.B0', 'HEVC Main @ L5.1'],
+  ['vp09.00.10.08', 'VP9 Profile 0'],
+  ['av01.0.08M.08', 'AV1 Main']
+];
+const RCS = [['cbr', 'CBR: constant'], ['vbr', 'VBR: variable']];
+const ACODECS = [['mp4a.40.2', 'AAC-LC'], ['opus', 'Opus']];
+const SRS = [['48000', '48 000 Hz'], ['44100', '44 100 Hz']];
+
+let list = [];            /* [{name, uuid, notes, video:{}, audio:{}, file}] */
+let sel = -1;
+let probeToken = 0;
+
+/* ---- library load: shipped files first, then this browser's edits --------- */
+async function load() {
+  let shipped = [];
+  try {
+    const idx = await (await fetch(LIB + 'index.json')).json();
+    for (const row of (idx.encoders || [])) {
+      try {
+        const xml = await (await fetch(LIB + encodeURIComponent(row.file))).text();
+        const p = parse(xml);
+        if (p) { p.file = row.file; shipped.push(p); }
+      } catch (e) { /* one bad file must not take the library down */ }
+    }
+  } catch (e) {
+    stat('Could not read ' + LIB + 'index.json: the shipped library is unavailable.');
+  }
+  let local = [];
+  try { local = JSON.parse(localStorage.getItem(STORE) || '[]'); } catch (e) {}
+  /* a local edit REPLACES the shipped profile of the same uuid */
+  const byId = new Map(shipped.map(p => [p.uuid, p]));
+  for (const p of local) byId.set(p.uuid, p);
+  list = [...byId.values()];
+  sel = list.length ? 0 : -1;
+  renderList(); renderForm();
+  stat(list.length + ' encoder' + (list.length === 1 ? '' : 's') +
+       ': ' + shipped.length + ' shipped, ' + local.length + ' edited here');
+}
+
+function parse(xml) {
+  const d = new DOMParser().parseFromString(xml, 'application/xml');
+  if (d.querySelector('parsererror')) return null;
+  const root = d.querySelector('Encoder');
+  if (!root) return null;
+  const g = (block, name, dflt) => {
+    const b = root.querySelector('Params > ' + block);
+    if (!b) return dflt;
+    const el = [...b.children].find(c => c.getAttribute('name') === name);
+    return el ? el.getAttribute('value') : dflt;
+  };
+  return {
+    uuid: root.getAttribute('uuid') || crypto.randomUUID().replace(/-/g, ''),
+    name: root.getAttribute('encoderName') || 'Encoder',
+    notes: (root.querySelector('Notes') || {}).textContent || '',
+    video: {
+      codec: g('ParamEncoderVideo', 'Codec', 'avc1.640028'),
+      rc: g('ParamEncoderVideo', 'Rate Control', 'cbr'),
+      w: +g('ParamEncoderVideo', 'Width', 1920),
+      h: +g('ParamEncoderVideo', 'Height', 1080),
+      fps: +g('ParamEncoderVideo', 'Framerate', 60),
+      kbps: +g('ParamEncoderVideo', 'Bitrate', 6000),
+      gop: +g('ParamEncoderVideo', 'Keyframe Interval', 2)
+    },
+    audio: {
+      codec: g('ParamEncoderAudio', 'Codec', 'mp4a.40.2'),
+      sr: +g('ParamEncoderAudio', 'Sample Rate', 48000),
+      kbps: +g('ParamEncoderAudio', 'Bitrate', 160)
+    }
+  };
+}
+
+function toXML(p) {
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const rng = (n, v, mn, mx) =>
+    `\t\t\t<ParamRange name="${n}" T="DOUBLE" default="${v}" value="${v}">\n` +
+    `\t\t\t\t<ValueRange name="defaultRange" min="${mn}" max="${mx}"/>\n\t\t\t</ParamRange>\n`;
+  return `<?xml version="1.0" encoding="utf-8"?>\n` +
+    `<Encoder name="Encoder" uuid="${p.uuid}" encoderName="${esc(p.name)}">\n\t<Params name="Params">\n` +
+    `\t\t<ParamEncoderVideo storage="0" name="Video">\n` +
+    `\t\t\t<ParamChoice name="Codec" T="STRING" default="${p.video.codec}" value="${p.video.codec}" storeChoices="0"/>\n` +
+    `\t\t\t<ParamChoice name="Rate Control" T="STRING" default="${p.video.rc}" value="${p.video.rc}" storeChoices="0"/>\n` +
+    rng('Width', p.video.w, 128, 7680) + rng('Height', p.video.h, 128, 4320) +
+    rng('Framerate', p.video.fps, 1, 120) + rng('Bitrate', p.video.kbps, 100, 50000) +
+    rng('Keyframe Interval', p.video.gop, 0.5, 10) +
+    `\t\t</ParamEncoderVideo>\n\t\t<ParamEncoderAudio storage="0" name="Audio">\n` +
+    `\t\t\t<ParamChoice name="Codec" T="STRING" default="${p.audio.codec}" value="${p.audio.codec}" storeChoices="0"/>\n` +
+    rng('Sample Rate', p.audio.sr, 8000, 48000) + rng('Bitrate', p.audio.kbps, 32, 320) +
+    `\t\t</ParamEncoderAudio>\n\t</Params>\n\t<Notes>${esc(p.notes || '')}</Notes>\n</Encoder>\n`;
+}
+
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(list)); } catch (e) {} };
+const stat = t => { $('#stat').textContent = t; };
+
+/* ---- panes --------------------------------------------------------------- */
+function renderList() {
+  const q = ($('#eq').value || '').toLowerCase();
+  const box = $('#encList'); box.innerHTML = '';
+  list.forEach((p, i) => {
+    if (q && p.name.toLowerCase().indexOf(q) < 0) return;
+    const d = document.createElement('div');
+    d.className = 'fe-item' + (i === sel ? ' on' : '');
+    d.innerHTML = '<span>' + p.name.replace(/[<>&]/g, '') + '</span><span class="sub">' +
+      p.video.w + '×' + p.video.h + ' · ' + p.video.fps + ' fps · ' + p.video.kbps + ' kbps</span>';
+    d.addEventListener('click', () => { sel = i; renderList(); renderForm(); });
+    box.appendChild(d);
+  });
+  $('#encCount').textContent = String(list.length);
+}
+
+function fill(el, pairs, value) {
+  el.innerHTML = '';
+  for (const [v, label] of pairs) {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = label; el.appendChild(o);
+  }
+  el.value = value;
+  if (el.value !== String(value)) {          /* a codec the list does not carry */
+    const o = document.createElement('option');
+    o.value = value; o.textContent = value + ' (from file)';
+    el.appendChild(o); el.value = value;
+  }
+}
+
+function renderForm() {
+  const p = list[sel];
+  const on = !!p;
+  ['eName','eCodec','eRC','eW','eH','eFps','eKbps','eGop','eACodec','eSR','eAKbps','eNotes','expEnc']
+    .forEach(id => { $('#' + id).disabled = !on; });
+  if (!on) { $('#encTitle').textContent = 'N/A'; $('#vBody').innerHTML = ''; return; }
+  $('#encTitle').textContent = p.name;
+  $('#eName').value = p.name;
+  fill($('#eCodec'), VCODECS, p.video.codec);
+  fill($('#eRC'), RCS, p.video.rc);
+  $('#eW').value = p.video.w; $('#eH').value = p.video.h;
+  $('#eFps').value = p.video.fps; $('#eKbps').value = p.video.kbps; $('#eGop').value = p.video.gop;
+  fill($('#eACodec'), ACODECS, p.audio.codec);
+  fill($('#eSR'), SRS, String(p.audio.sr));
+  $('#eAKbps').value = p.audio.kbps;
+  $('#eNotes').value = p.notes || '';
+  validate();
+}
+
+/* ---- the validation pane: probe, never assert ---------------------------- */
+function vrow(k, v, cls) {
+  const d = document.createElement('div');
+  d.className = 'vrow';
+  d.innerHTML = '<span class="k">' + k + '</span><span class="v ' + (cls || '') + '"></span>';
+  d.querySelector('.v').textContent = v;
+  $('#vBody').appendChild(d);
+  return d;
+}
+
+async function validate() {
+  const p = list[sel];
+  const mine = ++probeToken;
+  const body = $('#vBody'); body.innerHTML = '';
+  $('#vNote').textContent = '';
+  if (!p) return;
+
+  const px = p.video.w * p.video.h * p.video.fps;
+  vrow('Pixel rate', (px / 1e6).toFixed(1) + ' Mpx/s');
+  vrow('Bits per pixel', (p.video.kbps * 1000 / px).toFixed(3));
+
+  if (typeof VideoEncoder === 'undefined') {
+    vrow('WebCodecs', 'unavailable in this browser', 'fe-bad');
+    $('#vNote').textContent = 'Without WebCodecs this profile cannot be validated here, and ' +
+      'nothing is guessed on its behalf.';
+    return;
+  }
+
+  const cfg = {
+    codec: p.video.codec, width: p.video.w, height: p.video.h,
+    bitrate: Math.round(p.video.kbps * 1000), framerate: p.video.fps,
+    latencyMode: 'realtime'
+  };
+  let sup = null;
+  try { sup = await VideoEncoder.isConfigSupported({ ...cfg, hardwareAcceleration: 'prefer-hardware' }); }
+  catch (e) { sup = { supported: false, reason: e.name }; }
+  if (mine !== probeToken) return;
+
+  let hw = !!(sup && sup.supported);
+  let soft = false;
+  if (!hw) {
+    try {
+      const s2 = await VideoEncoder.isConfigSupported(cfg);
+      soft = !!(s2 && s2.supported);
+    } catch (e) {}
+  }
+  if (mine !== probeToken) return;
+
+  vrow('Video codec', hw ? 'supported (hardware preferred)' : soft ? 'supported (software)' : 'NOT supported here',
+       hw ? 'fe-ok' : soft ? 'fe-warn' : 'fe-bad');
+
+  if (typeof AudioEncoder !== 'undefined') {
+    try {
+      const a = await AudioEncoder.isConfigSupported({
+        codec: p.audio.codec, sampleRate: p.audio.sr,
+        numberOfChannels: 2, bitrate: Math.round(p.audio.kbps * 1000)
+      });
+      if (mine === probeToken)
+        vrow('Audio codec', a && a.supported ? 'supported' : 'NOT supported here',
+             a && a.supported ? 'fe-ok' : 'fe-bad');
+    } catch (e) { if (mine === probeToken) vrow('Audio codec', 'probe failed: ' + e.name, 'fe-bad'); }
+  } else {
+    vrow('Audio codec', 'AudioEncoder unavailable', 'fe-bad');
+  }
+
+  if (!hw && !soft) {
+    $('#vNote').textContent = 'This machine cannot encode that configuration. Nothing downstream ' +
+      'would be able to use this profile, which is better to know here than at showtime.';
+    return;
+  }
+
+  const speed = vrow('Realtime headroom', 'measuring…');
+  const bench = await measure(cfg, hw);
+  if (mine !== probeToken) return;
+  if (!bench) { speed.querySelector('.v').textContent = 'measurement failed'; return; }
+  const ratio = bench.fps / p.video.fps;
+  speed.querySelector('.v').textContent =
+    bench.fps.toFixed(0) + ' fps encode vs ' + p.video.fps + ' fps needed: ' + ratio.toFixed(2) + '×';
+  speed.querySelector('.v').className = 'v ' + (ratio >= 1.5 ? 'fe-ok' : ratio >= 1.05 ? 'fe-warn' : 'fe-bad');
+  $('#vNote').textContent = ratio < 1.05
+    ? 'UNDER REALTIME on this machine. A stream at this profile would drop frames continuously. ' +
+      'Measured just now over ' + bench.frames + ' frames, not looked up in a table.'
+    : ratio < 1.5
+      ? 'Little headroom. This measurement is of the encoder alone. Compositing and transport ' +
+        'have not been paid for yet.'
+      : 'Measured just now over ' + bench.frames + ' frames on this machine, encoder only.';
+}
+
+/* A short REAL encode. Synthetic content compresses unrealistically well, so
+   this reports THROUGHPUT (frames per second the encoder sustains) and never
+   the resulting bitrate, which would not mean anything. */
+async function measure(cfg, preferHw) {
+  const n = cfg.width * cfg.height >= 3840 * 2160 ? 40 : 120;
+  try {
+    const conf = preferHw ? { ...cfg, hardwareAcceleration: 'prefer-hardware' } : cfg;
+    let count = 0, failed = null;
+    const enc = new VideoEncoder({ output: () => { count++; }, error: e => { failed = e; } });
+    enc.configure(conf);
+    const oc = new OffscreenCanvas(cfg.width, cfg.height);
+    const cx = oc.getContext('2d');
+    const t0 = performance.now();
+    for (let i = 0; i < n; i++) {
+      cx.fillStyle = 'hsl(' + (i * 9 % 360) + ',70%,50%)';
+      cx.fillRect(0, 0, cfg.width, cfg.height);
+      cx.fillStyle = '#fff';
+      cx.fillRect((i * 31) % cfg.width, (i * 17) % cfg.height, cfg.width / 6, cfg.height / 6);
+      const f = new VideoFrame(oc, { timestamp: i * 1e6 / cfg.framerate });
+      try { enc.encode(f, { keyFrame: i === 0 }); } finally { f.close(); }
+      if (enc.encodeQueueSize > 4) await new Promise(r => setTimeout(r, 0));
+    }
+    await enc.flush();
+    const dt = performance.now() - t0;
+    enc.close();
+    if (failed) return null;
+    return { fps: n / (dt / 1000), frames: count || n, ms: dt };
+  } catch (e) { return null; }
+}
+
+/* ---- edits --------------------------------------------------------------- */
+function edit(fn) {
+  const p = list[sel]; if (!p) return;
+  fn(p); save(); renderList(); $('#encTitle').textContent = p.name; validate();
+}
+const num = (el, lo, hi, dflt) => {
+  const v = parseFloat(el.value);
+  return isFinite(v) ? Math.min(hi, Math.max(lo, v)) : dflt;
+};
+
+$('#eq').addEventListener('input', renderList);
+$('#eName').addEventListener('input', e => edit(p => { p.name = e.target.value || 'Encoder'; }));
+$('#eCodec').addEventListener('change', e => edit(p => { p.video.codec = e.target.value; }));
+$('#eRC').addEventListener('change', e => edit(p => { p.video.rc = e.target.value; }));
+$('#eW').addEventListener('change', e => edit(p => { p.video.w = num(e.target, 128, 7680, 1920); e.target.value = p.video.w; }));
+$('#eH').addEventListener('change', e => edit(p => { p.video.h = num(e.target, 128, 4320, 1080); e.target.value = p.video.h; }));
+$('#eFps').addEventListener('change', e => edit(p => { p.video.fps = num(e.target, 1, 120, 60); e.target.value = p.video.fps; }));
+$('#eKbps').addEventListener('change', e => edit(p => { p.video.kbps = num(e.target, 100, 50000, 6000); e.target.value = p.video.kbps; }));
+$('#eGop').addEventListener('change', e => edit(p => { p.video.gop = num(e.target, 0.5, 10, 2); e.target.value = p.video.gop; }));
+$('#eACodec').addEventListener('change', e => edit(p => { p.audio.codec = e.target.value; }));
+$('#eSR').addEventListener('change', e => edit(p => { p.audio.sr = +e.target.value; }));
+$('#eAKbps').addEventListener('change', e => edit(p => { p.audio.kbps = num(e.target, 32, 320, 160); e.target.value = p.audio.kbps; }));
+$('#eNotes').addEventListener('input', e => edit(p => { p.notes = e.target.value; }));
+
+$('#newEnc').addEventListener('click', () => {
+  list.push({ uuid: crypto.randomUUID().replace(/-/g, ''), name: 'New Encoder', notes: '',
+    video: { codec: 'avc1.640028', rc: 'cbr', w: 1920, h: 1080, fps: 60, kbps: 6000, gop: 2 },
+    audio: { codec: 'mp4a.40.2', sr: 48000, kbps: 160 } });
+  sel = list.length - 1; save(); renderList(); renderForm();
+});
+$('#dupEnc').addEventListener('click', () => {
+  const p = list[sel]; if (!p) return;
+  const c = JSON.parse(JSON.stringify(p));
+  c.uuid = crypto.randomUUID().replace(/-/g, ''); c.name = p.name + ' copy'; delete c.file;
+  list.splice(sel + 1, 0, c); sel++; save(); renderList(); renderForm();
+});
+$('#delEnc').addEventListener('click', () => {
+  if (sel < 0) return;
+  list.splice(sel, 1); if (sel >= list.length) sel = list.length - 1;
+  save(); renderList(); renderForm();
+});
+$('#expEnc').addEventListener('click', () => {
+  if (window.OpenLiveSessionPolicy?.sessionOnly) {
+    try { window.OpenLiveSessionPolicy.assertCanWrite('Exporting an encoder'); }
+    catch(error) { stat(error.message); }
+    return;
+  }
+  const p = list[sel]; if (!p) return;
+  const blob = new Blob([toXML(p)], { type: 'application/xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = p.name + '.xml';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 20000);
+  stat('Exported ' + p.name + '.xml: put it in ' + LIB + ' and add its row to index.json to ship it.');
+});
+$('#impEnc').addEventListener('click', () => $('#impFile').click());
+$('#impFile').addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  const p = parse(await f.text());
+  if (!p) { stat('That file is not an <Encoder> document. Nothing was imported.'); return; }
+  list.push(p); sel = list.length - 1; save(); renderList(); renderForm();
+  stat('Imported ' + p.name + '.');
+});
+
+$('#stat2').textContent = typeof VideoEncoder === 'undefined'
+  ? 'WebCodecs unavailable: profiles cannot be validated in this browser'
+  : 'Validation probes this machine; nothing is read from a table';
+
+load();
+})();
+</script>
+<script src="openlive-hub.js"></script>
+</body>
+</html>

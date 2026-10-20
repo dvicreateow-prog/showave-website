@@ -1,0 +1,125 @@
+/* Image launchers preserve the original website layout and article links. */
+/* The sticky hero's empty full-width layers must not catch clicks over the
+   following section. Its visible globe and hero controls remain interactive. */
+.home-hero-wrap,.home-hero,.home-hero-stick-wrap,.home-hero-stick,.home-hero-stick>.container.full-width,.home-hero-bg-star { pointer-events:none; }
+.home-hero-globe,.home-hero-text-wrap { pointer-events:auto; }
+.home-hero-text-wrap.on-hidden { pointer-events:none; }
+.showave-demo-picture { position:relative; }
+.showave-demo-launch { box-sizing:border-box; font:600 11px/1.4 Arial,Helvetica,sans-serif; cursor:pointer; color:#f5f7fa; touch-action:manipulation; }
+.showave-demo-launch[hidden] { display:none!important; }
+.showave-demo-image-button { position:absolute; inset:0; z-index:3; width:100%; height:100%; display:flex; align-items:flex-end; justify-content:flex-end; gap:6px; padding:10px; border:0; border-radius:0; background:transparent; }
+.showave-demo-image-button > span { padding:5px 8px; background:#111720ed; border:1px solid #8290a4; border-radius:3px; }
+.showave-demo-image-button > span:first-child { display:none; }
+.showave-demo-image-button:focus-visible { outline:3px solid #ffab7a; outline-offset:-3px; }
+.showave-demo-image-button:hover > span { background:#26303f; border-color:#f1b08d; }
+.workspace-stage .showave-demo-image-button { align-items:center; justify-content:center; }
+.workspace-stage .showave-demo-image-button > span { transform:translateY(5px); opacity:0; transition:opacity .2s,transform .2s; padding:9px 14px; }
+.workspace-stage:hover .showave-demo-image-button > span,.workspace-stage:focus-within .showave-demo-image-button > span { opacity:1;transform:none; }
+.showave-workspaces .workspace-enlarge { z-index:4; }
+img[data-demo-image] { cursor:pointer; }
+.showave-demo-mobile { display:inline-flex; align-items:center; gap:7px; margin:8px 0 18px; border:1px solid #758092; border-radius:3px; padding:8px 11px; background:#111720; }
+.showave-demo-mobile:focus-visible { outline:2px solid #ffab7a; outline-offset:3px; }
+/* The native dialog owns focus and inertness; its frame follows SHOWAVE Home. */
+@font-face { font-family:ShowaveDemoDisplay;src:url('assets/reference-fonts/steinhart-bold.woff2') format('woff2');font-weight:700;font-display:swap; }
+.showave-app-demo {
+ --demo-bg:var(--sw-surface,#191919);--demo-panel:var(--sw-panel,#222);--demo-inset:var(--sw-inset,#161616);--demo-ink:var(--sw-ink,#f2f2f2);--demo-muted:var(--sw-muted,#b0b0b0);--demo-line:var(--sw-line,#363636);--demo-accent:#ff9968;
+ --demo-display:var(--font--heading,var(--display,ShowaveDemoDisplay));
+ box-sizing:border-box;width:min(1380px,calc(100vw - 56px));max-width:none;max-height:calc(100dvh - 48px);margin:auto;padding:0;border:1px solid var(--demo-line);border-radius:4px;background:var(--demo-bg);color:var(--demo-ink);box-shadow:0 3px 10px #0005,0 24px 90px #0006;overflow:auto;overscroll-behavior:contain;font:13px/1.5 'Segoe UI',system-ui,-apple-system,Arial,sans-serif;letter-spacing:normal;text-transform:none;-webkit-font-smoothing:antialiased;color-scheme:dark;
+}
+html[data-showave-appearance] .showave-app-demo { color-scheme:inherit; }
+.showave-app-demo::backdrop { background:#0007;backdrop-filter:blur(2px); }
+.showave-app-demo * { box-sizing:border-box;min-width:0; }
+.showave-app-demo [hidden] { display:none!important; }
+.showave-app-demo :is(button,input,select,a):focus-visible { outline:2px solid var(--sw-link,var(--demo-ink));outline-offset:3px; }
+.showave-app-demo button { cursor:pointer;touch-action:manipulation;letter-spacing:normal;text-transform:none; }
+.showave-app-demo button:disabled { cursor:default;opacity:.5; }
+.showave-app-demo :is(button,a,input,select) { font:inherit; }
+.app-demo-heading { position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:76px;padding:16px 24px;border-bottom:1px solid var(--demo-line);background:var(--demo-bg); }
+.app-demo-brand { display:flex;align-items:center;gap:26px; }
+.app-demo-brand-mark { display:block;width:166px;height:41.2px;flex:0 0 166px;background:var(--demo-ink);mask:url('assets/showave-header-brand.svg') center/contain no-repeat;-webkit-mask:url('assets/showave-header-brand.svg') center/contain no-repeat; }
+.app-demo-brand-caption { padding-left:24px;border-left:1px solid var(--demo-line);color:var(--demo-muted);font-size:12px; }
+.app-demo-close { display:grid;place-items:center;flex-shrink:0;width:32px;height:32px;padding:6px;border:1px solid transparent;border-radius:3px;background:transparent;color:var(--demo-muted); }
+.app-demo-close svg { display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round; }
+.app-demo-close:hover { border-color:var(--demo-line);background:var(--demo-panel);color:var(--demo-ink); }
+.app-demo-layout { display:grid;grid-template-columns:182px minmax(0,1fr); }
+.app-demo-sidebar { padding:26px 14px 22px;border-right:1px solid var(--demo-line);background:var(--demo-inset); }
+.app-demo-nav-label { margin:0 10px 13px;color:var(--demo-muted);font-size:11px; }
+.app-demo-tools { display:grid;gap:3px; }
+.app-demo-tools button { position:relative;display:flex;align-items:center;gap:9px;width:100%;min-height:39px;padding:7px 9px;border:1px solid transparent;border-radius:3px;color:var(--demo-muted);background:transparent;text-align:left;font-size:12px;white-space:nowrap; }
+.app-demo-tools img { width:23px;height:23px;flex-shrink:0; }
+.app-demo-tools button[aria-pressed=true] { border-color:color-mix(in srgb,var(--demo-ink) 24%,transparent);color:var(--demo-ink);background:color-mix(in srgb,var(--demo-ink) 7%,transparent); }
+.app-demo-tools button:hover { color:var(--demo-ink);background:color-mix(in srgb,var(--demo-ink) 5%,transparent); }
+.app-demo-tool-arrow { margin-left:auto;font-size:12px;opacity:0;color:var(--demo-muted); }
+.app-demo-tools button:is([aria-pressed=true],:hover,:focus-visible) .app-demo-tool-arrow { opacity:1; }
+.app-demo-family-note { margin:38px 10px 0;color:var(--demo-muted);font:700 21px/1.15 var(--demo-display);letter-spacing:-.02em; }
+.app-demo-content { padding:25px 26px 0; }
+.app-demo-intro { display:grid;gap:8px; }
+.app-demo-current { display:flex;align-items:center;gap:10px; }
+.app-demo-current img { display:block;width:28px;height:28px;flex-shrink:0; }
+.showave-app-demo h2 { margin:0;color:var(--demo-ink);font:700 27px/1.15 var(--demo-display);letter-spacing:-.025em;text-transform:none; }
+.app-demo-intro p { margin:0;color:var(--demo-muted);font-size:12px;line-height:1.5; }
+.app-demo-toolbar { display:flex;align-items:center;gap:18px;min-height:34px;margin:18px 0 12px;padding-right:126px; }
+.app-demo-views,.app-demo-playback { display:flex;align-items:center;gap:3px; }
+.app-demo-toolbar button { display:flex;align-items:center;justify-content:center;gap:6px;min-height:32px;padding:6px 10px;border:1px solid transparent;border-radius:3px;background:transparent;color:var(--demo-muted);font-size:12px;white-space:nowrap; }
+.app-demo-toolbar button[aria-pressed=true] { background:var(--demo-panel);border-color:var(--demo-line);color:var(--demo-ink); }
+.app-demo-toolbar button:hover { color:var(--demo-ink);background:var(--demo-panel); }
+.app-demo-playback { border-left:1px solid var(--demo-line);padding-left:12px; }
+.app-demo-toolbar svg { display:block;flex-shrink:0;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round; }
+.app-demo-label-short { display:none; }
+.app-demo-workbench { position:relative;min-height:280px;margin:0;overflow:visible;background:#181818;color:#e8e8e8; }
+.app-demo-original { margin:0;border:1px solid var(--demo-line);border-radius:2px;background:#151515;overflow:hidden; }
+.app-demo-original img { display:block;width:100%;max-width:100%;height:auto; }
+.app-demo-original figcaption { margin:0;padding:8px 12px;color:#c0c5cf;font-size:10px; }
+.app-demo-guidance { color:var(--demo-ink); }
+.app-demo-guidance p { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap; }
+.app-demo-guidance > span { display:block;padding:10px 0 0;color:var(--demo-muted);font-size:10px; }
+.showave-app-demo:has([data-demo-tour][hidden]) [data-demo-motion-note] { display:none; }
+.app-demo-footer { display:flex;justify-content:space-between;align-items:center;gap:20px;min-height:55px;margin-top:14px;padding:12px 0;border-top:1px solid var(--demo-line); }
+.app-demo-footer p { margin:0;color:var(--demo-muted);font-size:10px;line-height:1.5; }
+.app-demo-footer a { display:flex;align-items:center;gap:17px;flex-shrink:0;color:var(--demo-ink);font-size:11px;text-decoration:none; }
+.app-demo-footer a:hover { text-decoration:underline;text-underline-offset:4px; }
+.app-demo-footer a>span { color:var(--demo-muted); }
+@media(max-width:1000px) {
+ .showave-app-demo { width:calc(100vw - 32px);max-height:calc(100dvh - 32px); }
+ .app-demo-layout { grid-template-columns:158px minmax(0,1fr); }
+ .app-demo-sidebar { padding-inline:9px; }
+ .app-demo-tools button { gap:7px;padding-inline:7px;font-size:11px; }
+ .app-demo-tools img { width:21px;height:21px; }
+ .app-demo-tool-arrow { display:none; }
+ .app-demo-content { padding:22px 20px 0; }
+ .showave-app-demo h2 { font-size:24px; }
+ .app-demo-toolbar { gap:10px; }
+ .app-demo-playback { padding-left:7px; }
+}
+@media(max-width:700px) {
+ .showave-app-demo { width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:3px; }
+ .app-demo-heading { min-height:66px;padding:13px 15px;gap:10px; }
+ .app-demo-brand-mark { width:143px;height:35.5px;flex-basis:143px; }
+ .app-demo-brand-caption { display:none; }
+ .app-demo-close { width:30px;height:30px; }
+ .app-demo-layout { display:block; }
+ .app-demo-sidebar { padding:8px 0 0;border-right:0;border-bottom:1px solid var(--demo-line);background:transparent; }
+ .app-demo-nav-label,.app-demo-family-note { display:none; }
+ .app-demo-tools { display:flex;gap:2px;overflow:auto;padding:0 13px 8px;scrollbar-width:thin; }
+ .app-demo-tools button { flex:0 0 auto;width:auto;min-height:34px;padding:5px 7px;font-size:11px;gap:6px; }
+ .app-demo-tools img { width:21px;height:21px; }
+ .app-demo-content { padding:19px 14px 0; }
+ .app-demo-intro { gap:7px; }
+ .app-demo-current { gap:8px; }
+ .app-demo-current img { width:24px;height:24px; }
+ .showave-app-demo h2 { font-size:23px; }
+ .app-demo-intro p { font-size:11px; }
+ .app-demo-toolbar { gap:7px;margin-top:15px;padding-right:111px; }
+ .app-demo-toolbar button { padding:5px 7px;font-size:11px;min-height:31px; }
+ .app-demo-playback { border-left:0;padding-left:0; }
+ .app-demo-playback [data-demo-reset] { width:28px;padding:5px; }
+ .app-demo-playback [data-demo-reset]>span { position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap; }
+ .app-demo-label-wide { display:none; }
+ .app-demo-label-short { display:inline; }
+ .app-demo-workbench { min-height:0; }
+ .app-demo-footer { margin-top:13px;padding:12px 0;gap:16px;align-items:flex-start; }
+ .app-demo-footer p { max-width:65%;font-size:9px; }
+ .app-demo-footer a { font-size:10px;gap:8px;white-space:nowrap; }
+}
+@media(prefers-reduced-motion:reduce) { .workspace-stage .showave-demo-image-button > span { transition:none; } }
+@media(forced-colors:active) { .showave-app-demo,.showave-demo-launch { border:1px solid CanvasText; }.app-demo-brand-mark { background:CanvasText; }.showave-app-demo button[aria-pressed=true] { outline:2px solid Highlight; } }

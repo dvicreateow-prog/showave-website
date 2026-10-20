@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<title>SHOWAVE Map: Legacy</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<script src="showave-brand.js"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="workspace.css">
+<link rel="stylesheet" href="advanced-output.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+  #app{ display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+  /* the bar and the status line keep their heights; the editor takes the rest */
+  #app > #menubar, #app > #status{ flex:0 0 auto; }
+</style>
+</head>
+<body class="ao-window">
+<div id="app">
+
+  <!-- ===== MENU BAR — the same bar, the same decoded menus, as the deck ===== -->
+  <header id="menubar">
+    <div id="menus" style="display:flex"></div>
+    <div class="mb-right"><span id="mbMsg"></span></div>
+  </header>
+
+  <!-- ===== the editor ===== -->
+  <div id="aoHost" class="ao"></div>
+
+  <!-- ===== STATUS BAR — same layout as the main window's ===== -->
+  <div id="status">
+    <span class="conn offline" id="conn">Offline</span>
+    <span id="productLine">SHOWAVE Map: Output Mapping</span>
+    <!-- Whether this window is looking at the live composition in the main
+         window. `#conn` above is a different question — that one is whether a
+         real Resolume is answering on 127.0.0.1:8080. advanced-output.js has
+         always tried to paint this element and advanced-output.css has always
+         styled it; it simply never existed, so a stale composition looked
+         exactly like a current one. -->
+    <span class="ao-buspill cold" data-bus-state>no Show</span>
+    <span style="margin-left:auto"></span>
+    <span id="where"></span>
+    <span>CPU <b class="v" data-s="cpu">0%</b></span>
+    <span>RAM <b class="v" data-s="ram">0%</b></span>
+    <span>VRAM <b class="v" data-s="vram">0%</b></span>
+    <span>FPS <b class="v" data-s="fps">0</b></span>
+    <span class="v" id="clock">00:00</span>
+  </div>
+</div>
+
+<script src="arena-bus.js"></script>
+<script src="arena-client.js"></script>
+<!-- Real displays, so the Device list stops inventing hardware. Ported from the
+     Agents/godrick tree; no dependencies beyond the browser's own screen APIs. -->
+<script src="openlive-displays.js"></script>
+<script src="arena-data.js"></script>
+<script src="resolume-extracted.js"></script>
+<script src="arena-live.js"></script>
+<script src="workspace.js"></script>
+<script src="advanced-output.js"></script>
+<script>
+/* Arena's Advanced Output is its own window, so this is the same editor module
+   mounted on its own page rather than into a dock. The model is shared with the
+   docked copy through localStorage, so editing in one and reopening the other
+   shows the same setup.
+
+   The window wears the main window's chrome — menu bar above, status bar below,
+   both built from the same data and styled by the same rules — so it reads as
+   part of the application rather than as a separate tool. */
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const AL = window.ArenaLive;
+const host = $('#aoHost');
+const ed = window.AdvancedOutput.mount(host);
+
+/* Say whether this window is looking at a live composition or a remembered
+   one. Without it, a composition the main window closed an hour ago slices
+   exactly like the one you are performing with. */
+if (window.ArenaClient) window.ArenaClient.bindStatus($('[data-bus-state]'));
+
+function msg(t){ const e=$('#mbMsg'); e.textContent=t; e.style.color='var(--mint)';
+  setTimeout(()=>{ if(e.textContent===t) e.textContent=''; }, 2400); }
+
+/* ---- menu bar: the deck's dropdown builder, over the decoded menus ---- */
+let dd=[];
+function closeDD(n=0){ while(dd.length>n) dd.pop().remove();
+  if(!n) document.querySelectorAll('.menu-top.open').forEach(m=>m.classList.remove('open')); }
+function buildDD(items,x,y,lvl){
+  closeDD(lvl);
+  const d=document.createElement('div'); d.className='dropdown';
+  items.forEach(it=>{
+    if(it.sep){ d.appendChild(Object.assign(document.createElement('div'),{className:'dd-sep'})); return; }
+    const e=document.createElement('div'); e.className='dd-item'+(it.dis?' disabled':'');
+    e.innerHTML=`<span class="chk">${it.on?'✓':''}</span><span>${it.l}</span>`+
+      (it.k?`<span class="kbd">${it.k}</span>`:'')+(it.sub?`<span class="arrow">▸</span>`:'');
+    if(it.sub) e.addEventListener('mouseenter',()=>{const r=e.getBoundingClientRect();
+      buildDD(it.sub,r.right-2,r.top-3,lvl+1);});
+    else{ e.addEventListener('mouseenter',()=>closeDD(lvl+1));
+      e.addEventListener('click',()=>{ if(it.dis) return; if(it.fn) it.fn(); closeDD(); }); }
+    d.appendChild(e);
+  });
+  document.body.appendChild(d);
+  const r=d.getBoundingClientRect();
+  d.style.left=Math.min(x,innerWidth-r.width-4)+'px';
+  d.style.top =Math.min(y,innerHeight-r.height-4)+'px';
+  dd.push(d); return d;
+}
+addEventListener('mousedown',e=>{ if(!e.target.closest('.dropdown')&&!e.target.closest('.menu-top')) closeDD(); });
+addEventListener('keydown',e=>{ if(e.key==='Escape') closeDD(); });
+
+/* This window's own File menu, then the decoded menus that act on output. */
+const FILE_MENU = { label:'File', items:[
+  { l:'Import AdvancedOutput.xml…', fn:()=>host.querySelector('[data-act=import]').click() },
+  { l:'Export AdvancedOutput.xml',  fn:()=>host.querySelector('[data-act=export]').click() },
+  { sep:1 },
+  { l:'Fit to Window', k:'F', fn:()=>host.querySelector('[data-act=fit]').click() },
+  { sep:1 },
+  { l:'Close Window', k:'Ctrl+W', fn:()=>window.close() },
+]};
+const MENU_BAR = [FILE_MENU].concat(
+  ['Output','View','Shortcuts','Help'].map(l => (window.MENUS||[]).find(m=>m.label===l)).filter(Boolean));
+
+MENU_BAR.forEach(m=>{
+  const t=document.createElement('div'); t.className='menu-top'; t.textContent=m.label;
+  const open=()=>{ closeDD(); t.classList.add('open'); const r=t.getBoundingClientRect();
+    buildDD(m.items,r.left,r.bottom,0); };
+  t.addEventListener('mousedown',e=>{ e.stopPropagation();
+    t.classList.contains('open')?closeDD():open(); });
+  t.addEventListener('mouseenter',()=>{ if(dd.length&&document.querySelector('.menu-top.open')
+    &&!t.classList.contains('open')) open(); });
+  $('#menus').appendChild(t);
+});
+
+/* ---- what this window is showing, in the status bar ---- */
+function paintWhere(){
+  const m = ed.editor.model;
+  $('#where').textContent =
+    `${ed.editor.setup} · ` +
+    `${m.screens.length} screen${m.screens.length === 1 ? '' : 's'} · ` +
+    `${m.screens.reduce((n, s) => n + s.layers.length, 0)} slices · ` +
+    `texture ${m.compositionTexture.width} × ${m.compositionTexture.height}`;
+}
+paintWhere();
+
+/* ---- connection chrome ---- */
+function paintConn() {
+  const p = $('#conn');
+  p.className = 'conn ' + AL.status;
+  p.textContent = AL.status === 'live' ? 'LIVE · ' + AL.host()
+    : AL.status === 'connecting' ? 'connecting' : 'offline';
+  $('#productLine').textContent = AL.status === 'live'
+    ? 'SHOWAVE Map · ' + AL.host() : 'SHOWAVE Map: Output Mapping';
+}
+AL.on('status', paintConn); paintConn();
+$('#conn').addEventListener('click', () => {
+  if (AL.status === 'live') return msg('Connected to ' + AL.host());
+  const h = prompt('Arena webserver host:port', AL.host());
+  if (h) AL.connect(h.trim());
+});
+
+/* ---- status + clock, read the same way the main window reads them ---- */
+setInterval(() => {
+  $('#clock').textContent = new Date().toLocaleTimeString('en-GB').slice(0, 5);
+  if (AL.status === 'live') {
+    /* Arena's API exposes no machine telemetry — show what it does expose */
+    ['cpu','ram','vram','fps'].forEach(k=>{ $(`[data-s=${k}]`).textContent='N/A'; });
+  } else {
+    $('[data-s=cpu]').textContent  = (22 + Math.random()*18 | 0) + '%';
+    $('[data-s=ram]').textContent  = (44 + Math.random()*8  | 0) + '%';
+    $('[data-s=vram]').textContent = (10 + Math.random()*6  | 0) + '%';
+    $('[data-s=fps]').textContent  = (51 + Math.random()*4).toFixed(1);
+  }
+  paintWhere();
+}, 500);
+
+addEventListener('beforeunload', () => ed.destroy());
+})();
+</script>
+</body>
+</html>

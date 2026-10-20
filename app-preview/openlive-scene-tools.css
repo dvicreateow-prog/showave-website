@@ -1,0 +1,26 @@
+.bc-scene-dialog{width:min(460px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;box-sizing:border-box;margin:auto;padding:0;border:1px solid var(--line,#adb4c0);border-radius:7px;background:var(--panel,#e8e9ed);color:var(--txt-hi,#252b35);box-shadow:0 18px 65px #0005;font:11px/1.4 Inter,"Segoe UI",sans-serif}
+.bc-scene-dialog::backdrop{background:#10192766}
+.bc-scene-dialog form{margin:0;padding:16px}
+.bc-scene-dialog header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.bc-scene-dialog h2{flex:1;margin:0;font:600 15px/1.3 Inter,"Segoe UI",sans-serif;letter-spacing:normal}
+.bc-scene-dialog p{margin:8px 0;color:var(--n500,#647080)}
+.bc-scene-dialog label{display:grid;grid-template-columns:100px minmax(0,1fr);align-items:center;gap:10px;margin:10px 0}
+.bc-scene-dialog input,.bc-scene-dialog select{box-sizing:border-box;width:100%;min-width:0;min-height:28px;margin:0;padding:4px 6px;border:1px solid var(--line,#adb4c0);border-radius:3px;background:var(--inset,#fff);color:inherit;font:inherit}
+.bc-scene-dialog input[type=file]{font-size:10px}
+.bc-scene-dialog button{min-height:27px;padding:4px 9px;border:1px solid var(--line,#adb4c0);border-radius:3px;background:var(--inset,#f3f4f6);color:inherit;font:inherit;cursor:pointer}
+.bc-scene-dialog button:hover:not(:disabled){border-color:var(--a200,#0879ed)}
+.bc-scene-dialog :focus-visible{outline:2px solid var(--a200,#0879ed);outline-offset:2px}
+.bc-scene-dialog button:disabled{opacity:.5;cursor:wait}
+.bc-scene-dialog footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line,#adb4c0)}
+.bc-scene-dialog footer span{flex:1}
+.bc-scene-dialog [type=submit]{background:#0879ed;border-color:#0879ed;color:#fff}
+.bc-scene-dialog #sceneToolsStatus{min-height:16px}
+.bc-scene-dialog #sceneToolsStatus.error{color:var(--danger,#b32c32)}
+.bc-scene-actions{display:flex;flex-wrap:wrap;gap:6px;padding-top:8px;border-top:1px solid var(--line,#adb4c0)}
+.bc-scene-actions p{flex-basis:100%;margin:0 0 4px}
+.bc-scene-actions button{flex:1}
+.bc-scene-dialog [hidden]{display:none!important}
+.bc-scene-customize,.bc-scene-settings{position:absolute;right:5px;top:5px;min-height:21px;padding:2px 6px;background:rgba(18,26,40,.86);color:#edf3ff;border:1px solid rgba(255,255,255,.3);border-radius:3px;font:10px/1.3 Inter,"Segoe UI",sans-serif;cursor:pointer}
+.bc-scene-settings{right:62px;width:23px;padding:2px 0}
+.bc-scene-customize:hover,.bc-scene-customize:focus-visible,.bc-scene-settings:hover,.bc-scene-settings:focus-visible{background:#0879ed;color:white;border-color:#72b3ff}
+@media(max-width:480px){.bc-scene-dialog label{grid-template-columns:1fr;gap:4px}.bc-scene-dialog footer span{display:none}.bc-scene-dialog footer{justify-content:flex-end}}

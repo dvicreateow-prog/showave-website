@@ -1,0 +1,25 @@
+/* Compact split control, using the same chrome and accent as Go Live. */
+.bc-viewer-control{position:relative;display:inline-flex;flex:0 0 auto;align-items:stretch;height:26px;gap:0}
+.bc-viewer-control.has-viewer .bc-go{border-top-right-radius:0;border-bottom-right-radius:0}
+.bc-viewer-button{box-sizing:border-box;width:29px;height:26px;display:inline-flex;align-items:center;justify-content:center;
+  padding:0;border:1px solid var(--n800);border-left:0;border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  background:var(--inset);color:var(--n300);cursor:pointer;text-decoration:none}
+.bc-viewer-button[hidden]{display:none}
+.bc-viewer-button svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.bc-viewer-button:hover,.bc-viewer-button[aria-expanded=true]{background:color-mix(in srgb,var(--color-accent) 14%,var(--inset));color:var(--color-accent)}
+.bc-viewer-button.is-unavailable{color:var(--n500)}
+.bc-viewer-button:focus-visible,.bc-viewer-row:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+.bc-viewer-menu{position:absolute;right:0;top:31px;z-index:75;width:270px;max-width:calc(100vw - 24px);
+  padding:6px;border:1px solid var(--n700);border-radius:var(--radius-sm);background:var(--panel);color:var(--n200);
+  box-shadow:0 10px 28px rgba(0,0,0,.45);font-size:11px;line-height:1.4;white-space:normal}
+.bc-viewer-menu[hidden]{display:none}
+.bc-viewer-menu h2{font-size:11px;font-weight:600;margin:2px 6px 6px;color:var(--n200)}
+.bc-viewer-menu ul{list-style:none;margin:0;padding:0;max-height:min(45vh,280px);overflow:auto}
+.bc-viewer-row{position:relative;display:block;padding:7px 25px 7px 7px;border-radius:var(--radius-sm);color:var(--n200);text-decoration:none}
+.bc-viewer-row strong{display:block;font-weight:500;overflow-wrap:anywhere}
+.bc-viewer-row>span:not(.bc-viewer-arrow){display:block;color:var(--n500);font-size:10px;margin-top:2px}
+a.bc-viewer-row:hover{background:color-mix(in srgb,var(--color-accent) 12%,transparent)}
+.bc-viewer-arrow{position:absolute;right:8px;top:9px;color:var(--color-accent);font-size:15px}
+.bc-viewer-row.unavailable strong{color:var(--n500)}
+.bc-viewer-empty,.bc-viewer-hint{margin:4px 6px 3px;color:var(--n500);font-size:10px}
+.bc-viewer-hint{padding-top:7px;margin-top:5px;border-top:1px solid var(--line)}

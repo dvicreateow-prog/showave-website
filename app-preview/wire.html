@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SHOWAVE Forge: Node Creation</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<script src="showave-brand.js"></script>
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+  /* =====================================================================
+     wire.html — page-specific layer only.
+     Everything that already lives in arena.css / nocturne.css / windows.css
+     is reused by class; only the node editor's own furniture (canvas, node,
+     ports, wires, docks) is declared here. Every colour is a token.
+     ===================================================================== */
+
+  /* ---------- shell ---------- */
+  #wireRoot{ display:flex; flex-direction:column; height:100vh; overflow:hidden;
+    background:transparent; color:var(--txt); }
+  .w-main{ flex:1; display:flex; min-height:0; }
+
+  /* ---------- menu bar ---------- */
+  #menubar .logo{ display:flex; align-items:center; gap:var(--space-2);
+    padding:0 var(--space-4) 0 var(--space-3); font-size:11.5px; color:var(--n200);
+    font-weight:500; letter-spacing:-.015em; }
+  #menubar .logo b{ color:var(--color-accent); font-weight:600; }
+  #menubar .fps{ font-variant-numeric:tabular-nums; }
+
+  /* ---------- toolbar ----------
+     "you can always undo or redo your actions by clicking the curved arrows
+     under the Wire tab" — so the arrows are the first thing on this strip,
+     directly beneath the Wire menu. */
+  #toolbar{ flex:0 0 auto; height:30px; display:flex; align-items:center;
+    gap:var(--space-2); padding:0 var(--space-3);
+    background:
+      linear-gradient(180deg,var(--glass-reflection-start) 0,var(--glass-reflection-end) 76%),
+      color-mix(in srgb,var(--color-surface) 62%,var(--glass-bg));
+    border-bottom:1px solid var(--glass-border); box-shadow:inset 0 1px 1px var(--glass-highlight); }
+  .tb-group{ display:flex; align-items:center; gap:var(--space-2); }
+
+  /* ---------- library dock ---------- */
+  .w-lib{ flex:0 0 210px; width:210px;
+    background:
+      linear-gradient(180deg,var(--glass-reflection-start) 0,var(--glass-reflection-end) 34%),
+      color-mix(in srgb,var(--color-surface) 68%,var(--glass-bg));
+    border-right:1px solid var(--glass-border); display:flex; flex-direction:column;
+    box-shadow:inset -1px 0 0 var(--glass-caustic); }
+  .w-lib .tree{ flex:1; overflow-y:auto; }
+  .w-lib .hint{ border-top:1px solid var(--line); }
+
+  /* ---------- canvas ---------- */
+  .w-canvas-wrap{ flex:1; position:relative; overflow:hidden;
+    background-color:color-mix(in srgb,var(--color-bg) 58%,transparent);
+    background-image:radial-gradient(var(--n900) 1px, transparent 1px);
+    background-size:22px 22px; }
+  .w-canvas-wrap.drop{ box-shadow:inset 0 0 0 2px var(--a400),
+    inset 0 0 44px -12px var(--color-accent); }
+  .nodes-layer{ position:absolute; inset:0; z-index:2; transform-origin:0 0; }
+  #wires{ position:absolute; inset:0; pointer-events:none; z-index:1; }
+  /* the cords themselves stay clickable so they can be right-clicked */
+  #wires path{ pointer-events:stroke; }
+  #wires path:hover{ stroke-width:3; }
+
+  /* top right of the stage: the zoom level menu, with the volume slider
+     popping up next to it */
+  .w-tr{ position:absolute; top:var(--space-3); right:var(--space-3); z-index:6;
+    display:flex; align-items:center; gap:var(--space-4); }
+  .w-vol{ display:none; align-items:center; gap:var(--space-2); }
+  .w-vol.show{ display:flex; }
+  .w-vol input[type=range]{ width:70px; accent-color:var(--color-accent); }
+  .w-vol .warn{ color:var(--red); font-size:12px; cursor:help; }
+  .w-zoom{ display:flex; align-items:center; gap:var(--space-1); }
+  .w-zoom .zlevel{ min-width:52px; text-align:center; font-variant-numeric:tabular-nums; }
+  .sr-only{ position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+    overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+
+  /* ---------- a node ---------- */
+  .node{ position:absolute; min-width:120px;
+    background:
+      linear-gradient(180deg,var(--glass-reflection-start) 0,var(--glass-reflection-end) 42%),
+      color-mix(in srgb,var(--color-surface) 84%,var(--glass-bg));
+    border:1px solid var(--n800); border-radius:var(--radius-md); overflow:hidden;
+    box-shadow:var(--shadow-md); font-size:11px; }
+  .node:hover{ border-color:var(--n700); }
+  .node.sel{ border-color:var(--color-accent);
+    box-shadow:0 0 0 1px var(--color-accent), 0 0 16px -5px var(--color-accent),
+               var(--shadow-md); }
+  .node .stripe{ height:3px; }
+  .node h4{ display:flex; align-items:center; gap:var(--space-3);
+    padding:3px var(--space-3); font-size:11px; font-weight:500; color:var(--n200);
+    background:color-mix(in srgb,var(--head) 74%,transparent); cursor:grab; }
+  .node.sel h4{ color:var(--a200); }
+  /* CASING. Resolume shouts in the string, never with a stylesheet: of the 878
+     keys in reference/docs/gui/English.txt exactly 25 are all-caps, and each is a
+     compact transport/action button (RECORD, STOP, TAP, RESYNC, LINK, PAUSE,
+     METRONOME, PICK, ADD), an alarm (LOW MEMORY!!) or an acronym. Section
+     headers, menu group headings, tab labels, column headers and state chips are
+     Title Case throughout the string table and all 83 manual pages. The blanket
+     text-transform rules in this window were removed for that reason and the
+     caps-tuned tracking relaxed with them; nocturne.css and windows.css, which
+     this window also loads, no longer shout their equivalents, so leaving these
+     would paint one class of element in two conventions in one window. */
+  .node h4 .cat{ margin-left:auto; font-size:9.5px; letter-spacing:.01em; color:var(--n600); }
+  .node.bypass{ border-style:dashed; opacity:.55; }
+  .node .nthumb{ height:42px; margin:var(--space-2) var(--space-2) 0;
+    border:1px solid var(--n800); border-radius:var(--radius-sm); }
+  .node .ports{ display:flex; justify-content:space-between; gap:var(--space-4);
+    padding:var(--space-2) 0 var(--space-3); }
+  .node .col{ display:flex; flex-direction:column; gap:3px; }
+
+  /* "Inlets are always on the left side and outlets always on the right side." */
+  .port{ display:flex; align-items:center; gap:var(--space-2); padding:0 var(--space-2);
+    color:var(--n400); font-size:10px; white-space:nowrap; cursor:crosshair; }
+  .port.out{ flex-direction:row-reverse; }
+  .port:hover{ color:var(--n200); }
+  .port.off{ height:0; padding:0; opacity:0; overflow:hidden; pointer-events:none; }
+  .dot{ width:9px; height:9px; border-radius:50%; border:1px solid var(--n900); flex:none; }
+  .port:hover .dot{ outline:2px solid color-mix(in srgb,var(--color-accent) 65%,transparent); }
+  /* flow, as the anatomy chapter draws it: signal round, event rectangular,
+     attribute diamond */
+  .node .port .dot.evt{ border-radius:1px; }
+  .node .port .dot.attr{ border-radius:1px; transform:rotate(45deg); }
+
+  /* hovering an inlet or outlet lists the data types it accepts */
+  .port-tip{ position:fixed; z-index:1100; background:var(--color-surface);
+    border:1px solid var(--n800); border-radius:var(--radius-md);
+    box-shadow:var(--shadow-md); padding:var(--space-1) 0; min-width:158px;
+    pointer-events:none; }
+  .port-tip .pt-val{ padding:2px var(--space-4) 4px; font-size:11.5px; color:var(--a200);
+    font-variant-numeric:tabular-nums; border-bottom:1px solid var(--n800);
+    margin-bottom:var(--space-1); }
+  .port-tip .pt-h{ padding:2px var(--space-4); font-size:9.5px; letter-spacing:.01em; color:var(--n700); }
+  .port-tip .pt-t{ padding:1px var(--space-4); font-size:11px; color:var(--n500); }
+  .port-tip .pt-t.on{ color:var(--a200); }
+
+  /* ---------- right dock ---------- */
+  .w-side{ flex:0 0 290px; width:290px;
+    background:
+      linear-gradient(180deg,var(--glass-reflection-start) 0,var(--glass-reflection-end) 34%),
+      color-mix(in srgb,var(--color-surface) 68%,var(--glass-bg));
+    border-left:1px solid var(--glass-border); display:flex; flex-direction:column;
+    box-shadow:inset 1px 0 0 var(--glass-caustic); }
+  .w-side .pbody{ flex:1; min-height:0; overflow-y:auto; }
+  /* "In the bottom right corner of your screen you will find the monitor." */
+  .w-mon{ flex:0 0 auto; border-top:1px solid var(--line); }
+  .w-mon .mon-body{ height:150px; }
+  .w-mon .mon-foot .sp{ margin-left:auto; }
+  #pinBtn{ cursor:pointer; }
+  #monName{ color:var(--n300); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .legend-head{ padding:2px var(--space-3); font-size:10px; letter-spacing:.01em; color:var(--n500); background:var(--head);
+    border-top:1px solid var(--line); }
+  .legend{ display:flex; flex-wrap:wrap; gap:3px var(--space-4);
+    padding:var(--space-2) var(--space-3); }
+  .legend span{ font-size:9.5px; letter-spacing:.01em;
+    color:var(--n500); display:flex; align-items:center; gap:4px; }
+  .legend i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .legend i.fl{ background:var(--n400); }
+  .legend i.evt{ border-radius:1px; }
+  .legend i.attr{ border-radius:1px; transform:rotate(45deg); }
+
+  /* ---------- panel rows ----------
+     arena.css's .prow is a six column grid built for the main window's
+     [twirl][label][value][−][+][slider]. These panels have no twirl, so the
+     label is given the first two columns and the field the rest — same shape,
+     same right-aligned label. */
+  .w-side .prow > label{ grid-column:1/3; }
+  .w-side .prow > input[type=text]{ grid-column:3/7; height:15px; padding:0 4px;
+    background:var(--inset); border:1px solid var(--n800); color:var(--n200);
+    border-radius:var(--radius-sm); font-size:11px; }
+  .w-side .prow > input[type=number]{ grid-column:3/5; height:15px; padding:0 4px;
+    background:var(--inset); border:1px solid var(--n800); color:var(--n200);
+    border-radius:var(--radius-sm); font-size:11px; font-variant-numeric:tabular-nums; }
+  .w-side .prow > input[type=checkbox]{ grid-column:3; justify-self:start;
+    accent-color:var(--color-accent); }
+  .w-side .prow > input[type=range]{ grid-column:3/6; accent-color:var(--color-accent); }
+  .w-side .prow > output{ grid-column:6/7; text-align:right; font-size:10.5px;
+    color:var(--n400); font-variant-numeric:tabular-nums; }
+  .w-side .prow > .pval{ grid-column:3/7; justify-self:start; }
+  .w-side .prow > div{ grid-column:3/7; }
+  .w-side .prow > button{ grid-column:1/7; justify-self:start; }
+  .sect > h3 .hbtns{ margin-left:auto; display:flex; gap:var(--space-1); }
+  /* "At the bottom of the panel you will find a link to an example" */
+  .nex{ display:flex; align-items:center; gap:var(--space-2);
+    padding:var(--space-2) var(--space-3); border-top:1px solid var(--line); }
+  .nex .t{ flex:1; font-size:10.5px; color:var(--n600); }
+
+  /* the dashboard row keeps its own four-part shape */
+  #dashList .prow > label{ grid-column:1/3; cursor:grab; }
+  #dashList .prow > .dot{ grid-column:3; justify-self:center; }
+  #dashList .prow > span:not(.dot):not(.pval){ grid-column:4/6; }
+  #dashList .prow > .pval{ grid-column:6/7; justify-self:end; }
+  #dashList .prow.dragging{ opacity:.45; }
+  #dashList .prow.over{ box-shadow:inset 0 -2px 0 var(--color-accent); }
+  #dashList .dgroup{ padding:3px var(--space-3); font-size:10px; letter-spacing:.01em; color:var(--a300); background:var(--head);
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+
+  #pStats th{ cursor:pointer; user-select:none; }
+  #pStats th .sar{ color:var(--color-accent); margin-left:3px; font-size:8px; }
+  #logBody{ font:10.5px/1.5 Consolas,"SF Mono",monospace; padding:var(--space-2) var(--space-3); }
+
+  /* fields inside the dialogs */
+  .wfield{ width:100%; background:var(--inset); border:1px solid var(--n800);
+    color:var(--n200); padding:var(--space-2) var(--space-3);
+    border-radius:var(--radius-sm); font-size:11.5px; }
+  .wfield:hover{ border-color:var(--n700); }
+  textarea.wfield{ height:200px; resize:vertical; line-height:1.45; }
+  .wstart{ margin-right:auto; display:flex; align-items:center; gap:var(--space-2);
+    font-size:11px; color:var(--n500); }
+  .wstart input{ accent-color:var(--color-accent); }
+  #wTabs .wsort{ display:flex; align-items:center; gap:var(--space-1);
+    padding:0 var(--space-3); }
+  .qs-info{ margin-top:var(--space-2); padding-top:var(--space-2);
+    border-top:1px solid var(--line); font-size:10.5px; color:var(--n600); }
+
+  /* ---------- local corrections ----------
+     arena.css still carries a few values nocturne.css has not reached yet
+     (a pure-white hover, a mint tick on a hovered menu row, pure-black
+     hairlines on swatches). Corrected here, for this page only. */
+  .ptabs{ background:
+    linear-gradient(180deg,var(--glass-reflection-start) 0,var(--glass-reflection-end) 76%),
+    color-mix(in srgb,var(--color-surface) 58%,var(--glass-bg)); }
+  .ptab{ border-right:1px solid var(--line); }
+  .ptab.active{ background:var(--panel); color:var(--a200);
+    box-shadow:inset 0 -2px 0 var(--color-accent); }
+  .sect > h3{ border-bottom:1px solid var(--line); }
+  .prow select{ background:var(--inset); border:1px solid var(--n800);
+    color:var(--n200); border-radius:var(--radius-sm); }
+  .titem:hover{ color:var(--n100); }
+  .titem.selected{ background:color-mix(in srgb,var(--color-accent) 20%,transparent);
+    color:var(--n100); }
+  .btnrow{ border-top:1px solid var(--line); }
+  .mon-foot .ic:hover{ color:var(--n100); }
+  .dd-item:hover .chk{ color:var(--a200); }
+  .dd-item:hover .kbd{ color:var(--a300); }
+  .dd-hdr{ padding:3px 22px 3px 24px; font-size:9.5px; letter-spacing:.01em; color:var(--n700); cursor:default; }
+  .dd-colors .swatch{ border:1px solid var(--n800); border-radius:var(--radius-sm); }
+  .dd-colors .swatch:hover{ outline:1px solid var(--a300); }
+  #nColors .swatch{ border-color:var(--n800) !important; border-radius:var(--radius-sm); }
+  #logBody div{ color:var(--n500) !important; }
+  #dashList .prow > span:not(.dot):not(.pval){ color:var(--n500) !important; }
+  #qsResults .titem > span:last-child{ color:var(--n600) !important; }
+</style>
+</head>
+<body>
+<div id="wireRoot">
+
+  <!-- menu bar -->
+  <header id="menubar">
+    <div class="showave-brand-lockup--nav" data-showave-brand="forge"></div>
+    <div id="menubarMenus" style="display:flex"></div>
+    <div class="mb-right"><span id="patchName">Untitled.wire</span><span class="fps" id="wFps">60 fps</span></div>
+  </header>
+
+  <!-- toolbar — the curved arrows sit under the Wire tab -->
+  <div id="toolbar">
+    <div class="tb-group">
+      <button class="tb-btn small" type="button" title="Undo (Ctrl+Z)">↶</button>
+      <button class="tb-btn small" type="button" title="Redo (Ctrl+Shift+Z)">↷</button>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <span class="tb-label">Category</span>
+      <select class="tb-select" id="patchCat"><option>Source</option><option selected>Effect</option><option>Mixer</option></select>
+      <span class="tb-label">Resolution</span>
+      <select class="tb-select"><option>Host Determined</option><option>1920 x 1080</option><option>3840 x 2160</option><option>Custom…</option></select>
+      <span class="tb-label">Bit Depth</span>
+      <select class="tb-select"><option>8 bit</option><option>16 bit</option><option>32 bit float</option></select>
+    </div>
+    <div class="tb-sep"></div>
+    <div class="tb-group">
+      <button class="tb-btn" id="sortBtn" type="button" title="Auto Sort Selection (Ctrl+L)">Auto Sort Selection</button>
+      <button class="tb-btn" id="searchBtn" type="button" title="Node Search (Ctrl+F): focuses the Stats panel">Node Search</button>
+      <button class="tb-btn" id="textEdBtn" type="button" title="Open Text Editor (Ctrl+E)">Text Editor</button>
+    </div>
+    <span style="margin-left:auto" class="tb-label" id="nodeCount">0 nodes</span>
+  </div>
+
+  <div class="w-main">
+    <!-- library, down the left hand side -->
+    <div class="w-lib">
+      <div class="win-tabs"><div class="win-tab active">Library</div></div>
+      <div class="browser-tools"><input type="text" id="libSearch" placeholder="Search nodes…"></div>
+      <div class="tree" id="library"></div>
+      <div class="hint">
+        The collection of all the nodes in SHOWAVE Forge. Search or scroll to the node you
+        need, then double-click it or drag it onto the patch to create it.
+      </div>
+    </div>
+
+    <!-- canvas -->
+    <div class="w-canvas-wrap" id="canvasWrap">
+      <svg id="wires"></svg>
+      <div class="nodes-layer" id="nodes"></div>
+
+      <!-- top right corner of the screen: the zoom level menu, with the
+           volume slider popping up next to it -->
+      <div class="w-tr">
+        <div class="w-vol" id="volWrap">
+          <span class="tb-label">Vol</span>
+          <input type="range" min="0" max="100" value="70">
+          <span class="warn" title="No audio output device selected: SHOWAVE Forge &gt; Settings &gt; Audio">⚠</span>
+        </div>
+        <div class="w-zoom">
+          <button class="tb-btn small" id="zOut" type="button" title="Zoom Out (Ctrl+-)">−</button>
+          <button class="tb-btn small zlevel" id="zLevel" type="button" title="Zoom level menu">100%</button>
+          <button class="tb-btn small" id="zIn" type="button" title="Zoom In (Ctrl++)">+</button>
+          <!-- kept as the zoom model the patch view reads; the menu above drives it -->
+          <select class="sr-only" id="zSel" tabindex="-1" aria-hidden="true">
+            <option>25%</option><option>50%</option><option selected>100%</option>
+            <option>200%</option><option>400%</option><option>Fit</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- right side -->
+    <div class="w-side">
+      <div class="ptabs" id="sideTabs">
+        <div class="ptab active" data-pane="pNode">Node</div>
+        <div class="ptab" data-pane="pPatch">Patch</div>
+        <div class="ptab" data-pane="pDash">Quick Controls</div>
+        <div class="ptab" data-pane="pStats">Stats</div>
+        <div class="ptab" data-pane="pRes">Resources</div>
+        <div class="ptab" data-pane="pNotes">Notes</div>
+        <div class="ptab" data-pane="pLog">Log</div>
+      </div>
+      <div class="pbody">
+
+        <!-- Node panel: name, inlet values, colour, then attributes -->
+        <div class="pane active" id="pNode">
+          <div class="sect"><h3>Node</h3><div class="sect-body">
+            <div class="prow"><label>Name</label><input type="text" id="nName" value="N/A"></div>
+            <div class="prow"><label>Class</label><span class="pval" id="nClass" style="width:auto">N/A</span></div>
+            <div class="prow"><label>Color</label><div id="nColors" style="display:flex;gap:4px"></div></div>
+            <div class="hint">Editing more than one node at a time assigns the colour to all selected nodes.</div>
+          </div></div>
+          <div class="sect"><h3>Inputs</h3><div class="sect-body" id="nInputs">
+            <div class="hint">Select a node to edit its inlet values.</div>
+          </div></div>
+          <div class="sect"><h3>Attributes</h3><div class="sect-body">
+            <div class="prow"><label>Data Input Type</label><select id="nType"></select></div>
+            <div class="prow"><label>Data Output Type</label><select id="nOutType"></select></div>
+            <div class="prow"><label>Flow</label><select id="nFlow"><option>Signal</option><option>Event</option><option>Attribute</option></select></div>
+            <div class="prow"><label>Instances</label><input type="number" value="1" min="1" max="1024"></div>
+            <div class="hint">Instanced operations apply one chain to all N values in parallel: SHOWAVE Forge's nearest equivalent to a loop.</div>
+          </div></div>
+          <!-- shown only for the Comment node -->
+          <div class="sect" id="secComment" style="display:none"><h3>Comment</h3><div class="sect-body">
+            <div class="prow"><label>Fill</label><input type="checkbox" id="cFill" checked></div>
+            <div class="prow"><label>Text Size</label><select id="cSize"><option>Small</option><option selected>Medium</option><option>Large</option></select></div>
+            <div class="prow"><label>Text Alignment</label><select id="cAlign"><option selected>Left</option><option>Center</option><option>Right</option></select></div>
+            <div class="hint">Turn Fill off to make the comment hollow, so nodes can be placed inside it.</div>
+          </div></div>
+          <div class="nex">
+            <span class="t">An example that explains this node in more detail.</span>
+            <button class="tb-btn small" id="nExample" type="button">Show Example Patch</button>
+          </div>
+        </div>
+
+        <!-- Patch panel -->
+        <div class="pane" id="pPatch">
+          <div class="sect"><h3>Patch</h3><div class="sect-body">
+            <div class="prow"><label>Name</label><input type="text" id="pName" value="Untitled"></div>
+            <div class="prow"><label>Description</label><input type="text" placeholder="Shown in SHOWAVE Live"></div>
+            <div class="prow"><label>Category</label><select><option>Source</option><option selected>Effect</option><option>Mixer</option></select></div>
+            <div class="prow"><label>Resolution</label><select><option>Host Determined</option><option>1920 x 1080</option><option>3840 x 2160</option></select></div>
+            <div class="prow"><label>Bit Depth</label><select><option>8 bit</option><option>16 bit</option><option>32 bit float</option></select></div>
+            <div class="hint">Category is how SHOWAVE Live publishes the Patch: Source, Effect or Mixer.</div>
+          </div></div>
+          <div class="sect"><h3>Credentials</h3><div class="sect-body">
+            <div class="prow"><label>Author</label><input type="text" value="Godrick Sankofa"></div>
+            <div class="prow"><label>Website</label><input type="text" placeholder="https://"></div>
+            <div class="prow"><label>Version</label><input type="text" value="1.0"></div>
+          </div></div>
+          <div class="sect"><h3>License</h3><div class="sect-body">
+            <div class="prow"><label>Type</label><select><option>Free</option><option>Commercial</option><option>Compiled / Locked</option></select></div>
+          </div></div>
+        </div>
+
+        <!-- Dashboard: the P-icon sits next to the cogwheel -->
+        <div class="pane" id="pDash">
+          <div class="sect"><h3>Quick Controls <span class="hbtns">
+            <button class="tb-btn small" id="dashPresets" type="button" title="Presets">P</button>
+            <button class="tb-btn small" id="dashGear" type="button" title="Sorting options and input groups">⚙</button></span></h3>
+            <div class="sect-body" id="dashList"></div></div>
+          <div class="hint">Expose Parameters here as Controls for SHOWAVE Live. Drag a Parameter name
+            to reorder it; groups are published as foldable control sections.</div>
+        </div>
+
+        <!-- Stats — also where Ctrl+F lands -->
+        <div class="pane" id="pStats" style="padding:0">
+          <div class="browser-tools"><input type="text" id="statsSearch" placeholder="Search nodes… (Ctrl+F)"></div>
+          <table class="datatable">
+            <thead><tr>
+              <th data-sort="0">Name</th><th data-sort="1">Category</th>
+              <th class="num" data-sort="2">Load</th><th class="num" data-sort="3">Version</th>
+            </tr></thead>
+            <tbody id="statsBody"></tbody></table>
+          <div class="hint">How much each node is loading your system. Click a column to sort,
+            click the name of a node to select it in the patch and the Node panel.</div>
+        </div>
+
+        <!-- Resources -->
+        <div class="pane" id="pRes" style="padding:0">
+          <table class="datatable"><thead><tr><th>Resource</th><th>Type</th></tr></thead>
+            <tbody>
+              <tr><td>noise_512.png</td><td>ResourceImage</td></tr>
+              <tr><td>grain.mov</td><td>ResourceVideo</td></tr>
+              <tr><td>bloom.fs</td><td>ResourceIsf</td></tr>
+              <tr><td>teal_orange.cube</td><td>ResourceLut3d</td></tr>
+            </tbody></table>
+          <div class="prow" style="height:auto;padding:6px 8px"><button class="tb-btn small" type="button">Consolidate…</button></div>
+          <div class="hint">Resources are the external files used in your patch: clips, images or
+            ISF files. Consolidating copies them all to the folder the patch is saved in.</div>
+        </div>
+
+        <!-- Notes -->
+        <div class="pane" id="pNotes" style="padding:8px">
+          <textarea class="wfield"
+            placeholder="Notes, to-do lists, or nodes pasted with Copy For Sharing…"></textarea>
+          <div class="hint" style="padding-left:0">That is notes, not nodes. Useful for remembering
+            stuff, storing bits of patch and making to-do lists.</div>
+        </div>
+
+        <!-- Log -->
+        <div class="pane" id="pLog" style="padding:0">
+          <div id="logBody"></div>
+          <div class="hint">Where all the error messages show up. A clear Log is a happy Log.
+            Use the Print node to send information here.</div>
+        </div>
+      </div>
+
+      <!-- legend, then the monitor, so the monitor is the bottom right corner -->
+      <div class="legend-head">Flow</div>
+      <div class="legend">
+        <span><i class="fl sig"></i>Signal</span>
+        <span><i class="fl evt"></i>Event</span>
+        <span><i class="fl attr"></i>Attribute</span>
+      </div>
+      <div class="legend-head">Data Types</div>
+      <div class="legend" id="legend"></div>
+
+      <!-- monitor: the name below the image, the pin left of the name,
+           the cogwheel in the bottom right corner -->
+      <div class="w-mon">
+        <div class="mon-body"><canvas id="monCanvas" width="290" height="150"></canvas></div>
+        <div class="mon-foot">
+          <span id="pinBtn" class="ic" title="Pin node to monitor">📌</span>
+          <span id="monName">Texture Out</span>
+          <span class="sp"></span>
+          <span class="ic" id="monGear" title="Monitor options">⚙</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusline">
+    <span>Hold Space and click-drag, or press and hold the middle mouse button, to pan ·
+      scroll to zoom · double-click empty space to add a node</span>
+    <span style="margin-left:auto" id="selInfo">No selection</span>
+  </div>
+</div>
+
+<!-- welcome -->
+<div class="overlay show" id="welcome">
+  <div class="dialog" style="min-width:560px">
+    <div class="fw-title">Welcome to SHOWAVE Forge <span class="x" data-wclose>✕</span></div>
+    <div style="padding:10px 12px 8px;text-align:center;border-bottom:1px solid var(--line2)">
+      <div class="showave-about-lockup" data-showave-brand="forge"></div>
+      <div style="font-size:12px;font-weight:650">Weave signal into spectacle.</div>
+      <div class="showave-brand-kicker" style="margin-top:5px">An Afro Unity Group product · Created and developed by Godrick Sankofa</div>
+    </div>
+    <div class="ptabs" id="wTabs">
+      <div class="ptab active" data-pane="wPatches">Patches</div>
+      <div class="ptab" data-pane="wTutorials">Tutorials</div>
+      <div class="ptab" data-pane="wExamples">Examples</div>
+      <div class="ptab" data-pane="wTemplates">Templates</div>
+      <span class="wsort">
+        <button class="tb-btn small on" id="wClock" type="button" title="Last used patches">🕘</button>
+        <button class="tb-btn small" id="wAbc" type="button" title="Sort your collection alphabetically">ABC</button>
+      </span>
+    </div>
+    <div class="fw-body" style="max-height:300px;overflow:auto">
+      <div class="pane active tree" id="wPatches"></div>
+      <div class="pane tree" id="wTutorials"></div>
+      <div class="pane tree" id="wExamples"></div>
+      <div class="pane tree" id="wTemplates"></div>
+    </div>
+    <div class="btnrow">
+      <label class="wstart"><input type="checkbox" checked> Show on startup</label>
+      <button class="tb-btn on" data-wclose type="button">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- quick search — the search bar a double-click on empty space opens -->
+<div class="overlay" id="quickSearch">
+  <div class="dialog" style="min-width:420px">
+    <div class="fw-title">Add Node <span class="x" data-qclose>✕</span></div>
+    <div class="fw-body">
+      <input type="text" id="qsInput" class="wfield" placeholder="Type a node class…">
+      <div class="tree" id="qsResults" style="max-height:240px;overflow:auto;margin-top:6px"></div>
+      <div class="qs-info" id="qsInfo">Nodes found here have a description and an example patch attached to them.</div>
+    </div>
+  </div>
+</div>
+
+<!-- the real 391 node classes, decoded from Wire's own documentation patches;
+     loaded after wire-data.js so it can stand in for the guessed subset -->
+
+<script src="wire-data.js"></script>
+<script src="wire-nodes.js"></script>
+<script src="wire.js"></script>
+<script>
+  /* wire-data.js ships a representative subset written by hand. When the
+     decoded library is present, use it instead — same shape, real contents. */
+  if (window.WIRE_NODE_CATEGORIES && window.WIRE_NODE_CATEGORIES.length) {
+    window.NODE_CATEGORIES_REAL = window.WIRE_NODE_CATEGORIES;
+    window.NODE_CLASSES_REAL = window.WIRE_NODE_LIBRARY.flatMap(c =>
+      c.items.map(n => ({ name:n.name, cat:c.cat, id:n.id, clock:n.clock,
+        inputs:n.inputs, attributes:n.attributes,
+        color:(window.WIRE_NODE_CATEGORIES.find(x=>x.cat===c.cat)||{}).color })));
+  }
+
+  /* -----------------------------------------------------------------------
+     The node menu is also the node's right-click menu (wire.js reads
+     WIRE_MENUS[3].items live). The manual's node chapter names the entries,
+     so they are filled in here — nothing shared is edited, the array is only
+     populated at run time on this page.
+     ----------------------------------------------------------------------- */
+  (function(){
+    if (typeof WIRE_MENUS === 'undefined') return;
+    const colorItem = WIRE_MENUS[3].items.find(i => i.colors) || {l:'Color', colors:1, target:'node'};
+    const items = [
+      {l:'Add Node…', k:'Double-click canvas'},
+      {sep:1},
+      {l:'Rename', k:'Ctrl+Shift+R'},
+      {l:'Duplicate', k:'Ctrl+D'},
+      {l:'Destroy', k:'Del'},
+      {sep:1},
+      {l:'Cut', k:'Ctrl+X'},
+      {l:'Copy', k:'Ctrl+C'},
+      {l:'Paste', k:'Ctrl+V'},
+      {l:'Copy For Sharing', k:'Ctrl+Shift+C'},
+      {l:'Copy Settings'},
+      {l:'Paste Settings'},
+      {sep:1},
+      {l:'Align Left'},
+      {l:'Align Top'},
+      {sep:1},
+      {l:'Expose Inputs'},
+      {l:'Visibility', sub:[
+        {l:'Hide All', k:'Ctrl+Shift+H'},
+        {l:'Show All', k:'Ctrl+Shift+Alt+H'}
+      ]},
+      {l:'Thumbnails', sub:[
+        {l:'Show Thumbnail',   k:'Ctrl+T'},
+        {l:'Update Thumbnail', k:'Ctrl+Shift+T'}
+      ]},
+      {sep:1},
+      {l:'Bypass'},
+      {l:'Pin To Monitor'},
+      {sep:1},
+      {l:'Open Text Editor', k:'Ctrl+E', act:'isf'},
+      {l:'Show Example Patch'},
+      {sep:1},
+      colorItem
+    ];
+    WIRE_MENUS[3].items.length = 0;
+    WIRE_MENUS[3].items.push.apply(WIRE_MENUS[3].items, items);
+  })();
+</script>
+
+<script>
+/* ===========================================================================
+   wire.html — page behaviour layered on top of wire.js.
+   Everything here comes from wire-user-interface.htm and wire-node-anatomy.htm;
+   wire.js, wire-data.js and wire-nodes.js are untouched.
+   =========================================================================== */
+(() => {
+'use strict';
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+const wrap   = $('#canvasWrap');
+const layerE = $('#nodes');
+const svg    = $('#wires');
+
+/* ---------------------------------------------------------------- menus --
+   Built from arena.css's own .dropdown / .dd-item / .dd-sep vocabulary, so
+   every popup on this page reads exactly like the main window's. */
+const stack = [];
+function closeW(n){ n = n || 0; while(stack.length > n) stack.pop().remove(); }
+document.addEventListener('mousedown', e => { if(stack.length && !e.target.closest('.dropdown')) closeW(); });
+document.addEventListener('keydown',  e => { if(e.key === 'Escape') closeW(); });
+
+function wmenu(items, x, y, lvl){
+  lvl = lvl || 0;
+  closeW(lvl);
+  const d = document.createElement('div');
+  d.className = 'dropdown';
+  items.forEach(it => {
+    if(it.sep){ const s = document.createElement('div'); s.className = 'dd-sep'; d.appendChild(s); return; }
+    if(it.hdr){ const h = document.createElement('div'); h.className = 'dd-hdr'; h.textContent = it.hdr; d.appendChild(h); return; }
+    if(it.colors){                       /* the colour row, as arena.css draws it */
+      const row = document.createElement('div'); row.className = 'dd-colors';
+      (typeof WIRE_COLORS !== 'undefined' ? WIRE_COLORS : []).forEach(c => {
+        const s = document.createElement('span');
+        s.className = 'swatch' + (c === 'none' ? ' none' : '');
+        if(c !== 'none') s.style.background = c;
+        s.addEventListener('click', () => { if(it.fn) it.fn(c); closeW(); });
+        row.appendChild(s);
+      });
+      d.appendChild(row); return;
+    }
+    const e = document.createElement('div');
+    e.className = 'dd-item' + (it.dis ? ' disabled' : '');
+    const chk = document.createElement('span'); chk.className = 'chk'; chk.textContent = it.on ? '✓' : '';
+    const lab = document.createElement('span'); lab.textContent = it.l;
+    e.appendChild(chk); e.appendChild(lab);
+    if(it.k){ const k = document.createElement('span'); k.className = 'kbd'; k.textContent = it.k; e.appendChild(k); }
+    if(it.sub){
+      const a = document.createElement('span'); a.className = 'arrow'; a.textContent = '▸';
+      e.appendChild(a);
+      e.addEventListener('mouseenter', () => {
+        const r = e.getBoundingClientRect();
+        wmenu(typeof it.sub === 'function' ? it.sub() : it.sub, r.right - 2, r.top - 3, lvl + 1);
+      });
+    } else {
+      e.addEventListener('mouseenter', () => closeW(lvl + 1));
+      if(!it.dis) e.addEventListener('click', () => { closeW(); if(it.fn) it.fn(); });
+    }
+    d.appendChild(e);
+  });
+  document.body.appendChild(d);
+  const r = d.getBoundingClientRect();
+  d.style.left = Math.min(x, innerWidth  - r.width  - 4) + 'px';
+  d.style.top  = Math.min(y, innerHeight - r.height - 4) + 'px';
+  stack.push(d);
+  return d;
+}
+/* wire.js redraws the cords from its own model whenever the window resizes,
+   so this is the way to ask for a repaint after touching a node's markup */
+const redraw = () => dispatchEvent(new Event('resize'));
+
+/* ------------------------------------------------------- flow, on a dot --
+   "Signal ... denoted by circular inlets and outlets", "Event ... rectangular",
+   "Attribute ... diamond-shaped". */
+const EVENT_TYPES = ['Trigger','MIDI','OSC'];
+const ATTR_TYPES  = ['DataType','Flow'];
+function flowClass(type){
+  if(EVENT_TYPES.includes(type)) return 'evt';
+  if(ATTR_TYPES.includes(type))  return 'attr';
+  return 'sig';
+}
+function markFlow(){
+  $$('#nodes .port').forEach(p => {
+    const d = p.querySelector('.dot');
+    if(!d || d.dataset.flow) return;
+    const f = flowClass(p.textContent.trim());
+    d.classList.add(f);
+    d.dataset.flow = f;
+  });
+}
+new MutationObserver(markFlow).observe(layerE, {childList:true, subtree:true});
+markFlow();
+
+/* ------------------------------------------------- inlet / outlet hover --
+   "When you hover over an inlet or outlet a small list will appear containing
+   all the possible data types that can go into this. When data is flowing
+   through the inlet or outlet, the value will be previewed above the list." */
+let tip = null;
+function hideTip(){ if(tip){ tip.remove(); tip = null; } }
+function showTip(port){
+  hideTip();
+  const type   = port.textContent.trim();
+  const family = (typeof DATA_TYPES !== 'undefined')
+    ? DATA_TYPES.find(f => f.items.includes(type)) : null;
+  const t = document.createElement('div');
+  t.className = 'port-tip';
+
+  /* a value only previews when this node is selected and the inlet is live */
+  const node = port.closest('.node');
+  const idx  = port.dataset.in;
+  if(node && node.classList.contains('sel') && idx !== undefined){
+    const out = $$('#nInputs output')[+idx];
+    if(out){ const v = document.createElement('div'); v.className = 'pt-val';
+      v.textContent = out.value; t.appendChild(v); }
+  }
+  const h = document.createElement('div'); h.className = 'pt-h';
+  h.textContent = family ? family.family + ' types' : 'Data type';
+  t.appendChild(h);
+  ((family && family.items) || [type]).forEach(x => {
+    const r = document.createElement('div');
+    r.className = 'pt-t' + (x === type ? ' on' : '');
+    r.textContent = x;
+    t.appendChild(r);
+  });
+  document.body.appendChild(t);
+  const pr = port.getBoundingClientRect(), tr = t.getBoundingClientRect();
+  t.style.left = Math.min(port.classList.contains('out') ? pr.right + 8 : pr.left - tr.width - 8,
+                          innerWidth - tr.width - 4) + 'px';
+  t.style.top  = Math.min(pr.top, innerHeight - tr.height - 4) + 'px';
+  tip = t;
+}
+layerE.addEventListener('mouseover', e => { const p = e.target.closest('.port'); if(p) showTip(p); });
+layerE.addEventListener('mouseout',  e => { if(e.target.closest('.port')) hideTip(); });
+wrap.addEventListener('mousedown', hideTip);
+
+/* -------------------------------------------------------- node renaming --
+   "You may want to rename your nodes ... You can do this by double clicking
+   its name. You can change the name in the node panel." */
+const names = new WeakMap();
+const nName = $('#nName');
+function titleOf(el){ const s = el.querySelector('h4 span'); return s ? s.textContent : ''; }
+nName.addEventListener('input', () => {
+  const el = $('#nodes .node.sel'); if(!el) return;
+  names.set(el, nName.value);
+  const s = el.querySelector('h4 span'); if(s) s.textContent = nName.value;
+  redraw();
+});
+new MutationObserver(() => {
+  const el = $('#nodes .node.sel'); if(!el) return;
+  const stored = names.get(el);
+  if(stored !== undefined && nName.value !== stored) nName.value = stored;
+  updateComment();
+}).observe(layerE, {subtree:true, attributes:true, attributeFilter:['class']});
+
+layerE.addEventListener('dblclick', e => {
+  if(!e.target.closest('h4')) return;
+  e.stopPropagation();
+  nName.focus(); nName.select();
+});
+
+/* -------------------------------------------------- comment node options --
+   "Comments can be made hollow by disabling the 'fill' toggle in the node
+   panel ... options for text size and text alignment in the node panel." */
+const secComment = $('#secComment'), nClass = $('#nClass');
+function updateComment(){
+  secComment.style.display = (nClass.textContent.trim() === 'Comment') ? '' : 'none';
+}
+new MutationObserver(updateComment).observe(nClass, {childList:true, characterData:true, subtree:true});
+updateComment();
+
+/* ----------------------------------------------------- data output types --
+   "Under attributes you can often adjust the data input and output types" */
+if(typeof DATA_TYPES !== 'undefined'){
+  const out = $('#nOutType');
+  DATA_TYPES.forEach(f => f.items.forEach(t => out.appendChild(new Option(t, t))));
+}
+
+/* --------------------------------------------------- visibility submenu --
+   "You can adjust the visibility of a node by right clicking it and navigating
+   to Visibility. Here you can turn on and of the inlets and outlets that you
+   desire. There is also the option to hide all ... or show all". */
+function selNode(){ return $('#nodes .node.sel'); }
+function setPorts(el, off){ el.querySelectorAll('.port').forEach(p => p.classList.toggle('off', off)); redraw(); }
+function visibilityMenu(el){
+  const out = [
+    {l:'Hide All', k:'Ctrl+Shift+H',     fn:() => setPorts(el, true)},
+    {l:'Show All', k:'Ctrl+Shift+Alt+H', fn:() => setPorts(el, false)}
+  ];
+  const ins  = [...el.querySelectorAll('.port[data-in]')];
+  const outs = [...el.querySelectorAll('.port[data-out]')];
+  if(ins.length){
+    out.push({sep:1}, {hdr:'Inlets'});
+    ins.forEach(p => out.push({l:p.textContent.trim(), on:!p.classList.contains('off'),
+      fn:() => { p.classList.toggle('off'); redraw(); }}));
+  }
+  if(outs.length){
+    out.push({sep:1}, {hdr:'Outlets'});
+    outs.forEach(p => out.push({l:p.textContent.trim(), on:!p.classList.contains('off'),
+      fn:() => { p.classList.toggle('off'); redraw(); }}));
+  }
+  return out;
+}
+addEventListener('keydown', e => {
+  if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if(e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'h'){
+    e.preventDefault();
+    const el = selNode(); if(el) setPorts(el, !e.altKey);
+  }
+});
+
+/* --------------------------------------------------- thumbnails submenu --
+   "You can enable or update thumbnails by right clicking on the node(s) and
+   selecting the desired option from the menu." */
+function paintThumb(el){
+  const t = el.querySelector('.nthumb'); if(!t) return;
+  const c = (el.querySelector('.stripe') || {}).style;
+  const col = (c && c.background) || 'var(--n700)';
+  t.style.background = 'linear-gradient(' + Math.round(Math.random() * 360) + 'deg,' +
+    col + ', var(--inset))';
+}
+function toggleThumb(el, on){
+  let t = el.querySelector('.nthumb');
+  if(on && !t){
+    t = document.createElement('div'); t.className = 'nthumb';
+    el.insertBefore(t, el.querySelector('.ports'));
+  } else if(!on && t){ t.remove(); }
+  if(on) paintThumb(el);
+  redraw();
+}
+function thumbnailMenu(el){
+  const has = !!el.querySelector('.nthumb');
+  return [
+    {l:'Show Thumbnail',   k:'Ctrl+T',       on:has,   fn:() => toggleThumb(el, !has)},
+    {l:'Update Thumbnail', k:'Ctrl+Shift+T', dis:!has, fn:() => paintThumb(el)}
+  ];
+}
+
+/* ------------------------------------------- a node's contextual menu ----
+   The anatomy chapter names these entries: right click to rename, duplicate,
+   destroy, align, Expose Inputs, Visibility, Thumbnails and to set the colour.
+   Taken in the capture phase so it replaces the shorter menu wire.js shows;
+   the node is still selected, because the right button's mousedown does that. */
+function openAddNode(){
+  $('#quickSearch').classList.add('show');
+  const i = $('#qsInput');
+  i.value = '';
+  i.dispatchEvent(new Event('input', {bubbles:true}));
+  i.focus();
+}
+function key(k, mods){
+  document.body.dispatchEvent(new KeyboardEvent('keydown', Object.assign(
+    {key:k, bubbles:true}, mods || {})));
+}
+const canCopyText = !!(navigator.clipboard && navigator.clipboard.writeText);
+function shareText(el){
+  const ports = [...el.querySelectorAll('.port')].map(p =>
+    (p.dataset.in !== undefined ? 'in  ' : 'out ') + p.textContent.trim());
+  return '[wire] ' + titleOf(el) + '\n' + ports.join('\n') + '\n';
+}
+layerE.addEventListener('contextmenu', e => {
+  const el = e.target.closest('.node'); if(!el) return;
+  e.preventDefault(); e.stopPropagation();
+  hideTip();
+  wmenu([
+    {l:'Add Node…', k:'Double-click canvas', fn:openAddNode},
+    {sep:1},
+    {l:'Rename',    k:'Ctrl+Shift+R', fn:() => { nName.focus(); nName.select(); }},
+    {l:'Duplicate', k:'Ctrl+D', fn:() => key('d', {ctrlKey:true})},
+    {l:'Destroy',   k:'Del',    fn:() => key('Delete')},
+    {sep:1},
+    {l:'Cut',   k:'Ctrl+X'},
+    {l:'Copy',  k:'Ctrl+C'},
+    {l:'Paste', k:'Ctrl+V'},
+    {l:'Copy For Sharing', k:'Ctrl+Shift+C', dis:!canCopyText,
+      fn:() => { try{ navigator.clipboard.writeText(shareText(el)); }catch(err){} }},
+    {l:'Copy Settings'},
+    {l:'Paste Settings'},
+    {sep:1},
+    {l:'Align Left'},
+    {l:'Align Top'},
+    {sep:1},
+    {l:'Expose Inputs'},
+    {l:'Visibility', sub:() => visibilityMenu(el)},
+    {l:'Thumbnails', sub:() => thumbnailMenu(el)},
+    {sep:1},
+    {l:'Bypass', on:el.classList.contains('bypass'),
+      fn:() => el.classList.toggle('bypass')},
+    {l:'Pin To Monitor', fn:() => $('#pinBtn').click()},
+    {sep:1},
+    {l:'Open Text Editor', k:'Ctrl+E', fn:() => $('#textEdBtn').click()},
+    {l:'Show Example Patch', fn:() => $('#nExample').click()},
+    {sep:1},
+    {colors:1, fn:c => {
+      const s = el.querySelector('.stripe');
+      if(s) s.style.background = (c === 'none') ? 'transparent' : c;
+    }}
+  ], e.clientX, e.clientY);
+}, true);
+
+/* --------------------------------------------------- disconnect a cord ---
+   "To disconnect a connection, right click on the wire and select disconnect." */
+const cuts = [];
+function dotAt(x, y){
+  let best = null, bd = 900;
+  $$('#nodes .port .dot').forEach(d => {
+    const r = d.getBoundingClientRect();
+    const dx = r.left + r.width / 2 - x, dy = r.top + r.height / 2 - y;
+    const dd = dx * dx + dy * dy;
+    if(dd < bd){ bd = dd; best = d; }
+  });
+  return best;
+}
+function pathEnds(p){
+  const r = svg.getBoundingClientRect();
+  let a, b;
+  try{ a = p.getPointAtLength(0); b = p.getPointAtLength(p.getTotalLength()); }
+  catch(err){ return null; }
+  return [[r.left + a.x, r.top + a.y], [r.left + b.x, r.top + b.y]];
+}
+function applyCuts(){
+  if(!cuts.length) return;
+  svg.querySelectorAll('path').forEach(p => {
+    const e = pathEnds(p); if(!e) return;
+    const a = dotAt(e[0][0], e[0][1]), b = dotAt(e[1][0], e[1][1]);
+    if(a && b && cuts.some(c => c[0] === a && c[1] === b)) p.remove();
+  });
+}
+new MutationObserver(applyCuts).observe(svg, {childList:true});
+svg.addEventListener('contextmenu', e => {
+  const p = e.target.closest('path'); if(!p) return;
+  e.preventDefault(); e.stopPropagation();
+  wmenu([{l:'Disconnect', k:'Del', fn:() => {
+    const ends = pathEnds(p);
+    if(ends){
+      const a = dotAt(ends[0][0], ends[0][1]), b = dotAt(ends[1][0], ends[1][1]);
+      if(a && b) cuts.push([a, b]);
+    }
+    p.remove();
+  }}], e.clientX, e.clientY);
+});
+
+/* ------------------------------------------------------ the zoom menu ----
+   "At the top right corner of the screen you will find a zoom level menu.
+   Here you can jump to preset increments or fit the patch to the screen." */
+const zSel = $('#zSel'), zLevel = $('#zLevel');
+function setZoom(v){ zSel.value = v; zSel.dispatchEvent(new Event('change')); }
+zLevel.addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  wmenu([
+    {hdr:'Zoom Level'},
+    {l:'25%',  fn:() => setZoom('25%')},
+    {l:'50%',  fn:() => setZoom('50%')},
+    {l:'100%', k:'Ctrl+1', fn:() => setZoom('100%')},
+    {l:'200%', fn:() => setZoom('200%')},
+    {l:'400%', fn:() => setZoom('400%')},
+    {sep:1},
+    {l:'Fit To Screen', k:'Ctrl+0', fn:() => setZoom('Fit')}
+  ], r.left - 40, r.bottom + 4);
+});
+setInterval(() => {
+  const m = /scale\(([\d.]+)\)/.exec(layerE.style.transform || '');
+  zLevel.textContent = Math.round((m ? +m[1] : 1) * 100) + '%';
+}, 140);
+
+/* ------------------------------------------------- drag a class in ------
+   "click on the library tab and either search or scroll to the desired patch,
+   then drag it into the patch." */
+let dragItem = null;
+function armLibraryDrag(){ $$('#library .titem').forEach(i => { i.draggable = true; }); }
+armLibraryDrag();
+new MutationObserver(armLibraryDrag).observe($('#library'), {childList:true});
+
+$('#library').addEventListener('dragstart', e => {
+  const it = e.target.closest('.titem'); if(!it) return;
+  dragItem = it;
+  e.dataTransfer.effectAllowed = 'copy';
+  try{ e.dataTransfer.setData('text/plain', it.textContent.trim()); }catch(err){}
+});
+$('#library').addEventListener('dragend', () => { dragItem = null; wrap.classList.remove('drop'); });
+wrap.addEventListener('dragover', e => {
+  if(!dragItem) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+  wrap.classList.add('drop');
+});
+wrap.addEventListener('dragleave', e => { if(e.target === wrap) wrap.classList.remove('drop'); });
+wrap.addEventListener('drop', e => {
+  wrap.classList.remove('drop');
+  const it = dragItem; dragItem = null;
+  if(!it) return;
+  e.preventDefault();
+  try{
+    const before = layerE.children.length;
+    it.dispatchEvent(new MouseEvent('dblclick', {bubbles:true}));
+    if(layerE.children.length <= before) return;
+    /* drive wire.js's own drag handler so the node's model position is right */
+    const el = layerE.lastElementChild, r = el.getBoundingClientRect();
+    el.dispatchEvent(new MouseEvent('mousedown', {bubbles:true, clientX:r.left + 8, clientY:r.top + 8}));
+    dispatchEvent(new MouseEvent('mousemove', {clientX:e.clientX - 24, clientY:e.clientY - 8}));
+    dispatchEvent(new MouseEvent('mouseup'));
+  }catch(err){}
+});
+
+/* ---------------------------------------------------------- the monitor --
+   "Right clicking on the monitor (the name) allows you to hide, duplicate or
+   undock your monitor." / "Right clicking on the monitor (the image), allows
+   you to copy the current frame as an image." */
+const mon = $('.w-mon'), monCanvas = $('#monCanvas');
+$('#monName').addEventListener('contextmenu', e => {
+  e.preventDefault(); e.stopPropagation();
+  wmenu([
+    {l:'Hide',              fn:() => { mon.style.display = 'none'; }},
+    {l:'Duplicate Monitor'},
+    {l:'Undock'}
+  ], e.clientX, e.clientY);
+});
+const canCopyImage = !!(navigator.clipboard && window.ClipboardItem && window.isSecureContext);
+$('.w-mon .mon-body').addEventListener('contextmenu', e => {
+  e.preventDefault(); e.stopPropagation();
+  wmenu([
+    {l:'Copy Frame As Image', dis:!canCopyImage, fn:() => {
+      monCanvas.toBlob(b => {
+        try{ navigator.clipboard.write([new ClipboardItem({'image/png': b})]); }catch(err){}
+      });
+    }},
+    {l:'Snapshot To Image Node'}
+  ], e.clientX, e.clientY);
+});
+
+/* ------------------------------------------------------- the dashboard --
+   "Hit the cogwheel icon to find the sorting options. Additionally, in the
+   same cogwheel-menu, you'll find the option to create input groups."
+   "To create a preset for your patch; hit the P-icon next to the cogwheel." */
+const dashList = $('#dashList');
+function dashRows(){ return [...dashList.querySelectorAll('.prow')]; }
+function sortDash(keyIdx){
+  const rows = dashRows();
+  rows.sort((a, b) => {
+    const ka = (a.children[keyIdx] || {}).textContent || '';
+    const kb = (b.children[keyIdx] || {}).textContent || '';
+    return ka.localeCompare(kb);
+  });
+  rows.forEach(r => dashList.appendChild(r));
+}
+$('#dashGear').addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  wmenu([
+    {hdr:'Sorting'},
+    {l:'Sort By Name', fn:() => sortDash(0)},
+    {l:'Sort By Type', fn:() => sortDash(2)},
+    {l:'Sort By Node', fn:() => sortDash(3)},
+    {sep:1},
+    {l:'Create Input Group', fn:() => {
+      const g = document.createElement('div');
+      g.className = 'dgroup';
+      g.textContent = 'Group ' + (dashList.querySelectorAll('.dgroup').length + 1);
+      dashList.insertBefore(g, dashList.firstChild);
+    }}
+  ], r.right - 190, r.bottom + 4);
+});
+$('#dashPresets').addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  wmenu([
+    {hdr:'Presets'},
+    {l:'Save Preset…'},
+    {l:'Load Preset…'},
+    {l:'Manage Presets…'},
+    {sep:1},
+    {l:'“Default” is reserved for the saved state', dis:1}
+  ], r.right - 210, r.bottom + 4);
+});
+/* "Inputs can be moved by dragging and dropping the name of the parameter." */
+let dashDrag = null;
+function armDash(){
+  dashRows().forEach(row => {
+    if(row.dataset.armed) return;
+    row.dataset.armed = '1';
+    row.draggable = true;
+    row.addEventListener('dragstart', e => {
+      dashDrag = row; row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      try{ e.dataTransfer.setData('text/plain', ''); }catch(err){}
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging'); dashDrag = null;
+      dashRows().forEach(r => r.classList.remove('over'));
+    });
+    row.addEventListener('dragover', e => {
+      if(!dashDrag || dashDrag === row) return;
+      e.preventDefault(); row.classList.add('over');
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('over'));
+    row.addEventListener('drop', e => {
+      if(!dashDrag || dashDrag === row) return;
+      e.preventDefault(); row.classList.remove('over');
+      const rows = dashRows();
+      const after = rows.indexOf(dashDrag) < rows.indexOf(row);
+      row.parentNode.insertBefore(dashDrag, after ? row.nextSibling : row);
+    });
+  });
+}
+armDash();
+new MutationObserver(armDash).observe(dashList, {childList:true});
+
+/* ------------------------------------------------------------- the stats --
+   "Clicking on NAME, CATEGORY, LOAD or VERSION allows you to sort the stats
+   panel based on that parameter." Ctrl+F focuses this panel. */
+const statsBody = $('#statsBody'), statsSearch = $('#statsSearch');
+let sortCol = -1, sortDir = 1;
+function fixStatRows(){
+  [...statsBody.rows].forEach(tr => {
+    if(tr.cells.length >= 4) return;
+    if(tr.cells[2]) tr.cells[2].className = 'num';
+    const td = document.createElement('td');
+    td.className = 'num'; td.textContent = '1';
+    tr.appendChild(td);
+  });
+}
+function filterStats(){
+  const q = statsSearch.value.trim().toLowerCase();
+  [...statsBody.rows].forEach(tr => {
+    tr.style.display = (!q || tr.cells[0].textContent.toLowerCase().includes(q)) ? '' : 'none';
+  });
+}
+function sortStats(){
+  if(sortCol < 0) return;
+  const rows = [...statsBody.rows];
+  rows.sort((a, b) => {
+    const x = a.cells[sortCol].textContent, y = b.cells[sortCol].textContent;
+    const nx = parseFloat(x), ny = parseFloat(y);
+    const c = (!isNaN(nx) && !isNaN(ny)) ? nx - ny : x.localeCompare(y);
+    return c * sortDir;
+  });
+  rows.forEach(r => statsBody.appendChild(r));
+}
+/* sorting re-appends rows, which is itself a mutation — so the observer is
+   detached while the panel is being rebuilt */
+const statsObs = new MutationObserver(refreshStats);
+function refreshStats(){
+  statsObs.disconnect();
+  fixStatRows(); sortStats(); filterStats();
+  statsObs.observe(statsBody, {childList:true});
+}
+refreshStats();
+$$('#pStats th[data-sort]').forEach(th => th.addEventListener('click', () => {
+  const c = +th.dataset.sort;
+  sortDir = (c === sortCol) ? -sortDir : 1;
+  sortCol = c;
+  $$('#pStats th .sar').forEach(s => s.remove());
+  const a = document.createElement('span');
+  a.className = 'sar'; a.textContent = sortDir > 0 ? '▲' : '▼';
+  th.appendChild(a);
+  refreshStats();
+}));
+statsSearch.addEventListener('input', filterStats);
+
+/* "Hit CTRL + F ... The Stats panel will focus and you can start typing
+   straight away." The toolbar's Node Search button does the same; the Add Node
+   search bar keeps its own trigger, a double-click on empty space. */
+function openNodeSearch(){
+  const tab = $('#sideTabs [data-pane="pStats"]');
+  if(tab) tab.click();
+  statsSearch.focus(); statsSearch.select();
+}
+const oldFind = $('#searchBtn');
+const newFind = oldFind.cloneNode(true);          /* drops wire.js's handler */
+oldFind.replaceWith(newFind);
+newFind.addEventListener('click', openNodeSearch);
+
+/* ------------------------------------------------------- the node panel --
+   "At the bottom of the panel you will find a link to an example that explains
+   the node in more detail." */
+$('#nExample').addEventListener('click', () => {
+  $('#welcome').classList.add('show');
+  const t = $('#wTabs [data-pane="wExamples"]');
+  if(t) t.click();
+});
+
+/* ------------------------------------------------------ welcome screen --
+   "Toggle between the clock and ABC symbol to display your last used patches
+   or sort your collection alphabetically." */
+const wPatches = $('#wPatches');
+let recentOrder = null;
+function patchItems(){ return [...wPatches.querySelectorAll('.titem')]; }
+$('#wAbc').addEventListener('click', () => {
+  if(!recentOrder) recentOrder = patchItems();
+  patchItems().sort((a, b) => a.textContent.localeCompare(b.textContent))
+    .forEach(i => wPatches.appendChild(i));
+  $('#wAbc').classList.add('on'); $('#wClock').classList.remove('on');
+});
+$('#wClock').addEventListener('click', () => {
+  if(recentOrder) recentOrder.forEach(i => wPatches.appendChild(i));
+  $('#wClock').classList.add('on'); $('#wAbc').classList.remove('on');
+});
+
+/* --------------------------------------------------------- quick search --
+   "Nodes found this way have a description and an example patch attached." */
+const qsInfo = $('#qsInfo');
+const qsDefault = qsInfo.textContent;
+$('#qsResults').addEventListener('mouseover', e => {
+  const i = e.target.closest('.titem'); if(!i) return;
+  const parts = [...i.children].map(c => c.textContent.trim()).filter(Boolean);
+  qsInfo.textContent = parts.length > 1
+    ? parts[0] + ': ' + parts[parts.length - 1] + '. Example patch attached.'
+    : qsDefault;
+});
+$('#qsResults').addEventListener('mouseleave', () => { qsInfo.textContent = qsDefault; });
+
+/* the patch name in the title bar follows the name Arena / Avenue will use */
+const pNameField = $('#pName');
+pNameField.addEventListener('input', () => {
+  $('#patchName').textContent = (pNameField.value.trim() || 'Untitled') + '.wire';
+});
+})();
+</script>
+<link rel="stylesheet" href="openlive-areas.css">
+<link rel="stylesheet" href="openlive-phone-mirror.css">
+<link rel="stylesheet" href="openlive-tool-areas.css">
+<script src="openlive-phone-mirror.js"></script>
+<script src="openlive-areas.js"></script>
+<script src="openlive-tool-areas.js"></script>
+</body>
+</html>

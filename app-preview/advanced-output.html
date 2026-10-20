@@ -1,0 +1,2366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<title>SHOWAVE Map: Output Mapping</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="showave-brand.js"></script>
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<!-- The ported editor's sheet. Renamed on the way in from the donor tree: this
+     file and advanced-output.css both define `.ao`, and advanced-output.css is
+     still linked by panel.html, presets.html and workspace.html for the DOCKED
+     legacy panel. The two must never co-load; only this page loads this one. -->
+<link rel="stylesheet" href="openlive-output-editor.css?v=broadcast-corner-messages-1">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+  #app{ display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+  #app > #menubar, #app > #status{ flex:0 0 auto; }
+  /* body.ao-window is gone with advanced-output.css, and that class carried the
+     only two rules that gave the editor its height. Restate them here against
+     the mount point rather than relying on `.ao{height:100%}` shrinking into
+     whatever is left over. */
+  #aoHost{ flex:1 1 auto; min-height:0; }
+  /* .ao-buspill lives only in advanced-output.css, which this page no longer
+     links. arena-client.js keeps swapping .live/.cold on it, so without these
+     the page's one liveness indicator is inert grey text. */
+  .ao-buspill{ font-size:10.5px; padding:1px 7px; border-radius:9px; margin-left:8px;
+    border:1px solid transparent; }
+  .ao-buspill.live{ color:#9fe8c4; background:rgba(63,221,136,.12); border-color:rgba(63,221,136,.35); }
+  .ao-buspill.cold{ color:#8a8a8a; background:rgba(255,255,255,.04); border-color:#333; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== MENU BAR — the same bar, the same decoded menus, as the deck ===== -->
+  <header id="menubar">
+    <div class="showave-brand-lockup--nav" data-showave-brand="map"></div>
+    <div id="menus" role="menubar" aria-label="SHOWAVE Map menus" style="display:flex"></div>
+    <div class="mb-right"><span id="mbMsg" role="status" aria-live="polite"></span></div>
+  </header>
+
+  <!-- ===== the editor ===== -->
+  <div id="aoHost"></div>
+
+  <!-- ===== STATUS BAR — same layout as the main window's ===== -->
+  <div id="status">
+    <span class="conn offline" id="conn">Offline</span>
+    <span id="productLine">SHOWAVE Map: Output Mapping</span>
+    <span class="ao-buspill cold" data-bus-state>no show</span>
+    <!-- Which lane is feeding these stages, and how fast. "Why is there no
+         picture" was previously unanswerable from this window. -->
+    <span class="ao-buspill cold" id="feedPill">frames: N/A</span>
+    <span style="margin-left:auto"></span>
+    <span id="where"></span>
+    <span>CPU <b class="v" data-s="cpu">0%</b></span>
+    <span>RAM <b class="v" data-s="ram">0%</b></span>
+    <span>VRAM <b class="v" data-s="vram">0%</b></span>
+    <span>FPS <b class="v" data-s="fps">0</b></span>
+    <span class="v" id="clock">00:00</span>
+  </div>
+</div>
+
+<!-- One ordering constraint that matters: resolume-extracted.js MUST precede
+     openlive-screens.js, which reads window.RESOLUME.arena.advanced_output at
+     load to bootstrap the decoded screen setup. Get it wrong and you get one
+     empty 1920x1080 screen instead of the real three.
+     workspace.js is deliberately absent — this page has no dock. -->
+<script src="arena-bus.js"></script>
+<script src="arena-client.js"></script>
+<script src="openlive-displays.js"></script>
+<script src="arena-data.js"></script>
+<script src="resolume-extracted.js"></script>
+<script src="arena-live.js"></script>
+<script src="openlive-screens.js"></script>
+<script src="openlive-screen-render.js"></script>
+<script src="openlive-routing.js"></script>
+<script src="openlive-hub.js"></script>
+<script src="openlive-channel-routing.js"></script>
+<script src="openlive-platform-workflows.js"></script>
+<script src="openlive-map-platform-picker.js"></script>
+<script src="openlive-map-category-picker.js?v=compact-feedback-1"></script>
+<script src="openlive-show-info-legacy.js"></script>
+<script src="openlive-show-info.js"></script>
+<script src="openlive-output-editor.js?v=broadcast-corner-messages-1"></script>
+<script>
+/* The ported Advanced Output editor, driven by this tree's own ArenaBus.
+
+   The editor came from the openlive-* lineage, where its pictures come from a
+   local re-render of the composition. This tree has no such renderer on this
+   page, and does not need one: index.html already renders every source through
+   its OWN effect chain and media, and publishes each as a frame over ArenaBus.
+   So the frames are content-exact — A's effects, media and compositing. The
+   configuration preview is deliberately downscaled; a presented Screen asks
+   for the programme raster at display cadence. Those are separate workloads,
+   so merely opening this editor does not make the deck render full-size frames.
+
+   FOUR VOCABULARY MISMATCHES between the two lineages are reconciled here, and
+   every one of them fails SILENTLY if it is left alone — no error, just a
+   plausible wrong picture. They are marked (1)..(4) below. */
+(() => {
+'use strict';
+const $   = s => document.querySelector(s);
+const AL  = window.ArenaLive;
+const BUS = window.ArenaBus;
+const CLIENT_ID = 'advanced-output:' + (window.crypto && crypto.randomUUID
+  ? crypto.randomUUID() : (Date.now() + ':' + Math.random()));
+const SC  = window.OpenLiveScreens;
+const host = $('#aoHost');
+
+/* The routing graph is a memoised singleton, and it is the SAME instance the
+   editor resolves through internally. Calling createGraph() instead would hand
+   this page a graph the editor never reads. */
+const G = window.OpenLiveRouting.graph();
+const setup = SC.setup();
+
+/* ---------------------------------------------------------------------------
+   persistence — both documents, restored before anything reads them
+   ---------------------------------------------------------------------------
+   The screen model carries geometry only; it has no input-source field at all.
+   Routing is a SEPARATE document with its own serialize/deserialize pair. Save
+   only the first, as the obvious reading suggests, and every warp survives a
+   reload while every slice silently snaps back to Composition — the whole
+   show's routing lost, with the warps intact to make it look like it worked.
+   Screens must restore BEFORE routing, so routing's validate() has slices to
+   match its saved routes against. */
+const KEY = 'openlive.ao.setup.v1';   /* never 'ao.model' — different model, and
+                                         the docked legacy editor still owns it */
+function restore(){
+  let blob = null;
+  try { blob = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){}
+  if(!blob) return;
+  try { if(blob.screens) SC.deserialize(blob.screens); } catch(e){ console.warn('AO: screens restore failed', e); }
+  try { if(blob.routes)  G.deserialize(blob.routes);   } catch(e){ console.warn('AO: routes restore failed', e); }
+}
+let lastWrite = '';
+function persist(){
+  try {
+    const blob = JSON.stringify({ screens: SC.serialize(), routes: G.serialize() });
+    if(blob === lastWrite) return;
+    lastWrite = blob;
+    localStorage.setItem(KEY, blob);
+  } catch(e){ /* a full quota must not take the window down mid-show */ }
+}
+/* The editor emits exactly four events — route, select, stage, flag — and NONE
+   of them fires on a geometry or warp drag. So there is nothing to debounce on;
+   an idle timer is the only thing that catches a warp. */
+setInterval(persist, 2000);
+addEventListener('beforeunload', persist);
+document.addEventListener('visibilitychange', () => { if(document.hidden) persist(); });
+restore();
+
+/* THE BASELINE FOR CANCEL.
+   Taken here, immediately after restore() and before the editor mounts, so it
+   is exactly the state the user opened. It has to exist because this window
+   AUTOSAVES every two seconds: by the time anyone reaches for Cancel their
+   edits are already in localStorage, so cancelling cannot mean "do not save",
+   it can only mean "put back what was there". Without this snapshot the button
+   would be decoration, which is the one thing this codebase keeps refusing to
+   ship. */
+const setupSnapshot = () => {
+  try { return JSON.stringify({ screens: SC.serialize(), routes: G.serialize() }); }
+  catch(e){ return null; }
+};
+let baseline = setupSnapshot();
+/* A detached window can restore before its first authoritative Composition
+   snapshot arrives. Its Cancel point becomes valid only after that first real
+   coordinate space has been applied. Retained iframes call beginSession(). */
+let baselineNeedsCompositionSync = true;
+
+/* ---------------------------------------------------------------------------
+   the composition provider — MUST be set before mount()
+   ---------------------------------------------------------------------------
+   Routing's default provider prefers window.ArenaLive first, and this tree
+   ships arena-live.js. With a real Resolume connected it would build layer ids
+   off Arena's own tree, which do not match the 'layer:N' ids the frame lane is
+   keyed on. Setting ours first, and before the editor's first refresh, keeps
+   one vocabulary in play. */
+let SNAP = null;
+G.setCompositionProvider(() => ({
+  origin: 'index.html (live mix)',
+  /* reversed: the mixer publishes bottom-up, the routing tree reads top-down */
+  layers: ((SNAP && SNAP.layers) || []).slice().reverse().map(L => ({
+    id: 'layer:' + L.index,
+    name: L.name,
+    /* (3) OPACITY HAS EXACTLY ONE OWNER, AND IT IS ROUTING.
+       The host bakes opacity into the pixels it sends; routing then applies it
+       AGAIN as a per-draw gain, so a layer at 50% renders at 25% with nothing
+       to show for it. The fix is not to strip it here — routing needs the real
+       number to implement the Input Opacity toggle — it is to ask the host for
+       pre-fader pixels. See needSources below, which always sends
+       ignoreOpacity:true for layer and group. */
+    opacity: typeof L.opacity === 'number' ? L.opacity : 1,
+    bypassed: !!L.bypassed,
+    solo: !!L.solo
+  })),
+  groups: (((SNAP && SNAP.structure) || {}).groups || []).map(g => ({
+    id: 'group:' + g.index,
+    name: g.name,
+    opacity: typeof g.opacity === 'number' ? g.opacity : 1,
+    bypassed: !!g.bypassed,
+    solo: !!g.solo
+  }))
+}));
+
+/* ---------------------------------------------------------------------------
+   mount
+   --------------------------------------------------------------------------- */
+const editor = window.OpenLiveOutputEditor.mount(host, { setup: setup, stage: 'input' });
+
+/* Fixture personalities are edited in a separate window but belong to this
+   Input Selection stage.  The Hub is the shared durable library; subscribing
+   here makes an already-open Advanced Output window update immediately. */
+const HUB = window.OpenLiveHub;
+if(HUB) HUB.ready().then(() => {
+  const applyFixtures = value => {
+    const items = value && Array.isArray(value.items) ? value.items : [];
+    editor.setFixtures(items.length ? items : null);
+  };
+  applyFixtures(HUB.get('fixtures', null));
+  HUB.subscribe('fixtures', applyFixtures, { immediate:false });
+});
+
+/* Real hardware, which the donor page never wired because its own tree had no
+   displays module on that page. This one ships it, so the Device dropdown stops
+   inventing a single window.screen entry. */
+/* Preserve the OS descriptor here. OpenLiveOutputEditor owns the one conversion
+   from CSS display bounds to the Screen's physical-pixel raster. Converting in
+   both layers double-scaled external descriptors that carried scale but omitted
+   pixelWidth/pixelHeight. */
+const displaysForEditor = list => (list || []).map(d => Object.assign({}, d));
+let hostDisplays = null;
+const displayListComplete = list => Array.isArray(list) && list.length > 0 &&
+  list.every(d => d && !d.blocked && d.complete !== false);
+const pushDisplays = list => {
+  try {
+    hostDisplays = (list || (window.OpenLiveDisplays && OpenLiveDisplays.list()) || []).slice();
+    editor.setDisplays(displaysForEditor(hostDisplays));
+    /* A partial list may contain only the control monitor. Never migrate a
+       saved projector by matching its raster against that incomplete answer. */
+    if(displayListComplete(hostDisplays))
+      queueMicrotask(() => { try { migrateDisplayAssignments(hostDisplays); } catch(e){} });
+    /* Display Info is a live diagnostic. Resolution, scale, colour depth and
+       display role must follow ScreenDetailed.change without closing output. */
+    queueMicrotask(() => { try { pushOutputFlags(); } catch(e){} });
+  } catch(e){}
+};
+if(window.OpenLiveDisplays && window.OpenLiveDisplays.list){
+  pushDisplays();
+  /* Read once at mount was not enough. screens.htm's whole premise is that the
+     operating system owns this list — so a projector plugged in during the show,
+     or the permission granted a moment later, has to arrive without reopening
+     the window. onChange fires on both. */
+  OpenLiveDisplays.onChange(pushDisplays);
+  OpenLiveDisplays.prime().then(pushDisplays).catch(()=>{});
+}
+
+/* ---- Cancel / Save & Close -------------------------------------------------
+   The editor builds .ao-foot-right once at mount and never rewrites it
+   (openlive-output-editor.js:439), so filling it from here is safe and leaves
+   the editor untouched.
+
+   Until now this window had no commit affordance at all: File > Close Window
+   called window.close(), which the browser silently refuses whenever the page
+   was reached by in-tab navigation rather than script — the first bug found in
+   this codebase. Closing is now routed through whichever container this
+   actually is, so it works in all three cases. */
+/* Arena leaves the footer centre empty. Clear nodes and globals left by an
+   earlier hot-mounted build so Broadcast readiness can never leak into the
+   selected Screen/Lumiverse context. Broadcast transport controls remain in
+   their own inspector and the public egress API below remains available to the
+   main window's ON AIR indicator. */
+(function clearLegacyFooterStatus(){
+  const center = host.querySelector('.ao-foot-center');
+  if(center){ center.replaceChildren(); center.classList.remove('ao-notify'); }
+  try { delete window.__aoStatus; } catch(e){ window.__aoStatus = undefined; }
+  try { delete window.__aoNotify; } catch(e){ window.__aoNotify = undefined; }
+})();
+
+(function commitBar(){
+  const bar = host.querySelector('.ao-foot-right');
+  if(!bar) return;
+
+  const btn = (label, cls, title) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'ao-btn' + (cls ? ' ' + cls : '');
+    b.textContent = label; b.title = title;
+    bar.appendChild(b); return b;
+  };
+  bar.classList.add('ao-commit');
+
+  /* One close path, three containers. In a panel the parent owns the frame; in
+     a script-opened window close() works; in a tab it does not, and navigating
+     home beats stranding the user on a page with no way out. */
+  function leave(){
+    persist();
+    try {
+      if (window.parent && window.parent !== window && window.parent.__openliveClosePanel){
+        window.parent.__openliveClosePanel(); return;
+      }
+    } catch(e){ /* cross-origin cannot happen here */ }
+    window.close();
+    setTimeout(() => { if(!window.closed) location.href = 'index.html'; }, 60);
+  }
+
+  btn('Cancel', 'ao-btn-quiet',
+      'Discard every change made since this window opened and close it.')
+    .addEventListener('click', () => {
+      if(!baseline) return leave();                 /* nothing to roll back to */
+      let blob = null;
+      try { blob = JSON.parse(baseline); } catch(e){ return leave(); }
+      try {
+        /* Screens BEFORE routes, the same order restore() uses: routing's
+           validate() needs slices to match its saved routes against. */
+        if(blob.screens) SC.deserialize(blob.screens);
+        if(blob.routes)  G.deserialize(blob.routes);
+        /* Cancel restores operator edits, not an obsolete Composition raster.
+           If the Composition changed while this session was open, express the
+           restored InputRects in today's coordinate space; output geometry and
+           fixed device rasters remain independent in setCompositionSize(). */
+        const width=Math.max(0,Math.round(Number(SNAP&&SNAP.width)||0));
+        const height=Math.max(0,Math.round(Number(SNAP&&SNAP.height)||0));
+        if(width && height && setup.setCompositionSize) setup.setCompositionSize(width,height);
+        lastWrite = '';                             /* force the write through */
+        persist();
+        editor.refresh();
+        if(typeof reconcileOpenOutputs === 'function') reconcileOpenOutputs();
+      } catch(e){ msg('Could not restore: ' + (e.message || e)); return; }
+      msg('Reverted to the state this window opened in');
+      leave();
+    });
+
+  btn('Save & Close', 'ao-btn-primary',
+      'Write the screen setup and routing now, then close.')
+    .addEventListener('click', () => { msg('Output setup kept for this session'); leave(); });
+})();
+
+/* The editor redraws from its own tick; the frame maps below are read on each
+   tick, so a newly decoded frame needs no explicit repaint call.
+
+   THIS CANNOT BE rAF ALONE, AND THAT COST A LOT OF CHASING.
+   requestAnimationFrame does not fire while the document is not being rendered
+   — a window behind another, a minimised one, a background tab. The stage then
+   holds whatever it painted last, for ever, with no error and no notice: the
+   HUD figures freeze mid-sentence and the picture stays on the last thing it
+   saw, which is usually black because nothing had arrived yet at load. Every
+   symptom of a broken frame lane, produced by a lane that was working
+   perfectly — frames arriving, frameSource returning them, nobody asking.
+   A worker's timer is not throttled with the page, so it keeps the stage
+   truthful while the operator is in the deck window. The gap guard keeps the
+   two drivers from painting the same frame twice while rAF is running. */
+/* Coalesce the visible rAF, hidden Worker and output-surface wakeups without
+   rejecting every other slightly-early 16 ms timer tick. The editor's frame
+   stamp guard is also 15 ms, so every active Screen still shares one cadence. */
+const TICK_MIN_GAP_MS = 15;
+/* THE STAGE IS NOT PAINTED WHILE NOTHING CAN SEE IT.
+   The worker below exists because rAF stops in a background window and the
+   slice pump must keep publishing to the deck — that reasoning is right and it
+   stays. But it was keeping the whole EDITOR painting too, at 60 fps, behind
+   another window. Painting a canvas nobody is looking at is pure waste, and it
+   is waste taken from the one thread the output shares.
+   Hidden: pump slices, skip the paint. Visible again: repaint at once, so the
+   stage is never stale for a frame. */
+let lastTick = 0;
+const hidden = () => (typeof document !== 'undefined' && document.hidden);
+let forcedUiVisible = null;
+let outputDemand = false;
+function editorVisible(){
+  if(hidden()) return false;
+  if(forcedUiVisible !== null) return forcedUiVisible;
+  try {
+    return !window.frameElement || window.frameElement.getClientRects().length > 0;
+  } catch(e){ return true; }
+}
+/* ONLY THE PAINT IS SKIPPED WHEN HIDDEN — THE BEAT IS NOT SLOWED.
+   The first version of this also dropped the hidden tick to 200 ms, which was
+   wrong: slicePump already carries its own rate limits — publishSlices every
+   500 ms, a forced re-announce every 3000 ms, and the fallback FRAME LANE every
+   60 ms. An outer 200 ms gate would have throttled that 60 ms lane to a third
+   of its rate, i.e. broken a working thing by rate-limiting something that was
+   already rate-limited. The pump's own limits are the rate control.
+   So the beat stays, and what goes away is editor.tick() — the canvas painting,
+   which is the expensive part and the part nobody can see while hidden. The
+   wake-up that remains is a handful of number comparisons. */
+/* Assigned further down, once the screen tree publisher exists. It rides this
+   tick rather than a setInterval of its own for the same reason the tick needs
+   a worker at all: a background document's timers are throttled to about one a
+   second and can stop altogether, and the deck's Slices panel would then sit
+   empty while this window — which owns the screens — was perfectly healthy. */
+let slicePump = null, outputPump = null;
+let lastEditorVisible = editorVisible();
+function tickOnce(t){
+  if(editor.state && editor.state.destroyed) return;
+  const now = (typeof t === 'number' && t) || performance.now();
+  if(now - lastTick < TICK_MIN_GAP_MS) return;
+  lastTick = now;
+  /* The programme clock is independent of the configuration UI. Output keeps
+     rendering while this iframe is hidden; only editor chrome is visibility
+     gated. outputPump owns one shared render stamp for every open Screen. */
+  if(outputPump) { try { outputPump(now); } catch(e){} }
+  const visible = editorVisible();
+  if(visible){ try { editor.tick(now); } catch(e){} }
+  if(slicePump) { try { slicePump(now); } catch(e){} }
+  if(visible !== lastEditorVisible){
+    lastEditorVisible = visible;
+    try { reportSources(); } catch(e){}
+  }
+}
+(function loop(t){ if(!editor.state || !editor.state.destroyed){ tickOnce(t); requestAnimationFrame(loop); } })(0);
+/* The bare setInterval(tickOnce, 16) that used to sit here is gone. It was the
+   third driver of the same function: rAF already covers the visible case at
+   display rate, and the worker below covers the hidden one without being
+   throttled. All three firing meant ~180 wake-ups a second to do 60 frames of
+   work. Removing it changes no behaviour that rAF or the worker did not
+   already provide — verified by measuring the tick rate before and after. */
+/* Coming back into view must not wait for the next keepalive: repaint now. */
+addEventListener('visibilitychange', () => {
+  syncBackgroundTick();
+  if(editorVisible()){ lastTick = 0; tickOnce(performance.now()); }
+});
+let backgroundTicker = null, backgroundFallback = 0;
+function syncBackgroundTick(){
+  const on = !editorVisible() && outputDemand;
+  if(backgroundTicker){ try { backgroundTicker.postMessage(on ? 1 : 0); } catch(e){} }
+  if(backgroundFallback){ clearInterval(backgroundFallback); backgroundFallback = 0; }
+  if(on && !backgroundTicker) backgroundFallback = setInterval(() => tickOnce(performance.now()), 16);
+}
+try {
+  const tickSrc = 'let h=null;onmessage=function(e){' +
+    'if(e.data===0){if(h){clearInterval(h);h=null;}return;}' +
+    'if(!h)h=setInterval(function(){postMessage(0);},16);};';
+  backgroundTicker = new Worker(URL.createObjectURL(new Blob([tickSrc], {type:'text/javascript'})));
+  backgroundTicker.onmessage = () => tickOnce();
+} catch(e){ /* hidden-service interval fallback is armed by syncBackgroundTick */ }
+addEventListener('pagehide', () => {
+  if(backgroundFallback){ clearInterval(backgroundFallback); backgroundFallback = 0; }
+  if(backgroundTicker){ try { backgroundTicker.postMessage(0); backgroundTicker.terminate(); } catch(e){} backgroundTicker = null; }
+});
+syncBackgroundTick();
+
+/* ---------------------------------------------------------------------------
+   frames
+   ---------------------------------------------------------------------------
+   Adapted, not lifted, from the legacy editor's decoder: that version closed
+   over a module-scope COMP and finished by calling MOUNTED.forEach(m =>
+   m.repaint()), and the ported editor has no repaint method at all. */
+const SOURCE_IMG  = new Map();   /* wire id -> ImageBitmap, or canvas on the fallback lane */
+const SOURCE_LAST = new Map();   /* wire id -> last data URL, so we decode once   */
+const SOURCE_AT   = new Map();   /* wire id -> when that frame landed             */
+const DIRECT_STAMP = new Map();
+/* Diagnostic hook. This window's picture depends on four things agreeing across
+   two documents — host election, needSources, the frame lane, and the editor's
+   frameFor — and when it goes black none of them says so. Being able to ask, from
+   the console, "is there a frame, how old is it, how big is it" turns an hour of
+   guessing into one line. Read-only; nothing in the page reads it back. */
+window.__ao = { SOURCE_IMG, SOURCE_AT, editor };
+
+function directFrameHostAvailable(){
+  try {
+    return window.parent && window.parent !== window &&
+           window.parent.ArenaBus && window.parent.ArenaBus.role === 'host' &&
+           typeof window.parent.__openliveFrameSource === 'function';
+  } catch(e){ return false; }
+}
+/* undefined = no direct host (use bus/REST), null = direct host has no fresh
+   frame yet, Canvas = zero-copy current source. */
+function directFrameFor(wireId){
+  if(!directFrameHostAvailable()) return undefined;
+  try {
+    const info = window.parent.__openliveFrameSource(wireId);
+    if(!info || !info.canvas) return null;
+    const stamp = Number(info.stamp || 0);
+    if(DIRECT_STAMP.get(wireId) !== stamp){
+      DIRECT_STAMP.set(wireId, stamp);
+      SOURCE_AT.set(wireId, performance.now());
+      noteFrame('direct');
+    }
+    const at = SOURCE_AT.get(wireId) || 0;
+    return at && performance.now() - at <= FRAME_STALE_MS ? info.canvas : null;
+  } catch(e){ return undefined; }
+}
+
+/* A frame nobody has refreshed is not a picture of now. Holding the last one on
+   screen for ever is exactly what "it freezes" looks like from the operator's
+   side: the composition moved on and this window did not say so. Past this the
+   feed reports itself empty and the stage draws its honest no-source notice. */
+const FRAME_STALE_MS = 2000;
+
+/* WHICH LANE IS FEEDING THIS WINDOW, SAID OUT LOUD.
+   There are three ways for these stages to have a picture — the deck window
+   over the bus, this window's own Arena REST lane, and a live capture — and
+   until now the window reported none of them. When the picture vanished there
+   was nothing on screen to say whether the deck had closed, Arena had gone, or
+   a slice was routed somewhere that resolves to nothing. That is a diagnosis
+   the operator should not have to do from a console. */
+let feedLane = 'none', feedCount = 0, feedWindowAt = 0, feedRate = 0;
+const noteFrame = lane => { feedLane = lane; feedCount++; };
+
+function paintFeedPill(){
+  const el = $('#feedPill'); if(!el) return;
+  const now = performance.now();
+  if(!feedWindowAt) feedWindowAt = now;
+  const dt = now - feedWindowAt;
+  if(dt >= 1000){ feedRate = Math.round(feedCount * 1000 / dt); feedCount = 0; feedWindowAt = now; }
+
+  let newest = 0;
+  SOURCE_AT.forEach(t => { if(t > newest) newest = t; });
+  const fresh = newest && (now - newest) < FRAME_STALE_MS;
+
+  let text;
+  if(fresh){
+    text = 'frames: ' + (feedLane === 'rest' ? 'Arena REST'
+                       : feedLane === 'live' ? 'live capture'
+                       : 'main window') + ' · ' + feedRate + ' fps';
+    if(outputDemand && SNAP && Number.isFinite(Number(SNAP.programmeRenderScale))){
+      const scale = Math.max(0, Number(SNAP.programmeRenderScale));
+      text += ' · source ' + Math.round(scale * 100) + '%';
+    }
+  } else {
+    const why = [];
+    if(!(BUS && BUS.live)) why.push('SHOWAVE Live not publishing');
+    if(!AL || AL.status !== 'live') why.push('Resolume Arena not connected');
+    text = 'No frames: ' + (why.join(', ') || 'nothing routed');
+    feedRate = 0;
+  }
+  el.textContent = text;
+  el.classList.toggle('cold', !fresh);
+  const backedOff = outputDemand && SNAP && Number(SNAP.programmeRenderScale) < 0.999;
+  el.title = fresh
+    ? (backedOff
+      ? 'The programme source has reduced its raster to preserve frame cadence; Show Size is unchanged.'
+      : 'The lane currently supplying frames to both stages. Active programme output starts at the full Show canvas.')
+    : 'Both stages draw from SHOWAVE Live when it is open, or straight from Resolume Arena when it is connected. Neither is answering.';
+}
+
+const ENCODED_QUEUE = new Map();
+function queueEncodedFrame(id, url){
+  let rec = ENCODED_QUEUE.get(id);
+  if(!rec){ rec = {busy:false, pending:null, generation:0}; ENCODED_QUEUE.set(id, rec); }
+  if(SOURCE_LAST.get(id) === url) return;
+  SOURCE_LAST.set(id, url);
+  rec.pending = url;                         /* retain only the newest waiting frame */
+  if(rec.busy) return;
+
+  const decodeNext = () => {
+    if(!rec.pending){ rec.busy = false; return; }
+    rec.busy = true;
+    const next = rec.pending; rec.pending = null;
+    const generation = ++rec.generation;
+    const img = new Image();
+    const finish = () => { rec.busy = false; if(rec.pending) decodeNext(); };
+    img.onload = () => {
+      if(generation === rec.generation){
+        const cs = setup.compositionSize();
+        const cw = cs.width || 1920, ch = cs.height || 1080;
+        let c = SOURCE_IMG.get(id);
+        if(c && c.close){ try { c.close(); } catch(e){} c = null; }
+        if(!c || c.tagName !== 'CANVAS') c = document.createElement('canvas');
+        if(c.width !== cw || c.height !== ch){ c.width = cw; c.height = ch; }
+        const g2 = c.getContext('2d');
+        g2.imageSmoothingEnabled = true; g2.imageSmoothingQuality = 'high';
+        g2.clearRect(0, 0, cw, ch);
+        g2.drawImage(img, 0, 0, cw, ch);
+        SOURCE_IMG.set(id, c);
+        SOURCE_AT.set(id, performance.now());
+        noteFrame('bus');
+      }
+      finish();
+    };
+    img.onerror = finish;
+    img.src = next;
+  };
+  decodeNext();
+}
+
+if(BUS) BUS.onFrames(data => {
+  for(const id in data){
+    const f = data[id];
+    if(!f) continue;
+
+    /* THE FAST LANE. The host now sends pixels — an ImageBitmap already at the
+       composition's own size — so there is nothing to decode and nothing to
+       rescale. drawImage takes it directly. */
+    if(typeof ImageBitmap !== 'undefined' && f instanceof ImageBitmap){
+      const queued = ENCODED_QUEUE.get(id);
+      if(queued){ queued.generation++; queued.pending = null; }
+      const previous = SOURCE_IMG.get(id);
+      SOURCE_IMG.set(id, f);
+      SOURCE_AT.set(id, performance.now());
+      SOURCE_LAST.delete(id);
+      noteFrame('bus');
+      /* Keep the newly-arrived handle, but release the receiver's replaced
+         handle after the swap. Closing `f` itself would blank this frame; closing
+         `previous` here is safe because JS rendering cannot be concurrent with
+         this callback and prevents an unbounded queue of full-size bitmaps. */
+      try { if(previous && previous !== f && previous.close) previous.close(); } catch(e){}
+      continue;
+    }
+
+    /* THE FALLBACK LANE, for a browser that will not clone an ImageBitmap. */
+    if(typeof f === 'string') queueEncodedFrame(id, f);
+  }
+});
+
+/* (2) PREVIEW IS NOT COMPOSITION.
+   The editor asks for the preview texture as frameFor('preview', null) — the id
+   is literally null. Trusting the id alone lands in `SOURCE_IMG.get(null ||
+   'composition')` and a slice routed to Preview quietly shows the main mix.
+   Map on KIND first, and only fall back to the id. */
+/* ---- this window's own Arena lane ----------------------------------------
+   Until now every pixel on these stages arrived from the deck window over the
+   bus, which means the Advanced Output was dark whenever the deck was closed,
+   minimised, or simply sitting in a background tab where the browser had
+   suspended its timers. "Why is there no display feed" has that one answer,
+   and it is not a good one: this window is where a show gets mapped, and it
+   should not need a second window awake to show a picture.
+
+   Arena serves every render target as a plain image — GET
+   /composition/monitors/{id}/snapshot.jpg (API-CONTRACT.md §5) — and this page
+   already loads arena-live.js. So when no host is publishing, it fetches its
+   own frames, for exactly the sources its slices are routed to, and stops the
+   moment the deck comes back. Two producers never run at once.
+
+   The decode is done by the browser's own decoder at the size actually needed
+   (createImageBitmap's resize options), off the main thread, one request in
+   flight per source, each armed from the previous one's completion rather than
+   from a timer — so a slow answer can never build a queue. */
+const REST = new Map();          /* wireId -> {inFlight, at, err} */
+let restMonAt = 0, restMonList = null;
+
+function restMonitorId(wireId){
+  const list = restMonList;
+  if(!list) return null;
+  const byName = n => { const m = list.find(x => x && x.name === n); return m ? m.id : null; };
+  if(wireId === 'composition') return byName('Composition');
+  if(wireId === 'preview')     return byName('Preview');
+  const lm = /^layer:(\d+)$/.exec(String(wireId));
+  if(lm && AL.layer){
+    const L = AL.layer(+lm[1]);
+    if(L && L.id != null){
+      const suffix = '/layers/by-id/' + L.id;
+      const m = list.find(x => x && typeof x.associated_object === 'string'
+                                && x.associated_object.endsWith(suffix));
+      return m ? m.id : null;
+    }
+  }
+  return null;                    /* no target — say nothing rather than guess */
+}
+
+function restPull(wireId, wantW, wantH){
+  let rec = REST.get(wireId);
+  if(!rec){ rec = { inFlight:false, at:0, err:null }; REST.set(wireId, rec); }
+  if(rec.inFlight) return;
+  if(performance.now() - rec.at < (rec.err ? 800 : 0)) return;   /* back off a dead endpoint */
+  const monId = restMonitorId(wireId);
+  if(monId == null) return;
+  rec.inFlight = true;
+  const ctrl = new AbortController();
+  const kill = setTimeout(() => ctrl.abort(), 1200);   /* never wedge a slot */
+  fetch(AL.snapshotUrl(monId).replace('snapshot.png', 'snapshot.jpg'),
+        { mode:'cors', cache:'no-store', signal: ctrl.signal })
+    .then(res => { if(!res.ok) throw new Error('HTTP ' + res.status); return res.blob(); })
+    .then(blob => createImageBitmap(blob, {
+      resizeWidth: Math.max(16, Math.round(wantW)),
+      resizeHeight: Math.max(16, Math.round(wantH)),
+      resizeQuality: 'high', imageOrientation: 'none'
+    }))
+    .then(bmp => {
+      /* swap only on success, so a failed fetch never blanks a good frame */
+      const previous = SOURCE_IMG.get(wireId);
+      SOURCE_IMG.set(wireId, bmp);
+      SOURCE_AT.set(wireId, performance.now());
+      noteFrame('rest');
+      try { if(previous && previous !== bmp && previous.close) previous.close(); } catch(e){}
+      rec.err = null;
+    })
+    .catch(e => { rec.err = (e && e.message) || String(e); })
+    .then(() => { clearTimeout(kill); rec.inFlight = false; rec.at = performance.now(); });
+}
+
+/* The deck wins whenever it is actually publishing — it renders the engine's
+   own composition, which is closer to the truth than a JPEG round trip. This
+   lane only runs in its absence. */
+function restPump(){
+  if(!AL || AL.status !== 'live') return;
+  if(BUS && BUS.live) return;                 /* a host is publishing; stand down */
+  const now = performance.now();
+  if(now - restMonAt > 5000 && AL.monitors){
+    restMonAt = now;
+    AL.monitors().then(l => { if(l) restMonList = l; }).catch(() => {});
+  }
+  const cs = setup.compositionSize();
+  const cw = cs.width || 1920, ch = cs.height || 1080;
+  for(const id of restWanted()) restPull(id, cw, ch);
+}
+const routedParam = (node, names, fallback) => {
+  if(!node) return fallback;
+  for(const name of names){
+    const direct = node[name];
+    if(direct !== undefined && direct !== null)
+      return direct && typeof direct === 'object' && 'value' in direct ? direct.value : direct;
+  }
+  const blocks = node.params || {};
+  for(const block of Object.values(blocks)) for(const name of names){
+    const value = block && block[name];
+    if(value !== undefined && value !== null)
+      return value && typeof value === 'object' && 'value' in value ? value.value : value;
+  }
+  return fallback;
+};
+const routedBool = (node, names, fallback) => {
+  const value = routedParam(node, names, fallback);
+  if(typeof value === 'string') return /^(1|true|yes|on)$/i.test(value.trim());
+  return !!value;
+};
+const routedScreenActive = sc => !!sc && sc.type !== 'DmxScreen' &&
+  !routedBool(sc, ['Hidden','hidden'], false) &&
+  !routedBool(sc, ['Bypassed','bypassed'], false);
+const routedSliceActive = sl => !!sl && !/^Dmx/i.test(String(sl.type || '')) &&
+  !/mask/i.test(String(sl.type || '')) &&
+  !routedBool(sl, ['Hidden','hidden'], false) &&
+  !routedBool(sl, ['Bypassed','bypassed'], false);
+
+/* Walk only Screens and Slices that can contribute to this consumer. A
+   presented Screen is a programme root; a visible editor previews its selected
+   Screen. Virtual Screen dependencies are followed transitively, with a cycle
+   guard. Disabled/bypassed objects, Masks and DMX fixtures never sample a
+   source in the renderer, so asking the deck to render them at programme raster
+   merely steals time from outputs that are actually visible. */
+function routedSlicesForIntent(intent){
+  const roots = intent === 'output' ? activeOutputIds() : [currentScreenId()].filter(Boolean);
+  const queue = roots.slice(), visited = new Set(), out = [];
+  while(queue.length){
+    const screenId = String(queue.shift());
+    if(visited.has(screenId)) continue;
+    visited.add(screenId);
+    const sc = screenById(screenId);
+    if(!routedScreenActive(sc)) continue;
+    for(const sl of (sc.layers || [])){
+      if(!routedSliceActive(sl)) continue;
+      const route = G.sliceInput(sl.uniqueId);
+      if(!route || !route.source) continue;
+      out.push({slice:sl, route});
+      if(route.source.kind === 'screen' && route.source.id != null)
+        queue.push(String(route.source.id));
+    }
+  }
+  return out;
+}
+
+/* the same set reportSources() sends the host, so the two producers are asked
+   for exactly the same thing */
+function restWanted(){
+  const out = new Set();
+  const collect = intent => routedSlicesForIntent(intent).forEach(({route:r}) => {
+      if(!r || !r.source) return;
+      const k = r.source.kind;
+      if(k === 'screen' || k === 'live') return;
+      out.add(k === 'composition' ? 'composition' : k === 'preview' ? 'preview' : r.source.id);
+    });
+  /* Programme roots and the selected editor Screen are different consumers.
+     Keep both in the REST fallback: selecting a Virtual/non-presented Screen
+     must not make its Input Selection preview go black because another Screen
+     is live. */
+  if(outputDemand) collect('output');
+  if(editorVisible()) collect('preview');
+  if(editorVisible()) out.add('composition');
+  return out;
+}
+
+/* ---- live inputs ---------------------------------------------------------
+   openlive-routing.js has had probeLiveInputs() and acquireLive() since it was
+   written, both exported, both with zero callers anywhere in the tree. So the
+   Input Source dropdown listed Screen / Window Capture, routing accepted it,
+   and the frame context asked for it — and the answer was always null, because
+   nothing had ever opened a stream. The route was intent with no resource
+   behind it.
+
+   A stream is a resource, not a route: it is acquired when a slice is actually
+   pointed at it, and getDisplayMedia must be called inside the user gesture
+   that chose it, which is why this hangs off the editor's own 'route' event
+   rather than a later tick. */
+const LIVE_VIDEO = new Map();          /* routing source id -> <video> */
+const LIVE_FAILED = new Map();         /* id -> why, so we stop re-asking */
+
+function openLive(id){
+  id = String(id);
+  if(LIVE_VIDEO.has(id) || LIVE_FAILED.has(id)) return;
+  if(!G.acquireLive) return;
+  const v = document.createElement('video');
+  v.muted = true; v.autoplay = true; v.playsInline = true;
+  v.setAttribute('playsinline','');
+  /* off-screen rather than display:none — a hidden video is allowed to stop
+     producing frames, and this one exists only to produce them */
+  v.style.cssText = 'position:fixed;left:-10000px;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none';
+  document.body.appendChild(v);
+  LIVE_VIDEO.set(id, v);
+  G.acquireLive(id).then(stream => {
+    v.srcObject = stream;
+    /* the operator stopping the share from the browser's own bar is a real
+       event, and the stage must go back to saying it has no source */
+    (stream.getTracks()||[]).forEach(t => t.addEventListener('ended', () => closeLive(id)));
+    return v.play().catch(() => {});
+  }).then(() => {
+    /* Freshness comes from the decoder, not from a timer: one stamp per
+       delivered frame is exactly what the staleness rule wants. */
+    const stamp = () => {
+      SOURCE_AT.set(id, performance.now());
+      noteFrame('live');
+      if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(stamp);
+    };
+    if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(stamp);
+    else v.addEventListener('timeupdate', () => SOURCE_AT.set(id, performance.now()));
+    msg('Live input open: ' + id);
+  }).catch(e => {
+    const why = (e && e.message) || String(e);
+    LIVE_VIDEO.delete(id); LIVE_FAILED.set(id, why);
+    try { v.remove(); } catch(_){}
+    msg('Live input refused: ' + why);
+  });
+}
+function closeLive(id){
+  id = String(id);
+  const v = LIVE_VIDEO.get(id);
+  if(!v) return;
+  LIVE_VIDEO.delete(id); SOURCE_AT.delete(id);
+  try { v.srcObject = null; v.remove(); } catch(_){}
+  if(G.releaseLive) { try { G.releaseLive(id); } catch(_){} }
+}
+
+/* Probe once the operator actually opens the picker: enumerateDevices before
+   any permission has been granted returns entries with empty labels, so asking
+   later gives a better list than asking at load. */
+let liveProbed = false;
+function probeLive(){
+  /* the graph exports the probe as refreshLiveInputs; the older name is
+     accepted too so this keeps working either way */
+  const probe = G.refreshLiveInputs || G.probeLiveInputs;
+  if(liveProbed || typeof probe !== 'function') return;
+  liveProbed = true;
+  Promise.resolve(probe.call(G)).then(() => editor.refresh()).catch(() => {});
+}
+document.addEventListener('pointerdown', e => {
+  if(e.target && e.target.tagName === 'SELECT') probeLive();
+}, true);
+
+editor.on('route', ev => {
+  const src = ev && ev.source;
+  if(ev && ev.accepted && src && src.kind === 'live' && src.id) openLive(src.id);
+});
+
+editor.setFrameSource((kind, id) => {
+  /* A live input is a <video>, not a bitmap: it has no entry in SOURCE_IMG and
+     never will. videoWidth is 0 until the first frame decodes, which is the
+     honest "not yet" the stage already knows how to draw. */
+  if(kind === 'live'){
+    const v = LIVE_VIDEO.get(String(id));
+    if(!v || !v.videoWidth || !v.videoHeight) return null;
+    /* A stalled capture keeps its dimensions for ever, so the same staleness
+       rule the bus lane uses applies here too — measured from the decoder's own
+       frame callback rather than from a timer. */
+    const at = SOURCE_AT.get(String(id)) || 0;
+    if(at && performance.now() - at > FRAME_STALE_MS) return null;
+    return v;
+  }
+  const wireId = kind === 'composition' ? 'composition'
+               : kind === 'preview'     ? 'preview'
+               : id;
+  const direct = directFrameFor(wireId);
+  if(direct !== undefined) return direct;
+  const f = SOURCE_IMG.get(wireId);
+  if(!f) return null;
+  /* Report nothing rather than something old. The stage already knows how to
+     say it has no frame; a stale one it cannot tell apart from a live one is
+     the worse answer, because a still composition and a dead host look
+     identical until the operator pushes a fader and nothing moves. */
+  const at = SOURCE_AT.get(wireId) || 0;
+  if(performance.now() - at > FRAME_STALE_MS) return null;
+  return f;
+});
+
+/* ---------------------------------------------------------------------------
+   what the host must render for us
+   ---------------------------------------------------------------------------
+   Nothing arrives until this asks, and getting it wrong is silent: every slice
+   simply stays black. */
+function reportSources(){
+  if(!BUS) return;
+  const transport = directFrameHostAvailable() ? 'direct' : 'broadcast';
+  const sourcesFor = (intent, includeComposition) => {
+    const seen = new Map();
+    const want = (id, ignoreOpacity, ignoreBypass) => {
+      /* Shared pixels must be the least-destructive/raw form any consumer asks
+         for. Routing can apply opacity or bypass per slice afterwards; it cannot
+         recover pixels the host already discarded. */
+      const cur = seen.get(id) || { id: id, ignoreOpacity: false, ignoreBypass: false };
+      cur.ignoreOpacity = cur.ignoreOpacity || !!ignoreOpacity;
+      cur.ignoreBypass  = cur.ignoreBypass  || !!ignoreBypass;
+      seen.set(id, cur);
+    };
+    routedSlicesForIntent(intent).forEach(({route:r}) => {
+      if(!r || !r.source) return;
+      const k = r.source.kind, o = r.opts || {};
+      /* screen and live sources are answered inside the editor, not by the host */
+      if(k === 'screen' || k === 'live') return;
+      const wireId = k === 'composition' ? 'composition'
+                   : k === 'preview'     ? 'preview'
+                   : r.source.id;
+      /* layer/group pixels are pre-fader because routing owns the fader. */
+      const preFader = (k === 'layer' || k === 'group') ? true : !!o.ignoreOpacity;
+      /* Routing calls this ignoreBypassSolo; the host calls it ignoreBypass. */
+      want(wireId, preFader, !!o.ignoreBypassSolo);
+    });
+    if(includeComposition && !seen.has('composition')) want('composition', false, false);
+    return [...seen.values()];
+  };
+  const send = (suffix, active, intent, sources) => BUS.send({
+    op: 'needSources', clientId: CLIENT_ID + ':' + suffix,
+    intent: active ? intent : 'idle', transport: transport,
+    sources: active ? sources : []
+  });
+
+  /* Live Screens and the selected editor Screen use separate leases. A
+     selected Virtual Screen therefore remains previewable, while its sources
+     stay at preview raster instead of inheriting another Screen's programme
+     resolution. */
+  send('output', !!outputDemand, 'output', outputDemand ? sourcesFor('output', false) : []);
+  send('preview', editorVisible(), 'preview', editorVisible() ? sourcesFor('preview', true) : []);
+}
+editor.on('route', reportSources);
+G.onChange(reportSources);
+addEventListener('pagehide', () => {
+  try { if(BUS){
+    BUS.send({ op:'needSources', clientId:CLIENT_ID + ':output', intent:'idle', sources:[] });
+    BUS.send({ op:'needSources', clientId:CLIENT_ID + ':preview', intent:'idle', sources:[] });
+  } }
+  catch(e){}
+});
+
+/* ---------------------------------------------------------------------------
+   publishing the screen tree
+   ---------------------------------------------------------------------------
+   This window owns the screens and slices; the deck has never been able to see
+   one. That is why its Slices panel listed "Screen 1 — Display 2 / Slice 1 /
+   Slice 2 / Polygon 1" — invented names under a hint promising a gesture that
+   could not work, because the thing being dragged did not exist over there.
+
+   transform.htm and input-maps.htm both hang off that gesture: drag a screen
+   or a slice onto a clip, layer, group or the composition and the content is
+   placed into every slice at once, and editing the slice afterwards updates
+   the content's scaling. Sending the tree is the first half of it.
+
+   Geometry drags emit no event — the editor fires only route/select/stage/flag
+   — so, exactly as persist() already does for the same reason, a cheap
+   signature is checked on a timer and the tree goes out only when it changes. */
+/* Every kind needs a row here. Two were missing, and the fallback below quietly
+   covered for them by stripping the "OutputDevice" prefix — so the main window's
+   Slices browser read "Lumiverse 1 — Dmx" and "Broadcast 1 — Stream", naming
+   each screen by its class literal instead of by what the user calls it. The
+   fallback stays, but only for a kind this build genuinely does not know. */
+const DEVICE_LABEL = {
+  OutputDeviceVirtual: 'Virtual', OutputDeviceSpout: 'Spout', OutputDeviceNDI: 'NDI',
+  OutputDeviceCapture: 'Capture Card', OutputDeviceSnapshot: 'Snapshot',
+  OutputDeviceApiSnapshot: 'API Snapshot', OutputDeviceComponent: 'Component',
+  OutputDeviceDmx: 'Lumiverse', OutputDeviceStream: 'Broadcast'
+};
+function deviceLabel(sc){
+  const d = sc.outputDevice || {};
+  const k = String(d.kind || 'OutputDeviceVirtual');
+  if(/Display/i.test(k)) return 'Display ' + (d.deviceId != null ? d.deviceId : '');
+  return DEVICE_LABEL[k] || k.replace(/^OutputDevice/, '');
+}
+function deviceRaster(sc){
+  let size = null;
+  try { size = sc && typeof sc.deviceSize === 'function' ? sc.deviceSize() : null; } catch(e){}
+  const d = (sc && sc.outputDevice) || {};
+  return {
+    width: Math.max(1, Math.round(Number(size && size.width || d.width) || 1920)),
+    height: Math.max(1, Math.round(Number(size && size.height || d.height) || 1080))
+  };
+}
+function sliceKind(sl){
+  const t = String(sl.type || sl.__type || '');
+  if(/dmx/i.test(t))  return 'dmx';
+  if(/mask/i.test(t)) return 'mask';
+  if(/poly/i.test(t)) return 'poly';
+  return 'slice';
+}
+function boxOfVerts(V){
+  if(!V || !V.length) return null;
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for(const p of V){ if(p.x<x0)x0=p.x; if(p.x>x1)x1=p.x; if(p.y<y0)y0=p.y; if(p.y>y1)y1=p.y; }
+  /* The corners travel with the box. A slice's Input Selection is a QUAD, not
+     an axis-aligned rectangle — rotate one and its bounding box is strictly
+     larger than the region it actually samples. Consumers that only need a
+     size keep reading x/y/w/h; the Slice Outline source draws the four real
+     corners, which is the whole point of an outline. */
+  return { x:x0, y:y0, w:x1-x0, h:y1-y0, vertices: V.map(p => ({ x:p.x, y:p.y })) };
+}
+function sliceTree(){
+  const cs = setup.compositionSize();
+  return {
+    at: Date.now(),
+    origin: 'advanced-output',
+    composition: { width: cs.width || 1920, height: cs.height || 1080 },
+    screens: (setup.screens() || []).map(sc => ({
+      id: String(sc.uniqueId),
+      name: sc.name || 'Screen',
+      device: deviceLabel(sc),
+      /* Published consumers need the actual render-target raster, not the
+         Composition texture size. The two intentionally diverge for a custom
+         Virtual/Spout/NDI Screen and for hardware-owned outputs. */
+      raster: deviceRaster(sc),
+      followComposition: !!(sc.deviceFollowsComposition && sc.deviceFollowsComposition()),
+      slices: (sc.slices() || []).map(sl => ({
+        id: String(sl.uniqueId),
+        name: sl.name || 'Slice',
+        kind: sliceKind(sl),
+        /* input rect in COMPOSITION pixels — this is what a Slice Transform
+           needs to know where in the content each slice is looking */
+        input: boxOfVerts(sl.inputRect && sl.inputRect.vertices),
+        output: boxOfVerts(sl.outputRect && sl.outputRect.vertices)
+      }))
+    }))
+  };
+}
+let sliceSig = '';
+function publishSlices(force){
+  let tree;
+  try { tree = sliceTree(); } catch(e){ return; }
+  const sig = JSON.stringify(tree.screens) + '|' + JSON.stringify(tree.composition);
+  if(!force && sig === sliceSig) return;
+  sliceSig = sig;
+  /* Width/Height and the clone-only Follow Composition toggle are model
+     writes rather than route/selection events. Let the same cheap signature
+     pump refresh the local status and downstream tree whenever their effective
+     Screen raster changes, even if BroadcastChannel is unavailable. */
+  paintWhere();
+  if(BUS && BUS.slices) BUS.slices(tree);
+}
+editor.on('route', () => publishSlices());
+editor.on('select', () => { publishSlices(); reportSources(); });
+/* Driven from tickOnce (see slicePump above) so it keeps running while this
+   window sits behind the deck — which is exactly when the deck is asking.
+   The slow forced re-announce exists because a deck opened later has missed
+   every publish so far and BroadcastChannel does not replay; it costs a few
+   hundred bytes and removes a whole class of "why is the panel empty". */
+let lastSlicePub = 0, lastSliceForce = 0, lastRestPump = 0;
+slicePump = now => {
+  if(now - lastSlicePub  > 500)  { lastSlicePub  = now; publishSlices(); }
+  if(now - lastSliceForce > 3000){ lastSliceForce = now; publishSlices(true); }
+  /* the fallback frame lane rides the same tick, for the same reason: it has
+     to keep working while this window is not the foreground one */
+  if((outputDemand || editorVisible()) && now - lastRestPump > 60){
+    lastRestPump = now; try { restPump(); } catch(e){}
+  }
+  /* Belt and braces on the same beat as the slice re-announce: needSources is
+     the one thing that must reach the host for anything to be rendered at all,
+     and a host that restarts comes back with an empty set. Re-asking costs a
+     few dozen bytes and removes the "deck reloaded, stage went dark" case
+     entirely. */
+  if(now - lastSliceForce < 20) { try { reportSources(); } catch(e){} }
+};
+publishSlices(true);
+
+/* ---------------------------------------------------------------------------
+   the mixer's snapshot
+   ---------------------------------------------------------------------------
+   One application path serves both transports. Detached windows receive the
+   snapshot through ArenaBus; the retained same-origin iframe can also receive
+   it synchronously from its parent after load/reopen. */
+function applyCompositionSnapshot(snap){
+  if(!snap || typeof snap !== 'object') return false;
+  const nextAt=Number(snap.at||0), currentAt=Number(SNAP&&SNAP.at||0);
+  const nextRev=Number(snap.rev||0), currentRev=Number(SNAP&&SNAP.rev||0);
+  if(nextAt && currentAt){
+    if(nextAt<currentAt || (nextAt===currentAt && nextRev && currentRev && nextRev<currentRev)) return false;
+    /* The direct push is followed by the same BUS publication. A structured
+       clone is a different object, so timestamp + revision is the duplicate
+       key that prevents two source reports and two inspector refreshes. */
+    if(nextAt===currentAt && nextRev && nextRev===currentRev) return true;
+  }
+  SNAP = snap;
+
+  /* advanced-output.htm: the Advanced Output slices the composition's own
+     texture, so the composition texture IS the composition's resolution rather
+     than a private setting of this window. Guarded because the snapshot arrives
+     ~6.7 times a second and a real size change also rescales InputRects. */
+  const width=Math.max(0,Math.round(Number(snap.width)||0));
+  const height=Math.max(0,Math.round(Number(snap.height)||0));
+  if(width && height){
+    const cs = setup.compositionSize();
+    if(cs.width !== width || cs.height !== height){
+      setup.setCompositionSize(width, height);
+      SOURCE_IMG.forEach(f => { try { if(f && f.close) f.close(); } catch(e){} });
+      SOURCE_IMG.clear(); SOURCE_LAST.clear(); DIRECT_STAMP.clear(); /* rasterised at the old size */
+      /* setCompositionSize mutates InputRects and any Screen explicitly marked
+         Follow Composition. Fixed custom rasters and Display/Capture/DMX remain
+         untouched in the model. Refresh every consumer immediately: inspector,
+         stage/tree metadata, status and active programme canvases. */
+      editor.refresh();
+      publishSlices(true);
+      paintWhere();
+      try { if(typeof persist === 'function') persist(); } catch(e){}
+      try {
+        const active = typeof activeOutputIds === 'function' ? activeOutputIds() : [];
+        if(active.length && editor.renderOutputs) editor.renderOutputs(performance.now(), active);
+      } catch(e){}
+    }
+  }
+  if(width && height && baselineNeedsCompositionSync){
+    baseline = setupSnapshot();
+    baselineNeedsCompositionSync = false;
+  }
+
+  /* (1) THREE OF THE MIXER'S FIVE SOURCES CANNOT BE ROUTED, SO DO NOT OFFER THEM.
+     Routing validates against SOURCE_KINDS = composition, layer, group, preview,
+     screen, live, and refuses anything else. The mixer publishes the three
+     CrossFader entries (Result / Bus A / Bus B) as kind 'crossfader'. Passed
+     through, they appear in the Input Source dropdown — the editor MERGES the
+     host list rather than replacing it — the operator picks one, routing refuses
+     it, and the slice stays on Composition with only a transient hint. There is
+     no crossfader lane in the editor's frame context either, so there is no
+     picture for them even if the kind were accepted. Dropping them is honest;
+     offering them is not. Recovering them means adding a kind to routing.
+     (2) again: the mixer publishes Preview with kind 'composition', and routing
+     discards the id for that kind, forcing it to COMPOSITION_ID. Republish it
+     under its own kind so the two ends agree. */
+  editor.setSources((snap.sources || [])
+    .filter(s => s && s.kind !== 'crossfader')
+    .map(s => s.id === 'preview' ? { id: 'preview', kind: 'preview', name: s.label, label: s.label }
+                                 : { id: s.id, kind: s.kind, name: s.label, label: s.label,
+                                     playing: s.playing || null }));
+  reportSources();
+  return true;
+}
+if(BUS) BUS.onSnapshot(applyCompositionSnapshot);
+if(BUS) BUS.hello();          /* answered synchronously — do not wait for a tick */
+/* ASK FOR PIXELS WITHOUT WAITING TO BE TOLD ABOUT THE COMPOSITION.
+   reportSources() was reachable only from the editor's 'route' event and the
+   routing graph's onChange, and neither fires on a window that simply opens and
+   sits there. So a cold Advanced Output asked the host for nothing, the host
+   dutifully rendered nothing, and both ends were behaving correctly while the
+   stage stayed black. The stage always draws the composition whatever the
+   slices are routed to, so there is always at least one source to ask for. */
+reportSources();
+if(window.ArenaClient) window.ArenaClient.bindStatus($('[data-bus-state]'), {
+  /* The retained iframe can receive a newer direct snapshot before ArenaBus
+     wins/replays host state. Keep the presence heartbeat from ArenaClient,
+     but label that live connection with the state actually rendered here. */
+  label(){
+    const c=(SNAP&&SNAP.comp)||SNAP;
+    return `live · ${c&&c.name?c.name:'Show'}${c&&c.width&&c.height?` ${c.width}×${c.height}`:''}`;
+  }
+});
+
+function msg(t, bad){ const e=$('#mbMsg'); e.textContent=t; e.style.color=bad?'var(--red)':'var(--mint)';
+  try { if(editor && editor.message) editor.message(t, !!bad); } catch(err){}
+  if(!bad) setTimeout(()=>{ if(e.textContent===t) e.textContent=''; }, 2400); }
+
+/* ---- menu bar: the deck's dropdown builder, over the decoded menus ---- */
+let dd=[], menuReturnFocus=null;
+function closeDD(n=0,restoreFocus=false){
+  while(dd.length>n){
+    const panel=dd.pop();
+    if(panel._owner) panel._owner.setAttribute('aria-expanded','false');
+    panel.remove();
+  }
+  if(!n){
+    document.querySelectorAll('.menu-top.open').forEach(m=>{
+      m.classList.remove('open'); m.setAttribute('aria-expanded','false');
+    });
+    if(restoreFocus&&menuReturnFocus) menuReturnFocus.focus();
+  }
+}
+function buildDD(items,x,y,lvl,owner,focusFirst=false){
+  closeDD(lvl);
+  const d=document.createElement('div'); d.className='dropdown';
+  d.setAttribute('role','menu'); d.setAttribute('aria-label',owner&&owner.textContent||'Menu');
+  d._owner=owner||null;
+  const rows=[];
+  items.forEach(it=>{
+    if(it.sep){
+      const sep=Object.assign(document.createElement('div'),{className:'dd-sep'});
+      sep.setAttribute('role','separator'); d.appendChild(sep); return;
+    }
+    const e=document.createElement('div'); e.className='dd-item'+(it.dis?' disabled':'');
+    const checkable=Object.prototype.hasOwnProperty.call(it,'on');
+    e.setAttribute('role',checkable?'menuitemcheckbox':'menuitem');
+    if(checkable) e.setAttribute('aria-checked',it.on?'true':'false');
+    if(it.dis) e.setAttribute('aria-disabled','true');
+    e.tabIndex=-1;
+    /* A disabled item that cannot say why it is disabled is just a dead end;
+       the reason travels with the item and is shown on hover. */
+    if(it.title) e.title = it.title;
+    const displayLabel=window.ShowaveBrand&&window.ShowaveBrand.term
+      ? window.ShowaveBrand.term(it.uiLabel??it.l) : (it.uiLabel??it.l);
+    e.innerHTML=`<span class="chk">${it.on?'✓':''}</span><span>${displayLabel}</span>`+
+      (it.k?`<span class="kbd">${it.k}</span>`:'')+(it.sub?`<span class="arrow">▸</span>`:'');
+    const openSub=(focus=false)=>{
+      if(!it.sub||it.dis) return null;
+      e.setAttribute('aria-expanded','true');
+      const r=e.getBoundingClientRect();
+      return buildDD(it.sub,r.right-2,r.top-3,lvl+1,e,!!focus);
+    };
+    if(it.sub){
+      e.setAttribute('aria-haspopup','menu'); e.setAttribute('aria-expanded','false');
+      e.addEventListener('mouseenter',()=>openSub(false));
+      e.addEventListener('click',()=>openSub(true));
+    }else{
+      e.addEventListener('mouseenter',()=>closeDD(lvl+1));
+      e.addEventListener('click',()=>{
+        if(it.dis) return;
+        if(it.fn) it.fn();
+        closeDD(0,true);
+      });
+    }
+    d.appendChild(e);
+    if(!it.dis) rows.push(e);
+  });
+  document.body.appendChild(d);
+  const r=d.getBoundingClientRect();
+  d.style.left=Math.min(x,innerWidth-r.width-4)+'px';
+  d.style.top =Math.min(y,innerHeight-r.height-4)+'px';
+  dd.push(d);
+  const focusRow=index=>{
+    if(!rows.length) return;
+    const active=rows.indexOf(document.activeElement);
+    const next=index==='first'?0:index==='last'?rows.length-1:
+      (active+(index||0)+rows.length)%rows.length;
+    rows.forEach(row=>row.tabIndex=-1); rows[next].tabIndex=0; rows[next].focus();
+  };
+  d.addEventListener('keydown',event=>{
+    if(event.key==='ArrowDown'){ event.preventDefault(); focusRow(1); }
+    else if(event.key==='ArrowUp'){ event.preventDefault(); focusRow(-1); }
+    else if(event.key==='Home'){ event.preventDefault(); focusRow('first'); }
+    else if(event.key==='End'){ event.preventDefault(); focusRow('last'); }
+    else if(event.key==='ArrowRight'){
+      const active=document.activeElement;
+      if(active&&active.getAttribute('aria-haspopup')==='menu'){
+        event.preventDefault(); active.click();
+      }
+    }else if(event.key==='ArrowLeft'&&lvl>0){
+      event.preventDefault(); closeDD(lvl); if(owner) owner.focus();
+    }else if(event.key==='Enter'||event.key===' '){
+      const active=document.activeElement;
+      if(active&&rows.includes(active)){ event.preventDefault(); active.click(); }
+    }else if(event.key==='Escape'){
+      event.preventDefault();
+      if(lvl>0){ closeDD(lvl); if(owner) owner.focus(); }
+      else closeDD(0,true);
+    }
+  });
+  if(rows.length){ rows[0].tabIndex=0; if(focusFirst) rows[0].focus(); }
+  return d;
+}
+addEventListener('mousedown',e=>{ if(!e.target.closest('.dropdown')&&!e.target.closest('.menu-top')) closeDD(); });
+addEventListener('keydown',e=>{ if(e.key==='Escape'&&dd.length){ e.preventDefault(); closeDD(0,true); } });
+
+/* ===================== presenting a screen on a display =====================
+   openlive-displays.js has had openWindow() and openOn() written, correct and
+   uncalled since it was added, because there was nothing to open. There is now:
+   openlive-output.html. It pulls the finished screen canvas straight off this
+   window through __openliveOutput.frame(id) — same-origin, one drawImage, no
+   encode — rather than re-deriving the routing on the other side.
+
+   Fullscreen cannot be requested from here. Every browser refuses
+   requestFullscreen from the opener, which openlive-displays.js already says in
+   its own comment, so the output page asks on its own first click. */
+/* ONE WINDOW PER SCREEN, NOT PER DISPLAY.
+
+   This map used to be keyed by `mode:index` — by the DISPLAY — and present()
+   showed whichever screen happened to be selected in the editor at the moment
+   you clicked. That is not the model screens.htm describes:
+
+     "Each screen represents an output going out of Resolume. To setup a
+      screen, right click on it ... You can choose which output this screen
+      should use."
+
+   A screen IS an output. Six screens assigned to six displays are six outputs
+   running at once, and which one is selected in the editor has nothing to do
+   with it. Keyed by display, two assigned screens could never both be showing,
+   and the one that was showing changed depending on the editor's selection.
+
+   Keyed by screen, the display becomes a property of the entry rather than the
+   identity of it — which is also what makes screens.htm's exclusivity rule
+   expressible: "Every output can only have a single screen associated with it.
+   ... When you select an output already in use by another screen, Resolume
+   will set the output of the other screen back to virtual." That is a
+   statement about two screens contending for one display, and it cannot even
+   be said in a map keyed by display. */
+const openWindows = new Map();   /* screenId -> {win, mode, index, deviceLabel} */
+function screenById(id){
+  return (setup.screensList || []).find(s => String(s.uniqueId) === String(id)) || null;
+}
+/* Screens retained by a consumer that is NOT a projector window.
+
+   Until this existed, output demand was derived purely from openWindows, so a
+   screen only rendered while a real popup was showing it. That is wrong twice
+   over. It is wrong for streaming — openlive-stream.js reads frame(id) and
+   would have got null forever — and it was already wrong for parity:
+   syphonspout.htm's "texture-sharing output is independent of the composition
+   also being on a display; it does not require fullscreen" is asserted PASS in
+   reference/conformance-assertions.json, and could not have been true of a
+   renderer that painted only for open windows.
+
+   Reference counted, because two consumers may hold the same screen and the
+   first to let go must not blank the other. */
+const frameConsumers = new Map();
+function retainScreenFrames(id){
+  const key = String(id || '');
+  if(!key) return false;
+  frameConsumers.set(key, (frameConsumers.get(key) || 0) + 1);
+  syncOutputDemand();
+  syncBackgroundTick();
+  /* Render NOW rather than on the next rAF, so a caller can retain and read
+     frame(id) in the same turn. tickOnce and outputPump each rate-limit against
+     their own last-run stamp, so both have to be cleared or this call is
+     silently dropped — which is exactly what happened the first time. */
+  lastTick = 0;
+  lastOutputRenderAt = -Infinity;
+  tickOnce(performance.now());
+  return true;
+}
+function releaseScreenFrames(id){
+  const key = String(id || '');
+  const n = frameConsumers.get(key) || 0;
+  if(n <= 1) frameConsumers.delete(key); else frameConsumers.set(key, n - 1);
+  syncOutputDemand();
+  syncBackgroundTick();
+  return true;
+}
+
+function syncOutputDemand(){
+  let live = frameConsumers.size > 0;
+  for(const [id, e] of [...openWindows]){
+    if(!e || !e.win || e.win.closed){
+      openWindows.delete(id);
+      try { if(editor.setScreenEnabled) editor.setScreenEnabled(id, false); } catch(err){}
+    }
+    else live = true;
+  }
+  if(live !== outputDemand){
+    outputDemand = live;
+    syncBackgroundTick();
+    try { reportSources(); } catch(e){}
+    try {
+      /* The deck unloads this whole iframe when this reports zero
+         (app.js __openliveOutputState -> releaseAdvancedOutputIfIdle). Counting
+         only openWindows meant a stream holding a screen looked like idleness,
+         so the renderer was torn down underneath it — measured as the Advanced
+         Output going "complete, no renderer" the moment a capture stopped and
+         restarted. Consumers without a window count too. */
+      if(window.parent && window.parent !== window && window.parent.__openliveOutputState)
+        window.parent.__openliveOutputState(openWindows.size + frameConsumers.size);
+    } catch(e){}
+  }
+  return live;
+}
+function activeOutputIds(){
+  syncOutputDemand();
+  /* A screen held by both a projector window and a stream is still ONE screen
+     to render, so the two sets are unioned rather than concatenated. */
+  const ids = new Set(openWindows.keys());
+  for(const id of frameConsumers.keys()) ids.add(id);
+  return [...ids];
+}
+const displayKey = (index, disp) => String((disp && (disp.id || disp.deviceId)) || ('display-index:' + index));
+function displayRaster(disp){
+  const d = disp || {};
+  const scale = Number(d.devicePixelRatio || d.scale) || 1;
+  return {
+    width: Math.max(1, Math.round(Number(d.pixelWidth) || Number(d.width || 0) * scale || 1920)),
+    height: Math.max(1, Math.round(Number(d.pixelHeight) || Number(d.height || 0) * scale || 1080))
+  };
+}
+function displayIndexFor(list, device){
+  const d = device || {};
+  const wanted = String(d.deviceId || '');
+  let index = (list || []).findIndex(x => displayKey(-1, x) === wanted);
+  if(index >= 0) return index;
+  /* Physical raster is only a safe migration hint when the browser has the
+     complete OS topology. On a partial list it can redirect a projector setup
+     to the same-sized control monitor. */
+  if(!Array.isArray(list) || !list.length ||
+     !list.every(x => x && !x.blocked && x.complete !== false)) return -1;
+  /* New Screen assignments retain topology metadata. It survives a display
+     mode/DPI change and is therefore a safer migration key than the old pixel
+     dimensions. Browser APIs expose no hardware serial number, so require a
+     unique topology match before accepting it. */
+  if(d.displayLeft != null && d.displayTop != null){
+    const matches = list.map((x, i) => ({x, i})).filter(o =>
+      Number(o.x.left || 0) === Number(d.displayLeft) &&
+      Number(o.x.top || 0) === Number(d.displayTop) &&
+      (d.displayPrimary == null || !!o.x.primary === (String(d.displayPrimary) === 'true')) &&
+      (d.displayInternal == null || o.x.internal == null ||
+        !!o.x.internal === (String(d.displayInternal) === 'true')));
+    if(matches.length === 1) return matches[0].i;
+  }
+  /* Migrate the old `screen:N` index IDs without sending a saved setup to the
+     wrong projector after a reorder. A unique saved physical raster wins; the
+     original index is only the last compatibility fallback. */
+  const w = Number(d.width || 0), h = Number(d.height || 0);
+  if(w && h){
+    const matches = (list || []).map((x, i) => ({x, i})).filter(o =>
+      displayRaster(o.x).width === w && displayRaster(o.x).height === h);
+    if(matches.length === 1) return matches[0].i;
+  }
+  /* With exactly one connected output there is no ambiguity: a legacy
+     resolution-derived id still refers to that one display even if Windows
+     changed its mode while OpenLive was closed. */
+  if(list.length === 1 && /^screen:/.test(wanted)) return 0;
+  const legacy = /^screen:(\d+)$/.exec(wanted);
+  return legacy && Number(legacy[1]) < (list || []).length ? Number(legacy[1]) : -1;
+}
+function migrateDisplayAssignments(list){
+  for(const sc of setup.screens()){
+    const d = (sc && sc.outputDevice) || {};
+    if(d.kind !== 'OutputDeviceDisplay') continue;
+    const index = displayIndexFor(list, d);
+    if(index < 0) continue;
+    const target = list[index], raster = displayRaster(target);
+    const unchanged = String(d.deviceId || '') === displayKey(index, target) &&
+      Number(d.width || 0) === raster.width && Number(d.height || 0) === raster.height;
+    if(!unchanged) assignDisplayToScreen(String(sc.uniqueId), target, index);
+  }
+}
+/* which screen currently owns a given display, or null */
+function screenOwning(index, disp){
+  const target = displayKey(index, disp);
+  for(const [id, e] of openWindows)
+    if(e && e.win && !e.win.closed && e.deviceId === target) return id;
+  return null;
+}
+function closeOutputForScreen(id, sourceWindow){
+  const key = String(id);
+  const e = openWindows.get(key);
+  if(!e){
+    try { if(editor.setOutputState) editor.setOutputState(key, {state:'stopped'}); } catch(err){}
+    return false;
+  }
+  if(sourceWindow && e.win !== sourceWindow) return false;
+  openWindows.delete(key);
+  if(!sourceWindow){ try { if(e.win && !e.win.closed) e.win.close(); } catch(err){} }
+  try { if(editor.setOutputState) editor.setOutputState(key, {state:'stopped'}); } catch(err){}
+  syncOutputDemand();
+  return true;
+}
+
+function demoteScreenToVirtual(id){
+  const sc = screenById(id); if(!sc) return;
+  const old = sc.outputDevice || {};
+  const attrs = {
+    name: sc.name || 'Screen',
+    deviceId: 'Virtual' + String(sc.name || '').replace(/^Screen\s*/i, ''),
+    idHash: String(old.idHash || ''),
+    width: String(old.width || 1920), height: String(old.height || 1080)
+  };
+  let done = false;
+  try { const r = G.assignDevice(sc.uniqueId, Object.assign({kind:'OutputDeviceVirtual'}, attrs)); done = !!(r && r.ok); }
+  catch(e){}
+  if(!done) sc.setOutputDevice('OutputDeviceVirtual', attrs);
+  try { editor.refresh(); } catch(e){}
+}
+function assignDisplayToScreen(id, disp, index){
+  const sc = screenById(id); if(!sc) return null;
+  const raster = displayRaster(disp);
+  const attrs = {
+    kind: 'OutputDeviceDisplay',
+    name: sc.name || 'Screen',
+    deviceId: String((disp && (disp.id || disp.deviceId)) || ('screen:' + index)),
+    width: String(raster.width), height: String(raster.height),
+    /* Browser-only reconciliation hints. They are inert native attrs and are
+       never used as geometry; their only job is to recognise the same display
+       after a mode change when an older resolution-derived id is loaded. */
+    displayLeft: String(Number(disp && disp.left) || 0),
+    displayTop: String(Number(disp && disp.top) || 0),
+    displayPrimary: String(!!(disp && disp.primary)),
+    displayInternal: String(!!(disp && disp.internal))
+  };
+  let result = null;
+  try { result = G.assignDevice(sc.uniqueId, attrs); } catch(e){}
+  if(!result || !result.ok){
+    sc.setOutputDevice(attrs.kind, attrs);
+    result = {ok:true, demoted:[]};
+  }
+  (result.demoted || []).forEach(d => closeOutputForScreen(d.screenId));
+  try { editor.refresh(); } catch(e){}
+  return result;
+}
+function reconcileOpenOutputs(){
+  for(const [id, entry] of [...openWindows]){
+    const sc = screenById(id), d = sc && sc.outputDevice;
+    if(!sc || !d || d.kind !== 'OutputDeviceDisplay' ||
+       String(d.deviceId || '') !== entry.deviceId || !routedScreenActive(sc))
+      closeOutputForScreen(id);
+  }
+  syncOutputDemand();
+}
+
+function currentScreenId(){
+  try {
+    const sel = editor && editor.state && editor.state.screenId;
+    if(sel) return String(sel);
+    const list = (setup.screensList || []);
+    return list.length ? String(list[0].uniqueId) : '';
+  } catch(e){ return ''; }
+}
+function screenLabel(id){
+  const sc = (setup.screensList || []).find(s => String(s.uniqueId) === String(id));
+  return sc ? ((sc.attrs && sc.attrs.name) || sc.name || 'Screen') : 'Screen';
+}
+
+function present(mode, index, disp){
+  const id = currentScreenId();
+  assignDisplayToScreen(id, disp, index);
+  return presentScreen(id, mode, index, disp, {ensure:true});
+}
+/* The real entry point. present() is the deck's "put the selected screen on
+   display N"; presentScreen() is what the Device dropdown calls, because there
+   the screen is chosen and the display is the argument. Same code either way. */
+function presentScreen(id, mode, index, disp, options){
+  id = String(id || '');
+  if(!id) return msg('No screen to present');
+  const ensure = !!(options && options.ensure);
+  syncOutputDemand();
+  const targetDeviceId = displayKey(index, disp);
+
+  /* Toggling the same screen onto the same display closes it — the menu shows
+     a tick, so it has to be a toggle or the tick is a lie. */
+  const cur = openWindows.get(id);
+  if(cur && cur.win && !cur.win.closed && cur.mode === mode && cur.deviceId === targetDeviceId){
+    if(ensure){
+      try { editor.setFlag('outputOff', false); } catch(e){}
+      return cur;
+    }
+    closeOutputForScreen(id); msg('Output closed'); return;
+  }
+  /* screens.htm — "Every output can only have a single screen associated with
+     it. ... When you select an output already in use by another screen,
+     Resolume will set the output of the other screen back to virtual."
+     The poor projector would otherwise be sent two whole frames per frame. */
+  const rival = screenOwning(index, disp);
+  if(rival && rival !== id){
+    closeOutputForScreen(rival);
+    demoteScreenToVirtual(rival);
+    msg(screenLabel(rival) + ' released ' + ((disp && disp.label) || 'that output') + ': one screen per output');
+  }
+  /* Moving a screen from one display to another closes the old window first,
+     or the screen would be showing on two displays at once. */
+  if(cur) closeOutputForScreen(id);
+
+  const url = 'openlive-output.html?screen=' + encodeURIComponent(id)
+            + '&mode=' + mode + '&label=' + encodeURIComponent(screenLabel(id));
+  const DS = window.OpenLiveDisplays;
+  if(!DS || !DS.openOn){ msg('Display output is unavailable in this browser', true); return null; }
+  if(disp && disp.blocked){ msg(disp.reason || 'That display cannot be targeted', true); return null; }
+  const hasDescriptor = !!(disp && Number(disp.width) && Number(disp.height));
+  let w = null;
+  if(mode === 'windowed'){
+    /* WINDOWED MUST STILL LAND ON THE DISPLAY THE USER PICKED.
+       openWindow() passes width and height and no left/top, so it opens
+       wherever the browser feels like — which threw away the whole point of
+       choosing a display from the submenu. output-setup.htm: Windowed "fills
+       the second output with a rectangle exactly the size of your
+       composition"; the SECOND output, not whichever one the popup lands on.
+       So place it explicitly, at composition size, on the chosen display. */
+    const cs = setup.compositionSize ? setup.compositionSize() : {width:1920, height:1080};
+    w = DS.openAt(index, url, { name:'openlive-output-' + id,
+      width: (cs.width || 1920) / (Number((disp && disp.scale) || 1) || 1),
+      height: (cs.height || 1080) / (Number((disp && disp.scale) || 1) || 1),
+      display: hasDescriptor ? disp : null });
+  } else {
+    w = DS.openOn(index, url, { name:'openlive-output-' + id,
+      display: hasDescriptor ? disp : null });
+  }
+  if(!w){
+    try { if(editor.setScreenEnabled) editor.setScreenEnabled(id, false); } catch(e){}
+    const error = 'Could not open output: ' + (DS.lastError || 'the browser blocked the popup');
+    try { if(editor.setOutputState) editor.setOutputState(id, {state:'error', error}); } catch(e){}
+    msg(error, true);
+    return null;
+  }
+  openWindows.set(id, { win:w, mode, index, deviceId:targetDeviceId,
+                        deviceLabel:(disp && disp.label) || ('display ' + (index+1)) });
+  try { if(editor.setOutputState) editor.setOutputState(id, {
+    state:'running', label:(disp && disp.label) || ('display ' + (index+1)), mode
+  }); } catch(e){}
+  try { editor.setFlag('outputOff', false); } catch(e){}
+  syncOutputDemand();
+  try { if(editor.renderOutputs) editor.renderOutputs(performance.now(), activeOutputIds()); } catch(e){}
+  /* A surface opened after Show FPS was ticked must come up already showing it,
+     or the tick is lying about that window. The page installs its flags object
+     during its own script, so poll briefly rather than racing the load. */
+  (function seed(n){
+    try { if(w.__openliveOutputFlags){ pushOutputFlags(w); return; } } catch(e){}
+    if(n > 0) setTimeout(() => seed(n - 1), 120);
+  })(25);
+  msg(screenLabel(id) + ' → ' + ((disp && disp.label) || ('display ' + (index+1)))
+      + (mode === 'fullscreen' ? ' (click the window to go fullscreen)' : ' (windowed)'));
+  return openWindows.get(id);
+}
+/* An object literal's method does not bind its own name, so `present(...)`
+   inside __openliveOutput.present would resolve out here anyway. Aliased so
+   that is a stated fact rather than something a reader has to work out. */
+const presentOnDisplay = present;
+
+/* Track the panic latch independently from popup state. Clearing Disable
+   Output from the menu/toolbar is a user gesture, so it is the one reliable
+   moment a browser is allowed to recreate the configured presentation windows. */
+let observedOutputOff = !!(editor.state && editor.state.flags && editor.state.flags.outputOff);
+let resumingConfiguredOutputs = false;
+function resumeConfiguredOutputWindows(){
+  if(resumingConfiguredOutputs) return;
+  resumingConfiguredOutputs = true;
+  try {
+    const DS = window.OpenLiveDisplays;
+    const list = hostDisplays || ((DS && DS.list && DS.list()) || []);
+    for(const sc of setup.screens()){
+      const d = (sc && sc.outputDevice) || {};
+      if(d.kind !== 'OutputDeviceDisplay') continue;
+      if(!routedScreenActive(sc)) continue;
+      const index = displayIndexFor(list, d);
+      if(index < 0) continue;
+      if(String(d.deviceId || '') !== displayKey(index, list[index]))
+        assignDisplayToScreen(String(sc.uniqueId), list[index], index);
+      const opened = presentScreen(String(sc.uniqueId), 'fullscreen', index, list[index], {ensure:true});
+      if(!opened) msg('Could not resume ' + String(sc.name || 'Screen') + ': popup blocked');
+    }
+  } finally { resumingConfiguredOutputs = false; }
+}
+editor.on('flag', ev => {
+  if(ev&&ev.name==='testCard'){
+    if(outFlags.testCard!==!!ev.value){
+      outFlags.testCard=!!ev.value;
+      persistOutputDiagnostics();
+      pushOutputFlags();
+      publishOutputDiagnostics();
+    }
+    return;
+  }
+  if(!ev || ev.name !== 'outputOff') return;
+  const next = !!ev.value;
+  if(next === observedOutputOff) return;
+  observedOutputOff = next;
+  if(next) closeAllOutputs();
+  else resumeConfiguredOutputWindows();
+});
+
+/* A Screen's Device is its routing endpoint. Selecting a physical Display
+   ensures the presentation surface exists; selecting any non-display device
+   releases an old display surface for that Screen. */
+editor.on('device', ev => {
+  const id = String(ev && ev.screenId || '');
+  const d = (ev && ev.device) || {};
+  if(!id) return;
+  publishSlices(true);
+  paintWhere();
+  persist();
+  if(d.kind !== 'OutputDeviceDisplay'){
+    closeOutputForScreen(id);
+    return;
+  }
+  /* Disable All is a panic latch. Undo/redo restores the model, but must not
+     silently reopen projector windows or clear the latch. A direct inspector
+     choice is an explicit user gesture and is allowed to resume output. */
+  const outputOff = !!(editor.state && editor.state.flags && editor.state.flags.outputOff);
+  if(outputOff && ev && ev.source === 'history'){
+    closeOutputForScreen(id);
+    return;
+  }
+  if(outputOff && ev && ev.source === 'inspector'){
+    try { editor.setFlag('outputOff', false); } catch(e){}
+  }
+  const sc = screenById(id);
+  if(!routedScreenActive(sc)){
+    closeOutputForScreen(id);
+    msg(screenLabel(id) + ' is assigned, but the Screen is disabled');
+    return;
+  }
+  const DS = window.OpenLiveDisplays;
+  const list = hostDisplays || ((DS && DS.list && DS.list()) || []);
+  const index = displayIndexFor(list, d);
+  if(index < 0){
+    closeOutputForScreen(id);
+    msg('Assigned display is not available: ' + String(d.deviceId || d.name || 'unknown'), true);
+    return;
+  }
+  if(String(d.deviceId || '') !== displayKey(index, list[index]))
+    assignDisplayToScreen(id, list[index], index);
+  presentScreen(id, 'fullscreen', index, list[index], {ensure:true});
+});
+
+/* The eye in front of a Screen is Arena's actual per-Screen output control.
+   Turning it off closes only the temporary browser surface and preserves the
+   configured Device; turning it back on supplies the user gesture needed to
+   reopen that surface. */
+editor.on('screen', ev => {
+  const id = String(ev && ev.screenId || '');
+  if(!id) return;
+  if(!ev.enabled){ closeOutputForScreen(id); msg(screenLabel(id) + ' output disabled'); return; }
+  if(editor.state && editor.state.flags && editor.state.flags.outputOff){
+    msg('Global output is disabled. Use Output > Disabled to enable it first', true);
+    return;
+  }
+  const sc = screenById(id), d = (sc && sc.outputDevice) || {};
+  if(d.kind !== 'OutputDeviceDisplay') return;
+  const DS = window.OpenLiveDisplays;
+  const list = hostDisplays || ((DS && DS.list && DS.list()) || []);
+  const index = displayIndexFor(list, d);
+  if(index < 0){
+    if(editor.setScreenEnabled) editor.setScreenEnabled(id, false);
+    msg('Assigned display is unavailable. Allow display access or choose another Device.', true);
+    return;
+  }
+  presentScreen(id, 'fullscreen', index, list[index], {ensure:true});
+});
+
+/* Browser-only permission recovery for the diagnostic beside Device. The API
+   call itself happens synchronously in the click handler so Chromium is allowed
+   to show its Window Management prompt. */
+editor.on('display-access', () => {
+  const D = window.OpenLiveDisplays;
+  if(!D || !D.request){ msg('Display enumeration is unavailable in this browser', true); return; }
+  const state = D.permission ? D.permission() : 'unknown';
+  if(state === 'denied'){
+    msg('Window management is blocked. Allow it in this page\'s site settings, then try again.', true);
+    return;
+  }
+  try {
+    const request = D.request();
+    if(request && request.then) request.then(list => {
+      pushDisplays(list);
+      const complete = displayListComplete(list);
+      msg(D.describe(), !complete);
+    }).catch(err => msg('Could not enumerate displays: ' + (err && err.message || err), true));
+  } catch(err){ msg('Could not enumerate displays: ' + (err && err.message || err), true); }
+});
+
+/* Sole programme renderer: one cadence and one frame stamp for every open
+   Screen. Presentation windows only copy their already-composited canvas. */
+let lastOutputRenderAt = -Infinity, outputRenderGap = 15, outputRenderCost = 0;
+outputPump = now => {
+  reconcileOpenOutputs();
+  const ids = activeOutputIds();
+  if(!ids.length || now - lastOutputRenderAt < outputRenderGap) return;
+  lastOutputRenderAt = now;
+  const started = performance.now();
+  /* A visible output surface can wake the upstream deck even if the browser
+     has suspended that hidden document's Worker. The parent coalesces this
+     with its own scheduler and advances engine → programme → source once. */
+  if(ids.length){
+    try {
+      if(window.parent && window.parent !== window && window.parent.__openliveRequestOutputFrame)
+        window.parent.__openliveRequestOutputFrame();
+    } catch(e){}
+  }
+  if(editor.renderOutputs) editor.renderOutputs(now, ids);
+  const cost = performance.now() - started;
+  outputRenderCost = outputRenderCost ? outputRenderCost + (cost - outputRenderCost) * 0.15 : cost;
+  /* A stable 30 fps is preferable to saturating the UI thread while chasing a
+     rate this browser/Canvas2D workload cannot sustain. Recover to display
+     cadence automatically when the complete upstream + mapping pass is cheap. */
+  if(outputRenderCost > 18) outputRenderGap = 30;
+  else if(outputRenderCost < 10) outputRenderGap = 15;
+};
+
+/* What the output pages read, and what the DECK drives.
+
+   Two audiences, one object. openlive-output.html needs frame() and the panic
+   key. index.html needs present()/identify(), because its own Output menu is
+   where an operator actually reaches for Fullscreen — and until it could call
+   in here, that menu listed three invented displays and did nothing at all.
+   The deck opens this page in a same-origin iframe (app.js openPanel), so this
+   is a direct call, not a message hop. Delegating rather than duplicating is
+   AO-BUILD-PLAN.md:179: one compositor, one router, one truth. */
+window.__openliveOutput = {
+  /* Same-origin retained iframe handshake. Detached windows continue to use
+     ArenaBus.onSnapshot, which calls the exact same application function. */
+  applySnapshot(snap){ return applyCompositionSnapshot(snap); },
+  /* Output surfaces can wake the centralized host clock when workers are
+     unavailable. tickOnce coalesces all callers and always renders every live
+     Screen on one stamp. */
+  requestFrame(){ tickOnce(performance.now()); },
+  frame(id){ try { return editor.screenFrame(id); } catch(e){ return null; } },
+  frameInfo(id){ try { return editor.screenFrameInfo ? editor.screenFrameInfo(id) : {canvas:editor.screenFrame(id), stamp:-1}; } catch(e){ return null; } },
+  /* The deck's Stream dialog is a third consumer of the same seam that feeds
+     openlive-output.html — it needs to NAME the screens, not just fetch one.
+     [NDI_inputs_and_outputs.htm: an NDI output "can be treated like a separate
+     physical screen", and every such screen is its own sender.] */
+  screens(){ try { return editor.screenList ? editor.screenList() : []; } catch(e){ return []; } },
+  streamInfoDraft(screenId){ try { return editor.streamInfoDraft ? editor.streamInfoDraft(screenId) : null; } catch(e){ return null; } },
+  patchStreamInfo(patch, owner){ try { return editor.patchStreamInfo ? editor.patchStreamInfo(patch, owner) : false; } catch(e){ return false; } },
+  /* Egress, for the main window's ON AIR pill. Published on THIS object rather
+     than on OpenLiveOutputEditor, which exposes only mount/version — the editor
+     instance is closure-held here. aoWindow() (app.js) already reaches this
+     object for present/outputCount, so the pill needs no second channel and no
+     Hub root. Returns null when the editor is not mounted, so the caller can
+     omit the pill rather than render a zero it has not measured. */
+  egress(){ try { return editor.egress ? editor.egress() : null; } catch(e){ return null; } },
+  stopAllEgress(){ try { return editor.stopAllEgress ? editor.stopAllEgress() : null; } catch(e){ return null; } },
+  /* A stream is an output consumer without a window. Retaining a screen puts it
+     into the render set exactly as opening a projector on it does; releasing
+     takes it out. Reference counted — see frameConsumers. */
+  retainScreen(id){ try { return retainScreenFrames(id); } catch(e){ return false; } },
+  releaseScreen(id){ try { return releaseScreenFrames(id); } catch(e){ return false; } },
+  /* output-setup.htm — CTRL-SHIFT-D "disable all output and get the interface
+     back". Pressed on the output surface, it must close every output, not just
+     the one that had focus. */
+  disableAll(){ closeAllOutputs(); try { editor.setFlag('outputOff', true); } catch(e){} },
+
+  outputCount(){ return activeOutputIds().length; },
+
+  /* present() is a toggle, so the caller is told which way it went rather than
+     having to guess from a boolean. Errors come back as text because the deck
+     has the status line the user is looking at. */
+  present(mode, index, externalDisplay){
+    const id = currentScreenId();
+    const disp = externalDisplay || ((window.OpenLiveDisplays && OpenLiveDisplays.list()[index]) || null);
+    try { presentOnDisplay(mode, index, disp); }
+    catch(e){ return { ok:false, error: String(e && e.message || e) }; }
+    const e2 = openWindows.get(id);
+    const open = !!(e2 && e2.win && !e2.win.closed);
+    /* present() opens OR closes. If nothing was open before and nothing is open
+       now, the popup was refused — a real failure the deck must show rather than
+       report as a successful assignment. */
+    if(!open){
+      return { ok:false, error:'Could not open the output window: ' +
+        ((window.OpenLiveDisplays && OpenLiveDisplays.lastError) || 'the browser blocked the popup') };
+    }
+    return { ok:true, open,
+             message: open ? (screenLabel(currentScreenId()) + ' → ' + ((disp && disp.label) || ('display ' + (index+1))))
+                           : 'Output closed' };
+  },
+  identify(){ const on = toggleIdentify(); return { on, count: this.outputCount() }; },
+  outputFlags(){ return {
+    fps:!!outFlags.fps,displayInfo:!!outFlags.displayInfo,testCard:!!outFlags.testCard
+  }; },
+  setOutputFlag(name,value){ return setOutputFlag(String(name||''),value); },
+  displayInfo(id){ return outputDisplayInfo(String(id||currentScreenId())); },
+
+  /* ---- what the per-screen Output Device dropdown calls --------------------
+     screens.htm makes assigning an output to a screen the act that starts that
+     screen outputting: "Each screen represents an output going out of
+     Resolume ... You can choose which output this screen should use." Until
+     now the dropdown set sc.outputDevice and opened nothing, so a screen could
+     be assigned to Display 2 and Display 2 stayed dark.
+     These two are the whole bridge: assign opens, un-assign closes. */
+  presentScreen(id, mode, index){
+    const list = hostDisplays || ((window.OpenLiveDisplays && OpenLiveDisplays.list()) || []);
+    const disp = list[index] || null;
+    try { presentScreen(String(id), mode, index, disp, {ensure:true}); }
+    catch(e){ return { ok:false, error:String(e && e.message || e) }; }
+    const e2 = openWindows.get(String(id));
+    const open = !!(e2 && e2.win && !e2.win.closed);
+    return open ? { ok:true, open:true, message: screenLabel(id) + ' → ' + ((disp && disp.label) || ('display ' + (index+1))) }
+                : { ok:false, error:'Could not open the output window: ' +
+                    ((window.OpenLiveDisplays && OpenLiveDisplays.lastError) || 'the browser blocked the popup') };
+  },
+  closeScreen(id){ return closeOutputForScreen(id); },
+  surfaceClosed(id, sourceWindow){
+    const removed = closeOutputForScreen(id, sourceWindow);
+    if(removed && editor.setScreenEnabled) editor.setScreenEnabled(id, false);
+    return removed;
+  },
+  setUiVisible(value){
+    forcedUiVisible = !!value;
+    lastEditorVisible = forcedUiVisible;
+    syncBackgroundTick();
+    try { reportSources(); } catch(e){}
+    if(forcedUiVisible){ lastTick = 0; tickOnce(performance.now()); }
+    return forcedUiVisible;
+  },
+  beginSession(){
+    baseline = setupSnapshot();
+    baselineNeedsCompositionSync = false;
+    return !!baseline;
+  },
+  setDisplays(list){
+    try {
+      hostDisplays = Array.isArray(list) ? list.slice() : [];
+      editor.setDisplays(displaysForEditor(hostDisplays));
+      if(displayListComplete(hostDisplays)) migrateDisplayAssignments(hostDisplays);
+      pushOutputFlags();
+      return true;
+    } catch(e){ return false; }
+  },
+  /* which display each screen is currently showing on, for the inspector */
+  openScreens(){ const o = {};
+    for(const [id, e] of openWindows) if(e && e.win && !e.win.closed)
+      o[id] = { mode:e.mode, index:e.index, deviceId:e.deviceId, device:e.deviceLabel };
+    return o; }
+};
+function closeAllOutputs(){
+  const entries = [...openWindows.entries()];
+  openWindows.clear();
+  for(const [id] of entries){
+    try { if(editor.setOutputState) editor.setOutputState(id, {state:'stopped'}); } catch(err){}
+  }
+  syncOutputDemand();
+  for(const [, e] of entries){ try { if(e && e.win && !e.win.closed) e.win.close(); } catch(err){} }
+}
+addEventListener('beforeunload', closeAllOutputs);
+/* The same panic key works from this window too. */
+addEventListener('keydown', e => {
+  if((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'D' || e.key === 'd')){
+    e.preventDefault(); closeAllOutputs();
+    try { editor.setFlag('outputOff', true); } catch(err){}
+    msg('All output disabled');
+  }
+});
+
+/* The editor sets these with element.dataset.act, which is a real data-act
+   attribute at runtime even though a text grep for `data-act=` in the .js
+   finds nothing. They work; do not "fix" them. */
+const act = a => { const b = host.querySelector('[data-act=' + a + ']'); if(b) b.click(); else msg('no ' + a + ' control'); };
+const FILE_MENU = { label:'File', items:[
+  { l:'Import AdvancedOutput.xml…', fn:()=>act('import') },
+  { l:'Export AdvancedOutput.xml',  fn:()=>act('export') },
+  { sep:1 },
+  { l:'Fit to Window', k:'F', fn:()=>act('fit') },
+  { sep:1 },
+  { l:'Close Window', k:'Ctrl+W', fn:()=>window.close() },
+]};
+/* ---- the decoded menus, wired to what this window can actually do -------
+   window.MENUS is the deck's captured menu tree. Every item carries a label, a
+   shortcut and an `act` / `chk` / `radio` name, and not one of them carries an
+   fn — while buildDD only ever invokes it.fn. So four of the five menus in this
+   window were decoration: they opened, they highlighted, they closed, and
+   nothing happened.
+
+   Each decoded item is resolved at OPEN time, not once at startup, because the
+   tick beside a toggle has to be the flag's state now. Three outcomes, and only
+   three: a real action, a live checkbox, or disabled with the reason in the
+   tooltip. A greyed item that explains itself is honest; a live-looking one
+   that does nothing is the same lie as a fake picture, told more quietly. */
+const FLG = () => editor.flags;
+
+/* Things this window genuinely cannot do, each with the reason Arena's own
+   feature depends on something a browser tab does not have. */
+const MENU_CANNOT = {
+  'Open System Display Preferences':
+    'A web page cannot open the operating system’s display settings.',
+  /* 'Show Display Info' and 'Show FPS' used to live here, disabled, because
+     "this window has no output surface of its own to draw it on". That reason
+     stopped being true when openlive-output.html landed: Arena draws both onto
+     the output, and now so can we. They are wired below instead. */
+  'Record':
+    'Recording the output is not implemented in this window.',
+  'Texture sharing (Spout)':
+    'Spout shares a DirectX texture handle between processes. There is no web API for a shared GPU handle.',
+  'Network streaming (NDI)':
+    'NDI discovery is mDNS and its transport is a proprietary UDP protocol. A browser has neither.'
+};
+
+/* Arena writes the output PNG itself; here the screen's own rendered canvas is
+   already at device resolution, so the snapshot is the real output raster and
+   not a picture of this window. */
+function snapshotOutput(){
+  if (window.OpenLiveSessionPolicy?.sessionOnly) {
+    try { window.OpenLiveSessionPolicy.assertCanWrite('Saving a snapshot'); }
+    catch(error) { msg(error.message); }
+    return;
+  }
+  const id = editor.state && editor.state.screenId;
+  const cv = id && editor.screenFrame(id);
+  if(!cv || !cv.width) return msg('No rendered frame to snapshot');
+  const sc = (setup.screens()||[]).find(s => String(s.uniqueId) === String(id));
+  const name = ((sc && sc.name) || 'screen').replace(/[^\w.-]+/g,'_');
+  try {
+    cv.toBlob(b => {
+      if(!b) return msg('Snapshot failed');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b); a.download = name + '.png';
+      a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+      msg('Saved ' + a.download);
+    }, 'image/png');
+  } catch(e){ msg('Snapshot failed: ' + e.message); }
+}
+
+const MENU_ACTS = {
+  openAdvanced: () => msg('This is SHOWAVE Map.'),
+  identify:     () => editor.setFlag('identify', !FLG().identify),
+  snapshot:     () => snapshotOutput(),
+  openShortcuts:() => window.open('shortcuts.html', 'openlive-shortcuts'),
+  openPrefs:    () => window.open('preferences.html', 'openlive-preferences')
+};
+/* checkbox name -> the editor flag it really is */
+const MENU_CHK = { outTest:'testCard', outInfo:null, outFPS:null, outSpout:null,
+                   outNDI:null, outRecord:null };
+
+/* ---- overlays that belong to the OUTPUT, not to this editor ----------------
+   output-setup.htm lists Show FPS, Show Test Card, Show Display Info and
+   Identify Displays under Output. Arena draws all four onto the output itself,
+   which is why they were disabled here for so long. openlive-output.html draws
+   them now, so this window's job is only to hold the state and push it to every
+   surface that is open — including ones opened later. */
+const OUTPUT_DIAGNOSTIC_STORAGE='openlive.outputDiagnostics.v1';
+function loadOutputDiagnostics(){
+  try{
+    const value=JSON.parse(sessionStorage.getItem(OUTPUT_DIAGNOSTIC_STORAGE)||'{}');
+    return {fps:!!value.fps,displayInfo:!!value.displayInfo,testCard:!!value.testCard};
+  }catch(error){ return {fps:false,displayInfo:false,testCard:false}; }
+}
+const storedOutputDiagnostics=loadOutputDiagnostics();
+const outFlags = { fps:storedOutputDiagnostics.fps,
+  displayInfo:storedOutputDiagnostics.displayInfo,
+  testCard:storedOutputDiagnostics.testCard, identify:0 };
+let outputDiagnosticChannel=null;
+function persistOutputDiagnostics(){
+  try{ sessionStorage.setItem(OUTPUT_DIAGNOSTIC_STORAGE,JSON.stringify({
+    fps:!!outFlags.fps,displayInfo:!!outFlags.displayInfo,testCard:!!outFlags.testCard
+  })); }catch(error){}
+}
+let rendererIdentityCache=null;
+function outputRendererIdentity(){
+  const gl=editor&&editor.renderer&&editor.renderer.gl;
+  if(!gl) return 'Unavailable - WebGL2 output renderer is not active';
+  if(rendererIdentityCache&&rendererIdentityCache.gl===gl) return rendererIdentityCache.label;
+  let label='WebGL Renderer';
+  try{
+    const ext=gl.getExtension&&gl.getExtension('WEBGL_debug_renderer_info');
+    label=String(ext&&gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)||
+      gl.getParameter(gl.RENDERER)||label);
+  }catch(error){}
+  rendererIdentityCache={gl,label};
+  try{ if(gl.canvas&&!gl.canvas.dataset.openliveRendererWatch){
+    gl.canvas.dataset.openliveRendererWatch='1';
+    gl.canvas.addEventListener('webglcontextrestored',()=>{ rendererIdentityCache=null; pushOutputFlags(); });
+  }}catch(error){}
+  return label;
+}
+function outputDisplayInfo(screenId){
+  const entry=openWindows.get(String(screenId||''));
+  const list=hostDisplays||((window.OpenLiveDisplays&&OpenLiveDisplays.list&&OpenLiveDisplays.list())||[]);
+  let d=entry&&list.find((item,index)=>displayKey(index,item)===entry.deviceId)||null;
+  /* An index is not an identity. Browser fallback descriptors sometimes have
+     no stable device id; after hotplug/reorder, using list[entry.index] could
+     confidently label one projector as another. Accept that fallback only
+     while its observed label still matches, otherwise report unavailable. */
+  if(!d&&entry&&String(entry.deviceId||'').startsWith('display-index:')){
+    const candidate=list[entry.index];
+    if(candidate&&String(candidate.label||'')===String(entry.deviceLabel||'')) d=candidate;
+  }
+  const pixelWidth=d&&Number(d.pixelWidth||((Number(d.width)||0)*(Number(d.scale)||1)))||0;
+  const pixelHeight=d&&Number(d.pixelHeight||((Number(d.height)||0)*(Number(d.scale)||1)))||0;
+  const locationRole=d
+    ? (typeof d.primary==='boolean'?(d.primary?'Primary':'Secondary'):'Role unavailable')+
+      (typeof d.internal==='boolean'?(d.internal?' / Internal':' / External'):'')
+    : 'Unavailable';
+  const displayScale=d&&Number(d.scale||d.devicePixelRatio);
+  return {
+    display:(d&&d.label)||(entry&&entry.deviceLabel&&entry.deviceLabel+' (descriptor unavailable)')||'Display unavailable',
+    raster:pixelWidth&&pixelHeight?Math.round(pixelWidth)+' x '+Math.round(pixelHeight):'Unavailable',
+    scale:displayScale>0?displayScale:'Unavailable',
+    colorDepth:d&&Number(d.colorDepth)||null,
+    role:locationRole,
+    edid:'Unavailable - browsers do not expose display EDID',
+    gfxCard:'Unavailable - browsers do not expose display-to-GPU connector topology',
+    renderer:outputRendererIdentity()
+  };
+}
+function pushOutputFlags(w){
+  const targets = w
+    ? [...openWindows.entries()].filter(([,entry])=>entry&&entry.win===w)
+    : [...openWindows.entries()];
+  for(const [id,entry] of targets){
+    const win=entry&&entry.win;
+    try { if(win && !win.closed && win.__openliveOutputFlags)
+      Object.assign(win.__openliveOutputFlags,outFlags,{info:outputDisplayInfo(id)}); }
+    catch(e){ /* a closed window is not an error */ }
+  }
+}
+function setOutputFlag(k,value){
+  if(!Object.prototype.hasOwnProperty.call(outFlags,k)||k==='identify') return false;
+  outFlags[k]=!!value;
+  persistOutputDiagnostics();
+  if(k==='testCard'&&editor.flags&&editor.flags.testCard!==outFlags[k])
+    editor.setFlag('testCard',outFlags[k]);
+  pushOutputFlags();
+  publishOutputDiagnostics();
+  return outFlags[k];
+}
+function toggleOutputFlag(k){ return setOutputFlag(k,!outFlags[k]); }
+if(editor.flags&&editor.flags.testCard!==outFlags.testCard)
+  editor.setFlag('testCard',outFlags.testCard);
+function publishOutputDiagnostics(){
+  try{ if(outputDiagnosticChannel) outputDiagnosticChannel.postMessage({
+    fps:!!outFlags.fps,displayInfo:!!outFlags.displayInfo,testCard:!!outFlags.testCard
+  }); }catch(error){}
+}
+function applyOutputDiagnosticSnapshot(value){
+  if(!value||typeof value!=='object') return;
+  let changed=false;
+  for(const key of ['fps','displayInfo','testCard']){
+    if(Object.prototype.hasOwnProperty.call(value,key)&&outFlags[key]!==!!value[key]){
+      outFlags[key]=!!value[key]; changed=true;
+    }
+  }
+  if(!changed) return;
+  persistOutputDiagnostics();
+  if(editor.flags&&editor.flags.testCard!==outFlags.testCard)
+    editor.setFlag('testCard',outFlags.testCard);
+  pushOutputFlags();
+}
+try{
+  if(typeof BroadcastChannel==='function'){
+    outputDiagnosticChannel=new BroadcastChannel('openlive-output-diagnostics-v1');
+    outputDiagnosticChannel.addEventListener('message',event=>applyOutputDiagnosticSnapshot(event.data));
+    addEventListener('pagehide',()=>outputDiagnosticChannel&&outputDiagnosticChannel.close(),{once:true});
+  }
+}catch(error){ outputDiagnosticChannel=null; }
+/* Identify Displays numbers each surface, so it is per-window rather than a
+   single boolean: "the numbers will match the numbers your computer has
+   assigned to those monitors" (output-setup.htm). */
+function toggleIdentify(){
+  const on = !outFlags.identify;
+  outFlags.identify = on ? 1 : 0;
+  let n = 0;
+  for(const {win} of openWindows.values()){
+    n++;
+    try { if(win && !win.closed && win.__openliveOutputFlags) win.__openliveOutputFlags.identify = on ? n : 0; }
+    catch(e){}
+  }
+  msg(on ? 'Identifying ' + n + ' output' + (n===1?'':'s') : 'Identify off');
+  return on;
+}
+const OUTPUT_CHK = { outFPS:'fps', outInfo:'displayInfo' };
+
+function resolveMenu(items){
+  const liveOutputCount = activeOutputIds().length;
+  return (items||[]).map(it => {
+    if(it.sep) return it;
+    const o = Object.assign({}, it);
+    /* File's items are written here with real handlers already; resolving is
+       only for the decoded trees that arrive without any. */
+    if(o.fn) return o;
+
+    /* the fictional three-display list the capture froze in — replaced with
+       whatever this machine actually reports (openlive-displays.js) */
+    if(o.l === 'Fullscreen' || o.l === 'Windowed'){
+      const mode = o.l === 'Windowed' ? 'windowed' : 'fullscreen';
+      const DS = window.OpenLiveDisplays;
+      const ds = hostDisplays || ((DS && DS.list && DS.list()) || []);
+      o.sub = ds.length ? ds.map((d, i) => ({
+        l: d.label || d.name || ('Display ' + (i + 1)),
+        dis: d.blocked ? 1 : 0,
+        /* The tick means "the SELECTED screen is on this display", because
+           that is what clicking here would toggle. A different screen owning
+           the display is a different fact and is stated in the tooltip. */
+        on: (() => { const e = openWindows.get(currentScreenId());
+                     return (e && e.win && !e.win.closed && e.mode === mode && e.index === i) ? 1 : 0; })(),
+        /* output-setup.htm: Fullscreen fills the display; Windowed "just fills
+           the second output with a rectangle exactly the size of your
+           composition". The screen presented is whichever one the editor has
+           selected, which is what the user is looking at. */
+        title: d.blocked ? (d.reason || 'This display cannot be measured yet.') : (mode === 'windowed'
+          ? 'Open this screen on ' + (d.label || 'this display') + ' at Show size.'
+          : 'Present this screen fullscreen on ' + (d.label || 'this display') + '. Click the new window once to enter fullscreen.'),
+        fn: d.blocked ? null : () => present(mode, i, d)
+      })) : [{ l:'No displays reported', dis:1,
+               title:'The Window Management permission has not been granted, so only this window’s own display is visible to the page. Open the Output menu again after granting it.' }];
+      return o;
+    }
+    if(o.sub){ o.sub = resolveMenu(o.sub); return o; }
+
+    const why = MENU_CANNOT[o.l];
+    if(why){ o.dis = 1; o.title = why; return o; }
+
+    /* Output > Disabled is the same state as the toolbar's output toggle */
+    if(o.l === 'Disabled' && o.radio === 'outMode'){
+      o.on = FLG().outputOff ? 1 : 0;
+      o.fn = () => editor.setFlag('outputOff', !FLG().outputOff);
+      return o;
+    }
+    /* Identify Displays — numbers every open output surface. */
+    if(o.l === 'Identify Displays'){
+      if(!liveOutputCount){ o.dis = 1; o.title = 'No output is open to identify. Present a screen first.'; return o; }
+      o.on = outFlags.identify ? 1 : 0;
+      o.title = 'Overlay each open output with its number and a colour.';
+      o.fn = toggleIdentify;
+      return o;
+    }
+    /* Overlays drawn ON the output. Arena lets these be armed before a Screen
+       is presented; every later output inherits the same authoritative flag. */
+    if(o.chk && OUTPUT_CHK[o.chk]){
+      const k = OUTPUT_CHK[o.chk];
+      o.on = outFlags[k] ? 1 : 0;
+      o.title = liveOutputCount
+        ? 'Drawn onto every open output.'
+        : 'Armed now and drawn onto every output opened later.';
+      o.fn = () => toggleOutputFlag(k);
+      return o;
+    }
+    if(o.chk){
+      const flag = MENU_CHK[o.chk];
+      if(flag){
+        o.on = flag==='testCard' ? (outFlags.testCard?1:0) : (FLG()[flag]?1:0);
+        /* Test Card belongs to both: the editor's own preview and every open
+           output surface, so one tick drives both rather than disagreeing. */
+        o.fn = () => flag==='testCard'
+          ? setOutputFlag('testCard',!outFlags.testCard)
+          : editor.setFlag(flag,!FLG()[flag]);
+      }
+      else { o.dis = 1; o.title = o.title || 'Not served by this window.'; }
+      return o;
+    }
+    if(o.act && MENU_ACTS[o.act]){ o.fn = MENU_ACTS[o.act]; return o; }
+
+    /* Anything still unmapped is a deck action with no meaning here — the
+       Shortcuts editors, the Help pages — so it says so rather than pretending. */
+    o.dis = 1;
+    o.title = o.title || 'This item belongs to the main SHOWAVE Live window.';
+    return o;
+  });
+}
+
+/* The View menu in the capture is the deck's panel list, none of which exists
+   here. This window's view state is its own, so the menu is rebuilt from the
+   editor's real flags — the same toggles as the toolbar, which is what makes it
+   a second surface onto one state rather than a separate control. */
+const VIEW_MENU = { label:'View', items(){
+  const f = FLG();
+  const tog = (l, k, key) => ({ l, k, on: f[key] ? 1 : 0, fn: () => editor.setFlag(key, !FLG()[key]) });
+  return [
+    tog('Snap', null, 'snap'),
+    tog('Show Slice Grid', null, 'showGrid'),
+    tog('Show 8×8 LED Grid', null, 'ledGrid'),
+    tog('Identify Slices', null, 'identify'),
+    tog('Show Input Guide in Output', null, 'showInOutput'),
+    tog('Follow Routing', null, 'followRouting'),
+    { sep:1 },
+    tog('Show Test Card', 'Ctrl+Shift+L', 'testCard'),
+    tog('Disable Output', 'Ctrl+Shift+D', 'outputOff'),
+    { sep:1 },
+    /* Arena moves BETWEEN Input Selection and Output Transformation; showing
+       both at once is this clone's own addition, so it is labelled as one and
+       lives here rather than pretending to be a stage tab. */
+    { l:'Split Stages (SHOWAVE extension)', on: editor.splitStages() ? 1 : 0,
+      fn:()=> editor.splitStages(!editor.splitStages()) },
+    { sep:1 },
+    { l:'Fit to Window', k:'F', fn:()=>act('fit') }
+  ];
+}};
+
+const MENU_BAR = [FILE_MENU]
+  .concat(['Output'].map(l => (window.MENUS||[]).find(m=>m.label===l)).filter(Boolean))
+  .concat([VIEW_MENU])
+  .concat(['Shortcuts','Help'].map(l => (window.MENUS||[]).find(m=>m.label===l)).filter(Boolean));
+
+MENU_BAR.forEach(m=>{
+  const t=document.createElement('div'); t.className='menu-top';
+  t.textContent=window.ShowaveBrand&&window.ShowaveBrand.term
+    ? window.ShowaveBrand.term(m.uiLabel??m.label) : (m.uiLabel??m.label);
+  t.setAttribute('role','menuitem'); t.setAttribute('aria-haspopup','menu');
+  t.setAttribute('aria-expanded','false'); t.tabIndex=0;
+  const open=(focusFirst=false)=>{
+    closeDD(); menuReturnFocus=t; t.classList.add('open');
+    t.setAttribute('aria-expanded','true');
+    const r=t.getBoundingClientRect();
+    /* resolved per open so every tick is current */
+    const items = typeof m.items === 'function' ? m.items() : resolveMenu(m.items);
+    buildDD(items,r.left,r.bottom,0,t,focusFirst);
+  };
+  t.addEventListener('mousedown',e=>{ e.stopPropagation(); t.focus();
+    /* THE DISPLAY PERMISSION, ASKED AT THE ONLY MOMENT IT CAN BE.
+       getScreenDetails must be called from a user gesture or the prompt is
+       suppressed and it silently resolves to the fallback — one entry for this
+       window's own display, which is why the Fullscreen submenu has been
+       reporting "Display 1 — 0 x 0" instead of the real pair.
+       openlive-displays.js:141 names this exact hook: "Wire it to opening the
+       Output menu, not to page load." A mousedown on a menu title IS that
+       gesture, and Output is the menu that needs the answer. Fire and forget:
+       the submenu resolves per open, so the next open shows the real list, and
+       a refusal simply leaves the fallback in place. */
+    if(m.label === 'Output' && window.OpenLiveDisplays){
+      const cur = window.OpenLiveDisplays.permission ? window.OpenLiveDisplays.permission() : 'unknown';
+      if(cur === 'unknown' || cur === 'prompt'){
+        try { window.OpenLiveDisplays.request(); } catch(err){}
+      }
+    }
+    t.classList.contains('open')?closeDD():open(false); });
+  t.addEventListener('mouseenter',()=>{ if(dd.length&&document.querySelector('.menu-top.open')
+    &&!t.classList.contains('open')) open(false); });
+  t.addEventListener('keydown',event=>{
+    if(event.key==='Enter'||event.key===' '||event.key==='ArrowDown'){
+      event.preventDefault(); open(true); return;
+    }
+    if(event.key==='Escape'){ event.preventDefault(); closeDD(0,true); return; }
+    if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
+      event.preventDefault();
+      const tops=[...document.querySelectorAll('#menus .menu-top')];
+      const index=tops.indexOf(t), step=event.key==='ArrowRight'?1:-1;
+      const next=tops[(index+step+tops.length)%tops.length];
+      closeDD(); if(next) next.focus();
+    }
+  });
+  $('#menus').appendChild(t);
+});
+
+/* ---- what this window is showing, in the status bar ---- */
+function paintWhere(){
+  const screens = setup.screens();
+  const slices  = screens.reduce((n, s) => n + (s.layers ? s.layers.length : 0), 0);
+  const cs = setup.compositionSize();
+  const current = screens.find(s => String(s.uniqueId) ===
+    String(editor.state && editor.state.screenId)) || screens[0];
+  const raster = current ? deviceRaster(current) : null;
+  $('#where').textContent =
+    `${screens.length} screen${screens.length === 1 ? '' : 's'} · ` +
+    `${slices} slice${slices === 1 ? '' : 's'} · ` +
+    `texture ${cs.width} × ${cs.height}` +
+    (raster ? ` · output ${raster.width} × ${raster.height}` : '');
+}
+paintWhere();
+
+/* ---- connection chrome ---- */
+function paintConn() {
+  const p = $('#conn');
+  p.className = 'conn ' + AL.status;
+  p.textContent = AL.status === 'live' ? 'LIVE · ' + AL.host()
+    : AL.status === 'connecting' ? 'connecting' : 'offline';
+  $('#productLine').textContent = AL.status === 'live'
+    ? 'SHOWAVE Map: Output Mapping · ' + AL.host() : 'SHOWAVE Map: Output Mapping';
+}
+AL.on('status', paintConn); paintConn();
+$('#conn').addEventListener('click', () => {
+  if (AL.status === 'live') return msg('Connected to ' + AL.host());
+  const h = prompt('Arena webserver host:port', AL.host());
+  if (h) AL.connect(h.trim());
+});
+
+/* ---- status + clock, read the same way the main window reads them ---- */
+setInterval(() => {
+  $('#clock').textContent = new Date().toLocaleTimeString('en-GB').slice(0, 5);
+  /* This read the connection backwards: it printed honest dashes while Arena was
+     connected and invented CPU / RAM / VRAM / FPS out of Math.random() when it
+     was not — so the numbers were fiction precisely when there was nothing to
+     measure, and an operator watching "CPU 33%" was watching a random walk. The
+     rest of this tree does not do that (panel-kit.js:14, panels/clip.js:10), and
+     API-CONTRACT.md is explicit that Arena publishes no telemetry at all. There
+     is no number to show, in either state, so none is shown. Real frame rate is
+     already on the toolbar, measured from this window's own paint loop. */
+  ['cpu','ram','vram','fps'].forEach(k=>{ $(`[data-s=${k}]`).textContent='N/A'; });
+  paintFeedPill();
+  paintWhere();
+}, 500);
+
+addEventListener('beforeunload', () => { try { editor.destroy(); } catch(e){} });
+})();
+</script>
+<link rel="stylesheet" href="openlive-areas.css">
+<link rel="stylesheet" href="openlive-phone-mirror.css">
+<link rel="stylesheet" href="openlive-tool-areas.css">
+<script src="openlive-phone-mirror.js"></script>
+<script src="openlive-areas.js"></script>
+<script src="openlive-tool-areas.js"></script>
+</body>
+</html>

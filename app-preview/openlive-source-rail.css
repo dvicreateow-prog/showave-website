@@ -1,0 +1,39 @@
+/* A slim rail keeps frequently used sources out of the workspace tab row. */
+:root { --showave-rail-width:28px; }
+body[data-showave-source-rail] { --showave-rail-width:28px; --showave-chrome-bg:var(--head); --showave-chrome-line:var(--line); }
+body[data-showave-source-rail="expanded"] { --showave-rail-width:152px; }
+body[data-showave-source-rail="hidden"] { --showave-rail-width:0px; }
+#showave-source-rail-visibility { display:flex; align-items:center; justify-content:center; align-self:stretch; flex:0 0 28px; width:28px; margin:0 5px 0 0; padding:0; box-sizing:border-box; border:0; border-right:1px solid var(--showave-chrome-line); border-radius:0; background:transparent; color:var(--glass-icon-color,var(--icon-color,#b9bec4)); cursor:pointer; }
+#showave-source-rail-visibility svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+#showave-source-rail-visibility:hover { background:var(--btn-hi); color:var(--txt-hi); }
+#showave-source-rail-visibility:focus-visible { outline:2px solid var(--theme-focus,var(--txt-hi)); outline-offset:-2px; }
+#showave-source-rail-visibility[aria-expanded="false"] .showave-rail-toggle-indicator { opacity:0; }
+#showave-source-rail { position:fixed; left:0; top:28px; bottom:20px; width:var(--showave-rail-width); z-index:940; display:flex; flex-direction:column; gap:10px; box-sizing:border-box; padding:8px 5px; overflow-y:auto; overflow-x:hidden; background:var(--showave-chrome-bg); border-right:1px solid var(--showave-chrome-line); color:var(--txt); font:12px/1.4 "Segoe UI",system-ui,sans-serif; scrollbar-width:thin; transition:width .16s ease; }
+#showave-source-rail-tools, .showave-source-rail-auxiliary { display:flex; flex-direction:column; gap:4px; flex:0 0 auto; }
+.showave-source-rail-auxiliary { border-top:1px solid var(--showave-chrome-line); padding-top:10px; }
+#showave-source-system { margin-top:auto; border-top:1px solid var(--showave-chrome-line); padding-top:8px; flex:0 0 auto; }
+#showave-source-rail .showave-source-rail-action { display:flex; align-items:center; gap:10px; height:34px; min-height:34px; width:100%; padding:7px; box-sizing:border-box; border:1px solid transparent; border-radius:5px; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; overflow:hidden; white-space:nowrap; }
+#showave-source-rail .showave-source-rail-action:hover { color:var(--txt-hi); background:var(--btn-hi); }
+#showave-source-rail .showave-source-rail-action[aria-pressed="true"], #showave-source-rail .menu-top.open { background:var(--color-accent); color:var(--appearance-on-accent,var(--mint-t)); }
+#showave-source-rail .showave-source-rail-action:focus-visible { outline:2px solid var(--theme-focus,var(--txt-hi)); outline-offset:-2px; }
+#showave-source-rail .bc-source-icon { display:block; flex:0 0 14px; width:14px; height:14px; background:currentColor; mask:var(--source-icon) center/contain no-repeat; -webkit-mask:var(--source-icon) center/contain no-repeat; }
+.showave-rail-label { overflow:hidden; text-overflow:ellipsis; }
+#showave-source-rail[data-expanded="false"] { padding-inline:2px; scrollbar-width:none; }
+#showave-source-rail[data-expanded="false"] .showave-source-rail-action { justify-content:center; gap:0; padding-inline:1px; }
+#showave-source-rail[data-expanded="false"] .showave-rail-label { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+.showave-rail-chevron { flex:0 0 14px; width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.showave-rail-file { flex:0 0 14px; width:14px; height:14px; fill:currentColor; }
+#showave-source-rail[data-expanded="true"] #showave-source-rail-toggle .showave-rail-chevron { transform:rotate(180deg); }
+#showave-source-rail-toggle { color:var(--txt-hi)!important; }
+.showave-source-rail-status { position:fixed; left:calc(var(--showave-rail-width) + 8px); bottom:28px; max-width:280px; margin:0; padding:8px 12px; color:var(--txt); background:var(--panel); border:1px solid var(--line2); box-shadow:0 2px 8px #0006; }
+#showave-source-rail[hidden], #showave-source-rail [hidden] { display:none!important; }
+body[data-showave-source-rail] #app { background:var(--showave-chrome-bg); }
+body[data-showave-source-rail] #app > #menubar { padding-left:0; background:var(--showave-chrome-bg)!important; border-bottom-color:var(--showave-chrome-line)!important; }
+body[data-showave-source-rail] #showave-areas-show { margin-left:var(--showave-rail-width); min-width:0; border-radius:6px 0 0 6px; transition:margin-left .16s ease; }
+body[data-showave-source-rail] #status { position:relative; margin-left:0; min-width:0; padding-left:calc(var(--showave-rail-width) + 10px); background:var(--showave-chrome-bg); border-top-color:var(--showave-chrome-line); box-shadow:none; color:var(--txt); transition:padding-left .16s ease; }
+body[data-showave-source-rail] #status::before { content:""; position:absolute; inset:0 auto 0 calc(var(--showave-rail-width) - 1px); width:1px; background:var(--showave-chrome-line); transition:left .16s ease; }
+body[data-showave-source-rail="hidden"] #status::before { display:none; }
+body[data-showave-source-rail] #showave-workspace-host { border-radius:6px 0 0 6px; transition:left .16s ease; }
+@media (max-width:700px) { #showave-source-rail[data-expanded="true"] { padding-inline:3px; } }
+@media (pointer:coarse) { #showave-source-rail .showave-source-rail-action { height:40px; min-height:40px; } }
+@media (prefers-reduced-motion:reduce) { #showave-source-rail, body[data-showave-source-rail] #showave-areas-show, body[data-showave-source-rail] #status, body[data-showave-source-rail] #status::before, body[data-showave-source-rail] #showave-workspace-host { transition:none; } }

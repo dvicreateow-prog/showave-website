@@ -1,0 +1,105 @@
+/* Broadcast's center uses the same compact chrome as Live #props.
+   Loaded after the page's legacy styles. This sheet changes presentation only;
+   monitor aspect ratio, source hit-testing and scene/workflow gates stay owned
+   by their existing components. Do not give the workspace #props' fixed width. */
+.bc-center{
+  padding:0;
+  background:var(--panel);
+  color:var(--txt);
+  font:var(--font);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  letter-spacing:.005em;
+  border-inline:1px solid var(--line);
+}
+.bc-center > *{flex-shrink:0}
+.bc-center .bc-monitors{
+  gap:var(--lc-gap,1px);
+  padding:0 6px 4px;
+}
+/* .mon-head supplies the reference inspector's shared header material. */
+.bc-center .bc-monitorhead{
+  height:var(--lc-ctl,20px);
+  min-height:var(--lc-ctl,20px);
+  padding:0 6px;
+  gap:5px;
+  color:var(--n400);
+  font-size:10px;
+  line-height:var(--step-7,14px);
+  letter-spacing:.01em;
+}
+.bc-center .bc-transitionbar{
+  display:grid;
+  grid-template-columns:minmax(0,1.1fr) minmax(0,.85fr) minmax(0,.7fr) minmax(0,1fr);
+  align-items:center;
+  gap:4px;
+  margin:0;
+  padding:4px 6px;
+  background:var(--panel);
+  border:0;
+  border-bottom:1px solid var(--line);
+}
+.bc-center .bc-transitionbar .tb-label{margin-inline:5px}
+.bc-center :is(.bc-transitionbar,.bc-workflow-steps) > :is(button,select),
+.bc-center > #freeSceneLibraryToggle,
+.bc-center .bc-monitorhead > button{
+  height:var(--lc-ctl,20px);
+  min-height:var(--lc-ctl,20px);
+  padding:2px 8px;
+  font-size:11px;
+  line-height:var(--step-7,14px);
+}
+.bc-center .bc-transitionbar input{
+  height:var(--step-9,18px);
+  padding:0 3px;
+  font-size:11px;
+  line-height:var(--step-7,14px);
+  font-variant-numeric:tabular-nums;
+}
+.bc-center .bc-transition-field{display:flex;flex-direction:column;gap:3px;min-width:0;margin:0;color:var(--txt-dim);font-size:9px;line-height:12px}
+.bc-center .bc-transition-field>:is(select,input){box-sizing:border-box;min-width:0;width:100%;height:20px;margin:0;padding:0 3px;font-size:11px}
+.bc-center .bc-transitionbar>:is(#studioMode,#takeScene){min-width:0;width:100%;white-space:normal;height:36px;line-height:14px;padding:2px 4px}
+/* Both monitors end at their audio controls. The shared transition area spans
+   underneath them and retains the original controls when moved or undocked. */
+.bc-center.ol-broadcast-preview .bc-monitorhead{order:0}
+.bc-center.ol-broadcast-preview .ol-broadcast-viewport{order:1}
+.bc-center.ol-broadcast-preview .bc-monitor-audio{order:2}
+.bc-center.ol-broadcast-transitions{container: broadcast-transitions / inline-size}
+.bc-center.ol-broadcast-transitions>.bc-transitionbar{box-sizing:border-box;flex:1;min-height:48px;padding:5px 6px;gap:8px}
+@container broadcast-transitions (max-width:320px){
+  .bc-center.ol-broadcast-transitions>.bc-transitionbar{grid-template-columns:repeat(2,minmax(0,1fr));min-height:92px;gap:5px}
+  .bc-center.ol-broadcast-transitions #studioMode{grid-column:1;grid-row:1}
+  .bc-center.ol-broadcast-transitions #takeScene{grid-column:2;grid-row:1}
+}
+.bc-center .bc-scene-workflow{
+  margin:0;
+  padding:4px 6px;
+  background:var(--panel);
+  border:0;
+  border-bottom:1px solid var(--line);
+}
+.bc-center .bc-workflow-steps{gap:var(--lc-gap,1px)}
+.bc-center .bc-workflow-steps [aria-current=step]{
+  color:var(--glass-icon-active,var(--icon-active));
+  border-color:var(--ctl-edge,var(--line));
+  box-shadow:inset 0 -2px 0 var(--color-accent);
+}
+.bc-center .bc-scene-workflow p{
+  margin:4px 0 0;
+  font-size:10.5px;
+  line-height:var(--step-7,14px);
+  color:var(--txt-dim);
+}
+.bc-center > .bc-free-scene{
+  margin:var(--row-sep,6px) 0;
+  border:0;
+  border-bottom:1px solid var(--line);
+}
+.bc-center > #freeSceneLibraryToggle{
+  margin:0 6px var(--row-sep,6px);
+}
+.bc-center .bc-controlbar{
+  margin-top:var(--row-sep,6px);
+  padding:0 6px 4px;
+  gap:6px;
+  background:var(--panel);
+}

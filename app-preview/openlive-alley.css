@@ -1,0 +1,1038 @@
+/* SHOWAVE Encode — focused workspace polish.
+   This layer consumes the shared Appearance tokens and keeps media content
+   wells true black while giving navigation, empty states, and tools a clear
+   operational hierarchy. */
+
+#alleyRoot {
+  --alley-side-width: 332px;
+  --alley-radius: var(--radius-sm);
+  color: var(--n200);
+}
+
+#alleyRoot .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#alleyRoot .a-main {
+  background: var(--color-bg);
+}
+
+#alleyRoot .a-list {
+  background: var(--color-bg);
+}
+
+#alleyRoot #mainTabs {
+  flex: 0 0 32px;
+  min-height: 32px;
+  padding: 3px 6px;
+  gap: 3px;
+  border-bottom: 1px solid var(--glass-border);
+  background:
+    linear-gradient(180deg, var(--glass-reflection-start), var(--glass-reflection-end)),
+    color-mix(in srgb, var(--color-surface) 72%, var(--glass-bg));
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+#alleyRoot #mainTabs .win-tab {
+  min-width: 74px;
+  height: 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--n500);
+  font-size: 11.5px;
+  font-weight: 600;
+  transition: color 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+#alleyRoot #mainTabs .win-tab:hover {
+  color: var(--n200);
+  background: var(--glass-pill-bg);
+}
+
+#alleyRoot #mainTabs .win-tab.active {
+  color: var(--n100);
+  border-color: color-mix(in srgb, var(--color-accent) 44%, var(--glass-border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 16%, var(--glass-highlight)), transparent),
+    var(--glass-pill-bg);
+  box-shadow: inset 0 -2px 0 var(--color-accent), var(--glass-pill-shadow);
+}
+
+#alleyRoot .a-list > .browser-tools {
+  min-height: 34px;
+  padding: 4px 7px;
+  gap: 5px;
+  box-shadow: inset 0 -1px 0 var(--glass-caustic);
+}
+
+#alleyRoot .browser-tools #aRoot {
+  flex: 0 0 132px;
+}
+
+#alleyRoot .browser-tools #aSearch {
+  height: 24px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  color: var(--n200);
+  padding: 0 10px;
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--content-black) 34%, transparent);
+}
+
+#alleyRoot .browser-tools #aSearch:focus,
+#alleyRoot .tool-search input:focus {
+  outline: 2px solid var(--theme-focus, var(--color-accent));
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+#alleyRoot .a-list .pbody {
+  min-height: 0;
+  background: transparent;
+}
+
+#alleyRoot .a-list .pane {
+  min-height: 100%;
+}
+
+#alleyRoot table.datatable {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+#alleyRoot table.datatable thead th {
+  height: 27px;
+  color: var(--n600);
+  font-size: 10.5px;
+  font-weight: 650;
+  background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+#alleyRoot table.datatable tbody tr {
+  transition: background 100ms ease;
+}
+
+#alleyRoot table.datatable tbody tr:hover {
+  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+}
+
+#alleyRoot table.datatable tbody tr.sel {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+/* Empty workspaces are instructional surfaces, not empty black rectangles. */
+#alleyRoot .alley-empty {
+  width: min(560px, calc(100% - 40px));
+  min-height: 176px;
+  margin: clamp(38px, 9vh, 78px) auto 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  text-align: center;
+  border: 1px dashed var(--n800);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  color: var(--n400);
+}
+
+#alleyRoot .alley-empty.over {
+  border-style: solid;
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--glass-bg));
+}
+
+#alleyRoot .alley-empty-mark {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 46%, var(--glass-border));
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 9%, var(--glass-pill-bg));
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  font-size: 16px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+#alleyRoot .alley-empty strong {
+  color: var(--n100);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#alleyRoot .alley-empty > span:not(.alley-empty-mark) {
+  max-width: 470px;
+  color: var(--n400);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+#alleyRoot .alley-empty small {
+  color: var(--n600);
+  font-size: 10.5px;
+}
+
+#alleyRoot .a-action {
+  min-height: 40px;
+  padding: 5px 8px;
+}
+
+#alleyRoot .a-action #actionBtn {
+  min-width: 92px;
+}
+
+/* Inspector rail */
+#alleyRoot .a-side {
+  flex-basis: var(--alley-side-width);
+  width: var(--alley-side-width);
+  border-left: 1px solid var(--glass-border);
+  scrollbar-color: var(--n800) transparent;
+}
+
+#alleyRoot .a-side .mon {
+  height: 190px;
+  background:
+    linear-gradient(180deg, var(--glass-reflection-start), transparent 34%),
+    color-mix(in srgb, var(--color-surface) 72%, var(--glass-bg));
+}
+
+#alleyRoot .a-side .mon-head {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  color: var(--n300);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .025em;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+#alleyRoot .a-side .mon-state {
+  color: var(--n700);
+  font-size: 9.5px;
+  font-weight: 600;
+}
+
+#alleyRoot[data-source="ready"] .a-side .mon-state {
+  color: var(--state-ok, var(--color-accent));
+}
+
+#alleyRoot .a-side .mon-body {
+  background: var(--content-black);
+}
+
+#alleyRoot #dxvRow[hidden] {
+  display: none !important;
+}
+
+#alleyRoot .a-side .sect {
+  border-bottom: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--color-surface) 50%, transparent);
+}
+
+#alleyRoot .a-side .sect > h3 {
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  color: var(--n300);
+  font-size: 10.5px;
+  font-weight: 700;
+  background: linear-gradient(180deg, var(--glass-reflection-start), transparent);
+}
+
+#alleyRoot .a-side .sect-body {
+  padding: 4px 0 6px;
+}
+
+#alleyRoot .a-side .prow {
+  min-height: 20px;
+  grid-template-columns: 110px minmax(0, 1fr);
+}
+
+#alleyRoot .a-side .prow select,
+#alleyRoot .a-side .prow input[type="text"],
+#alleyRoot .a-side .prow input[type="number"] {
+  height: 19px;
+}
+
+/* Footage is reference-only until a real account adapter exists. */
+#alleyRoot .footage-connection {
+  margin: 7px;
+  padding: 9px 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+#alleyRoot .footage-connection-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--state-warn, var(--color-accent));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--state-warn, var(--color-accent)) 12%, transparent);
+}
+
+#alleyRoot .footage-connection strong,
+#alleyRoot .footage-connection span {
+  display: block;
+}
+
+#alleyRoot .footage-connection strong {
+  color: var(--n200);
+  font-size: 11.5px;
+}
+
+#alleyRoot .footage-connection span {
+  margin-top: 3px;
+  color: var(--n600);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+/* Tools own the full workspace. File browsing and conversion settings are
+   intentionally absent here because they do not operate on these utilities. */
+#alleyRoot[data-pane="tTools"] .browser-tools,
+#alleyRoot[data-pane="tTools"] .a-side,
+#alleyRoot[data-pane="tTools"] .a-action {
+  display: none !important;
+}
+
+#alleyRoot[data-pane="tFootage"] .browser-tools,
+#alleyRoot[data-pane="tFootage"] .a-side {
+  display: none !important;
+}
+
+#alleyRoot[data-pane="tFootage"] .a-list,
+#alleyRoot[data-pane="tTools"] .a-list {
+  border-right: 0;
+}
+
+#alleyRoot[data-pane="tTools"] #tTools.active {
+  height: 100%;
+  overflow: auto;
+  scrollbar-color: var(--n800) transparent;
+}
+
+#alleyRoot .tools-shell {
+  height: 100%;
+  min-height: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#alleyRoot .tools-hero {
+  min-height: 68px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 0;
+  border-bottom: 1px solid var(--glass-border);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, var(--glass-reflection-start), var(--glass-reflection-end)),
+    color-mix(in srgb, var(--color-surface) 72%, var(--glass-bg));
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+#alleyRoot .tools-hero-copy {
+  max-width: 720px;
+}
+
+#alleyRoot .tools-kicker {
+  color: var(--color-accent);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+#alleyRoot .tools-hero h2 {
+  margin: 2px 0 2px;
+  color: var(--n100);
+  font-size: clamp(15px, 1.6vw, 18px);
+  line-height: 1.2;
+  letter-spacing: -.015em;
+}
+
+#alleyRoot .tools-hero p {
+  max-width: 690px;
+  margin: 0;
+  color: var(--n500);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+#alleyRoot .tools-health {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(68px, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--content-black) 26%, transparent);
+}
+
+#alleyRoot .tools-health > div {
+  min-height: 44px;
+  padding: 5px 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid var(--glass-border);
+}
+
+#alleyRoot .tools-health > div:first-child {
+  border-left: 0;
+}
+
+#alleyRoot .tools-health strong {
+  color: var(--n100);
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+#alleyRoot .tools-health span {
+  margin-top: 3px;
+  color: var(--n600);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+#alleyRoot .tools-toolbar {
+  min-height: 34px;
+  margin-top: 0;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 0;
+  border-bottom: 1px solid var(--glass-border);
+  border-radius: 0;
+  background: var(--head);
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
+#alleyRoot .tools-filters {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+#alleyRoot .tool-filter {
+  min-height: 25px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--n600);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#alleyRoot .tool-filter:hover {
+  color: var(--n200);
+  background: var(--glass-pill-bg);
+}
+
+#alleyRoot .tool-filter.active {
+  color: var(--n100);
+  border-color: color-mix(in srgb, var(--color-accent) 38%, var(--glass-border));
+  background: color-mix(in srgb, var(--color-accent) 11%, var(--glass-pill-bg));
+  box-shadow: inset 0 -2px 0 var(--color-accent);
+}
+
+#alleyRoot .tool-filter:focus-visible,
+#alleyRoot #tTools .tool-card:focus-visible {
+  outline: 2px solid var(--theme-focus, var(--color-accent));
+  outline-offset: 2px;
+}
+
+#alleyRoot .tool-search {
+  flex: 0 1 238px;
+}
+
+#alleyRoot .tool-search input {
+  width: 100%;
+  height: 25px;
+  padding: 0 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  color: var(--n200);
+  font: inherit;
+  font-size: 11px;
+}
+
+#alleyRoot .tools-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(330px, 370px);
+  gap: 0;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+#alleyRoot .tools-catalog,
+#alleyRoot #toolPanel {
+  border: 0;
+  border-radius: 0;
+  background: var(--panel);
+  box-shadow: none;
+}
+
+#alleyRoot .tools-catalog {
+  padding: 0;
+  border-right: 1px solid var(--glass-border);
+  overflow: auto;
+}
+
+#alleyRoot .tools-catalog-head {
+  min-height: 24px;
+  padding: 0 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--n500);
+  font-size: 9.5px;
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, var(--glass-reflection-start), var(--glass-reflection-end)),
+    color-mix(in srgb, var(--color-surface) 72%, var(--glass-bg));
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+#alleyRoot .tools-catalog-head strong {
+  color: var(--n300);
+  font-size: 10px;
+}
+
+#alleyRoot #toolsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(168px, 1fr));
+  gap: 4px;
+  padding: 4px;
+  background: var(--color-bg);
+}
+
+#alleyRoot #tTools .tool-card {
+  position: relative;
+  min-height: 94px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--n300);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  transition: border-color 100ms ease, background 100ms ease;
+}
+
+#alleyRoot #tTools .tool-card[hidden] {
+  display: none !important;
+}
+
+#alleyRoot #tTools .tool-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 12px 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-accent) 36%, transparent), transparent);
+  opacity: 0;
+}
+
+#alleyRoot #tTools .tool-card:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 34%, var(--glass-border));
+  background: color-mix(in srgb, var(--color-accent) 5%, var(--panel));
+}
+
+#alleyRoot #tTools .tool-card[data-selected="true"] {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--panel));
+  box-shadow: inset 3px 0 0 var(--color-accent), inset 0 1px 0 var(--glass-highlight);
+}
+
+#alleyRoot #tTools .tool-card[data-selected="true"]::after {
+  opacity: 1;
+}
+
+#alleyRoot #tTools .tool-card[data-available="false"] {
+  background: color-mix(in srgb, var(--color-surface) 42%, transparent);
+}
+
+#alleyRoot .olt-card-head,
+#alleyRoot .olt-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+#alleyRoot .olt-tool-mark {
+  min-width: 30px;
+  height: 17px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--glass-border));
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 7%, transparent);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .055em;
+}
+
+#alleyRoot .olt-availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--n600);
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+
+#alleyRoot .olt-availability::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 10%, transparent);
+}
+
+#alleyRoot .olt-availability[data-state="success"] {
+  color: var(--state-ok, var(--color-accent));
+}
+
+#alleyRoot .olt-availability[data-state="error"] {
+  color: var(--state-warn, var(--n500));
+}
+
+#alleyRoot .olt-card-title {
+  margin-top: 6px;
+  color: var(--n100);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+#alleyRoot .olt-summary {
+  margin-top: 2px;
+  color: var(--n500);
+  font-size: 9.5px;
+  line-height: 1.3;
+}
+
+#alleyRoot .olt-card-foot {
+  margin-top: auto;
+  padding-top: 5px;
+  color: var(--n700);
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+
+#alleyRoot .olt-card-output {
+  color: var(--n500);
+}
+
+#alleyRoot #toolPanel {
+  position: relative;
+  min-height: 100%;
+  max-height: none;
+  padding: 10px;
+  overflow: auto;
+  scrollbar-color: var(--n800) transparent;
+}
+
+#alleyRoot .olt-panel-overview {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+#alleyRoot .olt-panel-overview .olt-tool-mark {
+  min-width: 36px;
+  height: 21px;
+}
+
+#alleyRoot .olt-panel-eyebrow {
+  margin-bottom: 5px;
+  color: var(--color-accent);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+#alleyRoot .olt-panel-title {
+  margin: 0 0 5px;
+  color: var(--n100);
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: -.015em;
+}
+
+#alleyRoot .olt-panel-note {
+  margin-bottom: 9px;
+  color: var(--n500);
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+#alleyRoot .olt-panel-meta {
+  margin: 9px 0;
+  padding: 7px 8px;
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 4px 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  color: var(--n500);
+  font-size: 10px;
+}
+
+#alleyRoot .olt-panel-meta b {
+  color: var(--n300);
+  font-weight: 650;
+}
+
+#alleyRoot .olt-blocked {
+  margin-top: 9px;
+  padding: 9px;
+  border: 1px solid color-mix(in srgb, var(--state-warn, var(--color-accent)) 34%, var(--glass-border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--state-warn, var(--color-accent)) 7%, transparent);
+}
+
+#alleyRoot .olt-blocked strong,
+#alleyRoot .olt-blocked span {
+  display: block;
+}
+
+#alleyRoot .olt-blocked strong {
+  color: var(--n200);
+  font-size: 11px;
+}
+
+#alleyRoot .olt-blocked span {
+  margin-top: 5px;
+  color: var(--n500);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+
+#alleyRoot #toolPanel .formrow {
+  min-height: 26px;
+  gap: 8px;
+}
+
+#alleyRoot #toolPanel .formrow label {
+  flex-basis: 96px;
+  width: 96px;
+  min-width: 96px;
+  color: var(--n500);
+  font-size: 10px;
+}
+
+#alleyRoot #toolPanel input[type="text"],
+#alleyRoot #toolPanel input[type="file"],
+#alleyRoot #toolPanel select,
+#alleyRoot #toolPanel textarea {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+  color: var(--n200);
+}
+
+#alleyRoot #toolPanel input[type="text"],
+#alleyRoot #toolPanel select {
+  min-height: 23px;
+  padding: 0 8px;
+}
+
+#alleyRoot #toolPanel input[type="file"] {
+  max-width: 100%;
+  padding: 5px;
+  font-size: 10px;
+}
+
+#alleyRoot .olt-actions {
+  margin: 7px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+#alleyRoot .olt-status {
+  min-height: 20px;
+  margin-top: 8px;
+  color: var(--n600);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+#alleyRoot .olt-status[data-state="pending"] {
+  color: var(--n400);
+}
+
+#alleyRoot .olt-status[data-state="success"] {
+  color: var(--state-ok, var(--color-accent));
+}
+
+#alleyRoot .olt-status[data-state="error"] {
+  color: var(--state-err, var(--n300));
+}
+
+#alleyRoot .olt-script-output {
+  width: 100%;
+  min-height: 230px;
+  padding: 8px;
+  resize: vertical;
+  font: 10.5px/1.5 ui-monospace, Consolas, monospace;
+}
+
+#alleyRoot .olt-drop-zone {
+  padding: 9px;
+  border: 1px dashed var(--n700);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+}
+
+#alleyRoot .olt-drop-zone[data-dragover="true"] {
+  border-style: solid;
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+#alleyRoot .olt-drop-inner,
+#alleyRoot .olt-media-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+#alleyRoot .olt-drop-hint {
+  margin-top: 7px;
+  color: var(--n700);
+  font-size: 9.5px;
+}
+
+#alleyRoot .olt-content-well {
+  background: var(--content-black);
+}
+
+#alleyRoot .olt-camera-preview {
+  width: 100%;
+  max-width: 340px;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+#alleyRoot .olt-meter {
+  width: 100%;
+  height: 14px;
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+}
+
+#alleyRoot .olt-meter-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--state-ok, var(--color-accent)), var(--color-accent));
+}
+
+#alleyRoot .olt-mono-status {
+  white-space: pre-line;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+#alleyRoot .olt-playback {
+  width: 100%;
+  margin-top: 8px;
+}
+
+#alleyRoot .olt-empty {
+  display: none;
+}
+
+#alleyRoot .olt-document-status {
+  margin: 9px 0;
+}
+
+#alleyRoot .olt-document-pages {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+#alleyRoot .olt-document-page {
+  padding: 4px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
+}
+
+#alleyRoot .olt-document-page img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+}
+
+#alleyRoot .olt-page-name {
+  padding-top: 4px;
+  color: var(--n600);
+  font-size: 9px;
+}
+
+#alleyRoot .tools-no-results {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  color: var(--n600);
+  font-size: 11px;
+}
+
+#alleyRoot .tools-no-results[hidden] {
+  display: none;
+}
+
+@media (max-width: 1120px) {
+  #alleyRoot .tools-stage {
+    grid-template-columns: minmax(0, 1fr) 330px;
+  }
+
+  #alleyRoot #toolsGrid {
+    grid-template-columns: repeat(2, minmax(170px, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  #alleyRoot .tools-shell {
+    height: auto;
+    overflow: visible;
+  }
+
+  #alleyRoot .tools-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #alleyRoot .tools-health {
+    width: 100%;
+  }
+
+  #alleyRoot .tools-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  #alleyRoot .tool-search {
+    flex-basis: auto;
+  }
+
+  #alleyRoot .tools-stage {
+    flex: 0 0 auto;
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  #alleyRoot .tools-catalog {
+    overflow: visible;
+  }
+
+  #alleyRoot #toolPanel {
+    position: static;
+    min-height: 0;
+    max-height: none;
+  }
+}
+
+@media (max-width: 620px) {
+  #alleyRoot .tools-shell {
+    padding: 8px;
+  }
+
+  #alleyRoot .tools-filters {
+    overflow-x: auto;
+  }
+
+  #alleyRoot #toolsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  #alleyRoot .tools-health > div {
+    padding-inline: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #alleyRoot #tTools .tool-card,
+  #alleyRoot #mainTabs .win-tab {
+    transition: none;
+  }
+}

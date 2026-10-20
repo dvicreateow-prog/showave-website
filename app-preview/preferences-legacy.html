@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<title>SHOWAVE Preferences: Legacy</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<script src="showave-brand.js"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+/* preferences.html — page-specific only.
+   Everything structural (.win-root .win-title .side-tab .formgroup .formrow
+   .tb-btn .datatable .statusline .win-chip) is already themed by windows.css
+   and is used as-is. Nothing below re-declares those rules. */
+
+[hidden]{ display:none !important; }
+
+/* the pane header: title on the left, pane tools pushed to the top right —
+   this is what puts the MIDI / OSC monitor icon "in the top-right" */
+.pane-head{ display:flex; align-items:center; gap:var(--space-3);
+  max-width:660px; margin-bottom:var(--space-3); }
+.pane-head h2{ margin:0; }
+.pane-head .sp{ flex:1; }
+
+/* a manual note / tip: hairline card with the accent as a single edge */
+.ptip{ max-width:660px; margin:0 0 var(--space-4);
+  padding:var(--space-2) var(--space-3);
+  border:1px solid var(--n800); border-left:2px solid var(--color-accent);
+  border-radius:var(--radius-sm);
+  background:color-mix(in srgb, var(--color-accent) 8%, transparent);
+  font-size:10.5px; color:var(--n500); }
+/* CASING. Resolume shouts in the string, never with a stylesheet: of the 878
+   keys in reference/docs/gui/English.txt exactly 25 are all-caps, and each is a
+   compact transport/action button (RECORD, STOP, TAP, RESYNC, LINK, PAUSE,
+   METRONOME, PICK, ADD), an alarm (LOW MEMORY!!) or an acronym. Section
+   headers, menu group headings, tab labels, column headers and state chips are
+   Title Case throughout the string table and all 83 manual pages. The blanket
+   text-transform rules in this window were removed for that reason and the
+   caps-tuned tracking relaxed with them; nocturne.css and windows.css, which
+   this window also loads, no longer shout their equivalents, so leaving these
+   would paint one class of element in two conventions in one window. */
+.ptip b{ display:block; margin-bottom:2px; font-size:9.5px; font-weight:500; letter-spacing:.01em; color:var(--a300); }
+.formgroup .ptip{ max-width:none; margin:var(--space-2) 0 0; }
+
+/* a read-only state value sitting where a field would be */
+.pstate{ font-size:11.5px; color:var(--a300); }
+.pstate.dim{ color:var(--n300); }
+.pstate.warn{ color:var(--amber); }
+
+/* directory lists (VST plugin directories, FFGL plugin directories) */
+.dirlist{ background:var(--inset); border:1px solid var(--n800);
+  border-radius:var(--radius-sm); max-height:96px; overflow-y:auto;
+  margin-bottom:var(--space-2); }
+.dirlist > div{ padding:2px var(--space-3); font-size:11.5px; color:var(--n300);
+  cursor:pointer; }
+.dirlist > div:hover{ background:color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color:var(--n200); }
+.dirlist > div.sel{ background:color-mix(in srgb, var(--color-accent) 20%, transparent);
+  color:var(--n100); box-shadow:inset 2px 0 0 var(--color-accent); }
+.dirlist > div.locked{ color:var(--n600); cursor:default; }
+.dirlist > div.locked:hover{ background:transparent; color:var(--n600); }
+.dirlist > div.locked::after{ content:'always checked'; float:right;
+  font-size:9.5px; letter-spacing:.01em; color:var(--n700); }
+
+/* feedback message box */
+.fb-text{ display:block; width:100%; max-width:660px; height:110px;
+  background:var(--inset); border:1px solid var(--n800); color:var(--n200);
+  border-radius:var(--radius-sm); padding:var(--space-2);
+  font:var(--font); resize:vertical; }
+.fb-text:hover{ border-color:var(--n700); }
+
+/* MIDI / OSC monitor pop-ups */
+.mon-bar{ display:flex; align-items:center; gap:var(--space-2);
+  padding:var(--space-2) var(--space-3); background:var(--strip);
+  border-bottom:1px solid var(--line); }
+.monlog{ font:11px/1.5 Consolas, "SF Mono", monospace; height:280px;
+  overflow:auto; padding:var(--space-2) var(--space-3); background:var(--inset);
+  font-variant-numeric:tabular-nums; }
+.monlog .ml{ color:var(--n400); white-space:nowrap; }
+.monlog .ml b{ display:inline-block; width:26px; font-weight:500; color:var(--n600); }
+.monlog .ml.out b{ color:var(--a400); }
+.monlog:empty::after{ content:'Waiting for messages…'; color:var(--n700); }
+
+/* a chip used as a marker rather than a control */
+.win-chip.static{ cursor:default; }
+.win-chip.static:hover{ border-color:var(--n800); color:var(--n600); }
+</style>
+</head>
+<body>
+<div class="win-root">
+
+  <div class="win-title"><span data-showave-brand="live">SHOWAVE Live</span> Preferences
+    <span class="sp"><a class="plainlink" href="index.html">← back to SHOWAVE Live</a></span></div>
+
+  <div class="win-main">
+
+    <!-- The pane list, in the order the manual walks them. -->
+    <nav class="side-tabs" id="tabs">
+      <div class="side-tab active" data-t="general">General</div>
+      <div class="side-tab" data-t="audio">Audio</div>
+      <div class="side-tab" data-t="video">Video</div>
+      <div class="side-tab" data-t="midi">MIDI</div>
+      <div class="side-tab" data-t="osc">OSC</div>
+      <div class="side-tab" data-t="dmx">DMX</div>
+      <div class="side-tab" data-t="recording">Recording</div>
+      <div class="side-tab" data-t="cliprender">Clip Rendering</div>
+      <div class="side-tab" data-t="defaults">Defaults</div>
+      <div class="side-tab" data-t="feedback">Feedback</div>
+      <div class="side-tab" data-t="webserver">Webserver</div>
+      <div class="side-tab" data-t="registration">Registration</div>
+    </nav>
+
+    <div class="win-content">
+
+      <!-- ============================ GENERAL ============================ -->
+      <section data-tab="general">
+        <div class="pane-head"><h2>General Preferences</h2></div>
+
+        <div class="formgroup"><h3>Clip Panel</h3>
+          <div class="formrow"><label>Update the Clip Panel when a clip is triggered</label>
+            <input type="checkbox" checked></div>
+          <div class="hint">Turn it off when you are using an external source for triggering a
+            sequence of clips (via MIDI, OSC or DMX), while you are applying effects on another
+            clip at the same time.</div>
+        </div>
+
+        <div class="formgroup"><h3>Clip Start Offset</h3>
+          <div class="formrow"><label>Clip Start Offset</label>
+            <input type="number" value="0" min="0" max="2000"><span class="unit">ms</span></div>
+          <div class="hint">Lets a clip start an amount of milliseconds further into the timeline
+            of the clip, to compensate for delays with MIDI triggering and/or long cable runs.</div>
+        </div>
+
+        <div class="formgroup"><h3>Scrolling</h3>
+          <div class="formrow"><label>Scroll Layers and Clips into view</label>
+            <input type="checkbox" checked></div>
+          <div class="hint">When this is checked, Resolume scrolls the deck to the clip or layer
+            you just selected.</div>
+        </div>
+
+        <div class="formgroup"><h3>Font</h3>
+          <div class="formrow"><label>Use Arial Unicode</label><input type="checkbox"></div>
+          <div class="hint">If you are using non-latin characters, and having trouble displaying
+            them correctly, please enable this.</div>
+        </div>
+
+        <div class="formgroup"><h3>Software Updates</h3>
+          <div class="formrow"><label>Notify me about new software updates</label>
+            <input type="checkbox" checked></div>
+          <div class="formrow"><label>Release Channel</label>
+            <select><option>Stable</option><option>Beta</option></select>
+            <button class="tb-btn" type="button" id="updBtn">Check for updates</button></div>
+          <div class="hint" id="updNote"></div>
+        </div>
+
+        <div class="formgroup"><h3>Quit Confirmation</h3>
+          <div class="formrow"><label>Quit Confirmation</label><input type="checkbox" checked></div>
+          <div class="hint">With this disabled, Resolume will shut down immediately when you hit
+            CTRL/CMD+Q or choose to quit via the menu.</div>
+          <div class="ptip"><b>Tip</b>Turn off the Quit Confirmation in combination with the
+            ‘Trigger First Clip when Composition Has Loaded’ function found in the Layer menu to
+            use Resolume for fixed installations where the computer starts up and shuts down
+            automatically.</div>
+        </div>
+
+        <div class="formgroup"><h3>Startup Screen</h3>
+          <div class="formrow"><label>Show splash screen on startup</label>
+            <input type="checkbox" checked></div>
+        </div>
+
+        <div class="formgroup"><h3>Pioneer DJ Network Interface</h3>
+          <div class="formrow"><label>Interface</label>
+            <select><option>No interfaces available</option>
+              <option>Ethernet: 192.168.1.20</option></select></div>
+        </div>
+      </section>
+
+      <!-- ============================= AUDIO ============================= -->
+      <section data-tab="audio" hidden>
+        <div class="pane-head"><h2>Audio Preferences</h2></div>
+        <p class="lead">The audio tab presents you with options that control how audio should be
+          output from Resolume.</p>
+
+        <div class="formgroup"><h3>Audio Output Device</h3>
+          <div class="formrow"><label>Audio Output Device</label>
+            <select id="audioOut">
+              <option>Speakers (Realtek HD)</option>
+              <option>ASIO: Focusrite USB</option>
+              <option>None</option></select>
+            <button class="tb-btn" type="button" id="asioBtn" hidden>ASIO Settings…</button></div>
+          <div class="formrow"><label>Master Output Delay</label>
+            <input type="range" min="0" max="500" value="0"><span class="unit"><output>0</output> ms</span></div>
+          <div class="hint">If an ASIO device is selected, an extra button is displayed that
+            enables access to ASIO settings.</div>
+        </div>
+
+        <div class="formgroup"><h3>Output Channels</h3>
+          <div class="formrow"><label>Master Output Channels</label>
+            <select><option>1 / 2</option><option>3 / 4</option><option>5 / 6</option></select></div>
+          <div class="formrow"><label>Preview Output Channels</label>
+            <select><option>None</option><option>1 / 2</option><option>3 / 4</option></select></div>
+          <div class="hint">If you are using an audio device that supports more than two channels,
+            you can choose the channels used for monitoring the preview audio.</div>
+        </div>
+
+        <div class="formgroup"><h3>Sample Rate</h3>
+          <div class="formrow"><label>Sample Rate</label>
+            <select><option selected>44100</option><option>48000</option><option>96000</option></select></div>
+          <div class="hint">Higher sample rates provide higher quality audio but will require more
+            processing, especially if audio effects are in use. 44100 is a good choice.</div>
+        </div>
+
+        <div class="formgroup"><h3>Buffer Size</h3>
+          <div class="formrow"><label>Buffer Size</label>
+            <select><option>256</option><option selected>512</option><option>1024</option>
+              <option>2048</option></select></div>
+          <div class="hint">Higher buffer sizes will introduce more latency into the system but
+            setting the buffer size too low may cause glitches in the audio. 512 or 1024 are
+            usually safe choices.</div>
+        </div>
+
+        <div class="formgroup"><h3>Audio Input Device</h3>
+          <div class="formrow"><label>Audio Input Device</label>
+            <select><option>None</option><option>Microphone (USB)</option>
+              <option>Line In</option></select>
+            <button class="tb-btn" type="button">Refresh</button></div>
+        </div>
+
+        <div class="formgroup"><h3>Audio FFT</h3>
+          <div class="formrow"><label>External Audio FFT Input</label>
+            <select><option>1 / 2</option><option>3 / 4</option></select></div>
+          <div class="formrow"><label>Audio FFT Input Gain</label>
+            <input type="range" min="0" max="100" value="50" data-param="/composition/fft/gain"
+                   data-scale="100"><span class="unit"><output>50</output>%</span></div>
+          <div class="hint">You can boost the gain if the signal is coming in too low.</div>
+          <div class="ptip"><b>Tip</b>You can also set the FFT gain in the main interface via
+            View &gt; Show FFT Gain.</div>
+        </div>
+
+        <div class="formgroup"><h3>SMPTE <span class="win-chip static">Arena only</span></h3>
+          <div class="formrow"><label>SMPTE Timecode Input 1</label>
+            <select><option>None</option><option>Input 1</option><option>Input 2</option></select></div>
+          <div class="formrow"><label>SMPTE Timecode Input 2</label>
+            <select><option>None</option><option>Input 1</option><option>Input 2</option></select></div>
+          <div class="formrow"><label>SMPTE Timecode Output</label>
+            <select><option>None</option><option>Output 1 / 2</option></select></div>
+          <div class="formrow"><label>SMPTE Timecode Framerate</label>
+            <select><option>24</option><option selected>25</option><option>29.97</option>
+              <option>30</option></select></div>
+          <div class="formrow"><label>Enable SMPTE out via OSC</label><input type="checkbox"></div>
+          <div class="hint">On Arena, you can select which channels to use for your source of SMPTE
+            sync. You can read all about this in the SMPTE chapter.</div>
+        </div>
+
+        <div class="formgroup"><h3>VST Directories</h3>
+          <div class="hint" style="padding-left:0">VST Plugin Directories are the directories
+            (folders) that Resolume should look in for VST audio effects and sources.</div>
+          <div class="dirbox">
+            <div class="dirlist">
+              <div>C:\Program Files\VSTPlugins</div>
+              <div>C:\Program Files\Common Files\VST3</div>
+            </div>
+            <div class="formrow"><label>Directory</label>
+              <input type="text" placeholder="Type a path, then Add Directory…"></div>
+            <div class="formrow"><label></label>
+              <button class="tb-btn" type="button" data-add>Add Directory…</button>
+              <button class="tb-btn" type="button" data-remove disabled>Remove</button></div>
+          </div>
+          <div class="hint">A web page cannot open a native folder picker, so the path is typed
+            rather than browsed.</div>
+        </div>
+      </section>
+
+      <!-- ============================= VIDEO ============================= -->
+      <section data-tab="video" hidden>
+        <div class="pane-head"><h2>Video Preferences</h2></div>
+
+        <div class="formgroup"><h3>FFGL Directories</h3>
+          <div class="hint" style="padding-left:0">On the Video tab, you can select the directories
+            that you want Resolume to look in for FFGL effects and sources.</div>
+          <div class="dirbox">
+            <div class="dirlist">
+              <div class="locked">Documents\Resolume Arena\Extra Effects</div>
+              <div>C:\Program Files\Common Files\FreeFrame</div>
+            </div>
+            <div class="formrow"><label>Directory</label>
+              <input type="text" placeholder="Type a path, then Add Directory…"></div>
+            <div class="formrow"><label></label>
+              <button class="tb-btn" type="button" data-add>Add Directory…</button>
+              <button class="tb-btn" type="button" data-remove disabled>Remove</button></div>
+          </div>
+          <div class="ptip"><b>Note</b>Resolume always checks the Extra Effects folder in the
+            user’s Documents. For a hassle free plugin setup, install custom plugins there. They
+            will then load automatically on the next startup.</div>
+          <div class="hint">Bundled: ChromaKey, FFGLBarShift, FFGLEdgeDetection, FFGLStopMotion,
+            FFGLWaveWarp, SyzGL_Fragment, SyzGL_Goo, SyzGL_Iterate, SyzGL_Kaleidoscope,
+            SyzGL_RadialBlur, SyzGL_Ripples, SyzGL_Stripper, SyzGL_Tunnel, SyzGL_VideoWall.</div>
+        </div>
+
+        <div class="formgroup"><h3>DMA Textures</h3>
+          <div class="formrow"><label>DMA Textures</label>
+            <select><option selected>Force ON</option><option>Force OFF</option>
+              <option>Autodetect</option></select></div>
+          <div class="formrow"><label>Use Custom NVidia Profile</label><input type="checkbox"></div>
+          <div class="hint">Changes how Resolume sends your pixels from your computer’s hard drive
+            to the graphic card. The recommended setting is Force ON. This is also the default.
+            Only if you are experiencing performance problems on older or lower end GPUs, should
+            you switch to Force OFF. Autodetect is a legacy setting.</div>
+        </div>
+      </section>
+
+      <!-- ============================== MIDI ============================= -->
+      <section data-tab="midi" hidden>
+        <div class="pane-head"><h2>MIDI Preferences</h2><span class="sp"></span>
+          <button class="tb-btn" type="button" id="midiMonBtn" title="Pop up the MIDI monitor">
+            <span aria-hidden="true">▤</span> Monitor</button></div>
+        <p class="lead">Here you can enable or disable MIDI input and output from and to devices.</p>
+
+        <div class="formgroup"><h3>MIDI Devices</h3>
+          <table class="datatable">
+            <thead><tr><th>Device</th><th>Input</th><th>Output</th><th>Clock In</th>
+              <th>Clock Out</th></tr></thead>
+            <tbody>
+              <tr><td>APC40 mkII</td><td><input type="checkbox" checked></td>
+                <td><input type="checkbox" checked></td><td><input type="checkbox"></td>
+                <td><input type="checkbox"></td></tr>
+              <tr><td>Launchpad Pro MK3</td><td><input type="checkbox"></td>
+                <td><input type="checkbox"></td><td><input type="checkbox"></td>
+                <td><input type="checkbox"></td></tr>
+              <tr><td>loopMIDI Port</td><td><input type="checkbox" checked></td>
+                <td><input type="checkbox"></td><td><input type="checkbox" checked></td>
+                <td><input type="checkbox"></td></tr>
+            </tbody></table>
+          <div class="hint">Click the monitor-icon in the top-right to pop up the MIDI monitor and
+            watch all your incoming and/or outgoing MIDI messages.</div>
+        </div>
+
+        <div class="formgroup"><h3>Middle C</h3>
+          <div class="formrow"><label>Middle C (note 60)</label>
+            <select><option>C3</option><option selected>C4</option><option>Legacy</option></select></div>
+          <div class="hint">Ableton Live uses C3, Traktor uses C4. This doesn’t actually change
+            anything in your MIDI shortcuts. It just changes how the shortcut is displayed in
+            Resolume.</div>
+        </div>
+      </section>
+
+      <!-- =============================== OSC ============================= -->
+      <section data-tab="osc" hidden>
+        <div class="pane-head"><h2>OSC Preferences</h2><span class="sp"></span>
+          <button class="tb-btn" type="button" id="oscMonBtn" title="Pop up the OSC monitor">
+            <span aria-hidden="true">▤</span> Monitor</button></div>
+        <p class="lead">Here you can enable or disable OSC input and output, as well as set the
+          relevant ports and IP addresses used by OSC.</p>
+
+        <div class="formgroup"><h3>Input</h3>
+          <div class="formrow"><label>OSC input</label><input type="checkbox" checked></div>
+          <div class="formrow"><label>Incoming port</label><input type="number" value="7000"></div>
+        </div>
+
+        <div class="formgroup"><h3>Output</h3>
+          <div class="formrow"><label>OSC output</label><input type="checkbox"></div>
+          <div class="formrow"><label>Target IP address</label><input type="text" value="127.0.0.1"></div>
+          <div class="formrow"><label>Outgoing port</label><input type="number" value="7001"></div>
+          <div class="formrow"><label>Bundles</label><input type="checkbox" checked></div>
+          <div class="hint">With the monitor-icon in the top-right you can quickly see all incoming
+            and/or outgoing OSC messages.</div>
+        </div>
+      </section>
+
+      <!-- =============================== DMX ============================= -->
+      <section data-tab="dmx" hidden>
+        <div class="pane-head"><h2>DMX Preferences</h2><span class="sp"></span>
+          <span class="win-chip static">Arena only</span></div>
+        <p class="lead">You can read all about setting up Lumiverses and Art-Net nodes in the DMX
+          chapter of the manual.</p>
+
+        <div class="formgroup"><h3>ArtNet</h3>
+          <div class="formrow"><label>Network Adapter</label>
+            <select><option>Ethernet: 192.168.1.20</option><option>Wi-Fi: 10.0.0.5</option></select></div>
+          <div class="ptip"><b>Keep in mind</b>The Network Adapter switches both Art-Net input and
+            output to the selected adapter.</div>
+          <div class="formrow"><label>ArtNet Node Name</label><input type="text" value="Resolume Arena"></div>
+          <div class="formrow"><label>Status</label>
+            <span class="pstate">ArtNet initialization succeeded.</span></div>
+          <div class="formrow"><label>Output Framerate</label>
+            <input type="range" min="1" max="60" value="40"><span class="unit"><output>40</output> fps</span></div>
+          <div class="formrow"><label>Output Delay</label>
+            <input type="range" min="0" max="200" value="0"><span class="unit"><output>0</output> ms</span></div>
+          <div class="formrow"><label>Send ArtSync</label><input type="checkbox"></div>
+          <div class="formrow"><label>Synchronized</label><input type="checkbox" checked></div>
+        </div>
+
+        <div class="formgroup"><h3>Lumiverses</h3>
+          <table class="datatable">
+            <thead><tr><th>Lumiverse</th><th>Output Device</th><th>Target IP</th>
+              <th class="num">Subnet</th><th class="num">Universe</th><th>Out</th></tr></thead>
+            <tbody>
+              <tr><td>Lumiverse 1</td><td>ArtNet</td><td>Broadcast</td><td class="num">0</td>
+                <td class="num">0</td><td><input type="checkbox" checked></td></tr>
+              <tr><td>Lumiverse 2</td><td>ArtNet</td><td>192.168.1.51</td><td class="num">0</td>
+                <td class="num">1</td><td><input type="checkbox"></td></tr>
+              <tr><td>Lumiverse 3</td><td>No Output</td><td>Localhost</td><td class="num">0</td>
+                <td class="num">2</td><td><input type="checkbox"></td></tr>
+              <tr><td>Lumiverse 4</td><td>No Output</td><td>Localhost</td><td class="num">0</td>
+                <td class="num">3</td><td><input type="checkbox"></td></tr>
+            </tbody></table>
+          <div class="formrow" style="margin-top:var(--space-3)">
+            <button class="tb-btn" type="button">Add Lumiverse</button>
+            <button class="tb-btn" type="button">Remove</button></div>
+        </div>
+
+        <div class="formgroup"><h3>DMX Inputs</h3>
+          <div class="formrow"><label>Interface List</label>
+            <select><option>Dmx Interface: ArtNet</option></select>
+            <button class="tb-btn" type="button">New Input</button></div>
+          <div class="formrow"><label>Bind IP</label><input type="text" value="0.0.0.0"></div>
+          <div class="formrow"><label>Automap enabled</label><input type="checkbox" checked></div>
+        </div>
+      </section>
+
+      <!-- ============================ RECORDING ========================== -->
+      <section data-tab="recording" hidden>
+        <div class="pane-head"><h2>Recording</h2></div>
+        <p class="lead">Here, you can set the directory that Resolume will use to store video
+          recordings and still image snapshots.</p>
+
+        <div class="formgroup"><h3>Directory</h3>
+          <div class="formrow"><label>Recordings directory</label>
+            <input type="text" value="Documents\Resolume Arena\Recorded">
+            <button class="tb-btn" type="button" disabled
+              title="A web page cannot open a native folder picker">Browse…</button></div>
+          <div class="hint">Browse… needs a native folder picker, which a browser page cannot open.
+            Type the path instead.</div>
+        </div>
+
+        <div class="formgroup"><h3>Record</h3>
+          <div class="formrow"><label>Record Video</label><input type="checkbox" checked></div>
+          <div class="formrow"><label>Record Audio</label><input type="checkbox" checked></div>
+        </div>
+
+        <div class="formgroup"><h3>Codec</h3>
+          <div class="formrow"><label>Video codec</label>
+            <select><option>DXV 3 – Normal Quality</option><option>DXV 3 – High Quality</option>
+              <option>H.264</option></select></div>
+        </div>
+      </section>
+
+      <!-- ========================== CLIP RENDERING ======================= -->
+      <section data-tab="cliprender" hidden>
+        <div class="pane-head"><h2>Clip Rendering</h2></div>
+        <p class="lead">In this tab you can set a custom output directory for all your renderings
+          made with the clip renderer and set the codec details you prefer.</p>
+
+        <div class="formgroup"><h3>Output Directory</h3>
+          <div class="formrow"><label>Renders directory</label>
+            <input type="text" value="Documents\Resolume Arena\Renders">
+            <button class="tb-btn" type="button" disabled
+              title="A web page cannot open a native folder picker">Browse…</button></div>
+          <div class="hint">Browse… needs a native folder picker, which a browser page cannot open.
+            Type the path instead.</div>
+        </div>
+
+        <div class="formgroup"><h3>Codec</h3>
+          <div class="formrow"><label>Video codec</label>
+            <select><option>DXV 3 – Normal Quality</option>
+              <option>DXV 3 – High Quality (No Alpha)</option>
+              <option>DXV 3 – High Quality (With Alpha)</option>
+              <option>PNG Sequence</option></select></div>
+          <div class="formrow"><label>Include audio</label><input type="checkbox" checked></div>
+        </div>
+      </section>
+
+      <!-- ============================ DEFAULTS =========================== -->
+      <section data-tab="defaults" hidden>
+        <div class="pane-head"><h2>Defaults</h2></div>
+        <p class="lead">This section allows you to change several default settings to be used when
+          importing files or creating a new composition.</p>
+
+        <div class="formgroup"><h3>Default Transport and Play Mode</h3>
+          <div class="formrow"><label>Default Video Clip Transport</label>
+            <select class="pm-transport"></select></div>
+          <div class="formrow"><label>Default Video Clip Play Mode</label>
+            <select class="pm-play"></select></div>
+          <div class="formrow"><label>Default Audio Clip Transport</label>
+            <select class="pm-transport"></select></div>
+          <div class="formrow"><label>Default Audio Clip Play Mode</label>
+            <select class="pm-play"></select></div>
+          <div class="hint">Whatever you choose here will be the default setting for files that you
+            import from that moment on. AV files or videos with a (silent) audio track will use the
+            settings for audio. This does not affect clips that were already imported.</div>
+        </div>
+
+        <div class="formgroup"><h3>Default Blend Mode</h3>
+          <div class="formrow"><label>Default Layer Blend Mode</label>
+            <select id="defBlend"></select></div>
+          <div class="hint">Choose which Blend Mode newly created layers will use.</div>
+        </div>
+
+        <div class="formgroup"><h3>Tempo Nudge Range</h3>
+          <div class="formrow"><label>Tempo Nudge Range</label>
+            <input type="range" min="1" max="100" value="25"><span class="unit"><output>25</output>%</span></div>
+          <div class="hint">When nudging the BPM up or down, this sets what percentage of the
+            current BPM it shifts the BPM up or down with. 10% is good when doing actual audio
+            stuff; 25% is more suited when syncing visuals to music.</div>
+        </div>
+      </section>
+
+      <!-- ============================ FEEDBACK =========================== -->
+      <section data-tab="feedback" hidden>
+        <div class="pane-head"><h2>Feedback</h2></div>
+        <p class="lead">Here you can contact us. Either way, we always love to hear from you.</p>
+
+        <div class="formgroup"><h3>Tell us what you think</h3>
+          <div class="formrow"><label>Your email</label>
+            <input type="text" value="afro.unity256@gmail.com"></div>
+          <div class="formrow"><label>Message</label></div>
+          <textarea class="fb-text" placeholder="Bug reports, feature requests, love letters…"></textarea>
+          <div class="formrow" style="margin-top:var(--space-3)">
+            <label>Attach logfile</label><input type="checkbox"></div>
+          <div class="hint">Log files live in $USER_HOME\AppData\Local\Resolume Arena\ on
+            Windows, and $USER_HOME/Library/Logs/Resolume Arena/ on Mac.</div>
+          <div class="formrow" style="margin-top:var(--space-3)">
+            <button class="tb-btn on" type="button" id="fbSend">Send</button>
+            <span class="hint" id="fbNote"></span></div>
+        </div>
+      </section>
+
+      <!-- =========================== WEBSERVER =========================== -->
+      <section data-tab="webserver" hidden>
+        <div class="pane-head"><h2>Webserver</h2></div>
+        <p class="lead">Activate the Webserver and REST API and set the correct port and address.</p>
+
+        <div class="formgroup"><h3>Enable Webserver &amp; REST API</h3>
+          <div class="formrow"><label>Enabled</label><input type="checkbox"></div>
+          <div class="formrow"><label>Listen Address</label><input type="text" value="0.0.0.0"></div>
+          <div class="formrow"><label>Listen Port</label><input type="number" value="8080"></div>
+          <div class="formrow"><label>Root Directory</label>
+            <input type="text" value="Documents\Resolume Arena\Webserver">
+            <button class="tb-btn" type="button" disabled
+              title="A web page cannot open a native folder picker">Browse…</button></div>
+          <div class="formrow"><label>IP Address</label>
+            <span class="pval">http://192.168.1.20:8080/api/v1</span></div>
+        </div>
+      </section>
+
+      <!-- ========================== REGISTRATION ========================= -->
+      <section data-tab="registration" hidden>
+        <div class="pane-head"><h2>Registration</h2></div>
+        <p class="lead">Read all about making your Resolume legit and how to switch your license
+          between computers in the Registration chapter.</p>
+
+        <div class="formgroup"><h3>License</h3>
+          <div class="formrow"><label>Status</label>
+            <span class="pstate">Registered: Arena</span></div>
+          <div class="formrow"><label>Registered to</label>
+            <span class="pstate dim">Afro Unity: afro.unity256@gmail.com</span></div>
+          <div class="formrow"><label>Serial</label>
+            <input type="text" value="ARNA-XXXX-XXXX-XXXX-7270"></div>
+          <div class="formrow"><label></label>
+            <button class="tb-btn" type="button">Deactivate This Computer</button>
+            <button class="tb-btn" type="button">Buy Upgrade…</button></div>
+          <div class="hint">A license can be moved between computers by deactivating it here and
+            registering on the other machine.</div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="statusline"><span>Preferences are applied immediately.</span>
+    <span class="ao-buspill cold" data-bus-state>no Show</span>
+    <span id="prefScope">Rows marked ● are connected to the running Show.</span></div>
+</div>
+
+<!-- ===== MIDI / OSC monitors — popped up from the monitor-icon in the top-right ===== -->
+<div class="overlay" id="midiMon">
+  <div class="dialog" style="min-width:520px">
+    <div class="fw-title">MIDI Monitor
+      <span class="x" data-close>✕</span></div>
+    <div class="mon-bar">
+      <span class="win-chip on" data-dir="in">In</span>
+      <span class="win-chip on" data-dir="out">Out</span>
+      <span class="tb-sp"></span>
+      <button class="tb-btn small" type="button" data-clear>Clear</button></div>
+    <div class="monlog" id="midiLog"></div>
+  </div>
+</div>
+<div class="overlay" id="oscMon">
+  <div class="dialog" style="min-width:520px">
+    <div class="fw-title">OSC Monitor
+      <span class="x" data-close>✕</span></div>
+    <div class="mon-bar">
+      <span class="win-chip on" data-dir="in">In</span>
+      <span class="win-chip on" data-dir="out">Out</span>
+      <span class="tb-sp"></span>
+      <button class="tb-btn small" type="button" data-clear>Clear</button></div>
+    <div class="monlog" id="oscLog"></div>
+  </div>
+</div>
+
+<!-- This window used to load nothing at all, so every control here changed a
+     value that no other window read and that did not survive a reload of this
+     page. These two give it the same view of the composition the main window
+     has: arena-bus.js carries it, arena-client.js addresses parameters by their
+     REST path. -->
+<script src="arena-bus.js"></script>
+<script src="arena-client.js"></script>
+<script>
+/* ---------------------------------------------------------------------------
+   Preferences that are genuinely composition parameters.
+
+   preferences.htm's own Tip on the FFT row states the relationship outright:
+   "You can also set the FFT gain in the main interface via View > Show FFT
+   Gain." Two surfaces, one value — which is exactly the manual's rule for
+   linked controls, and it was unwired on both. A row carrying data-param is
+   bound to that parameter in both directions and marked so you can tell it
+   apart from the rows that are still only drawn.
+
+   data-scale is the factor between what the control shows and what the engine
+   stores: the FFT slider is 0..100, the parameter is 0..1.
+   --------------------------------------------------------------------------- */
+(() => {
+  const AC = window.ArenaClient;
+  if(!AC) return;
+
+  const rows = [...document.querySelectorAll('[data-param]')];
+
+  rows.forEach(el => {
+    const home  = el.dataset.param;
+    const scale = +el.dataset.scale || 1;
+    const out   = el.parentElement.querySelector('output');
+
+    /* mark the row, so "connected" is visible rather than assumed */
+    const label = el.parentElement.querySelector('label');
+    if(label && !label.dataset.bound){
+      label.dataset.bound = '1';
+      label.textContent = '● ' + label.textContent;
+      label.title = 'Shared with the composition: ' + home;
+    }
+
+    el.addEventListener('input', () => {
+      if(out) out.textContent = el.value;
+      AC.set(home, (+el.value) / scale);
+    });
+  });
+
+  /* the composition moving pushes back here, so the two surfaces cannot drift */
+  AC.onChange(() => {
+    rows.forEach(el => {
+      const v = AC.value(el.dataset.param);
+      if(v === undefined) return;
+      const scale = +el.dataset.scale || 1;
+      const shown = String(Math.round(v * scale));
+      if(document.activeElement === el) return;      // never fight a drag
+      if(el.value !== shown){
+        el.value = shown;
+        const out = el.parentElement.querySelector('output');
+        if(out) out.textContent = shown;
+      }
+    });
+  });
+
+  AC.bindStatus(document.querySelector('[data-bus-state]'));
+})();
+
+/* enumerations decoded from Arena.exe */
+const PLAY_MODES = ['Loop','Bounce','Play Once & Hold','Play Once & Clear','Restart','Random'];
+const TRANSPORTS = ['Timeline','BPM Sync','SMPTE'];
+const BLEND_MODES = ['Add','Alpha','B&W','Burn','Cube','Cut','Darken','Difference','Difference I',
+ 'Displace','Dissolve','Dodge','Exclusion','Hard Light','HV Blur','JitterBug','Lighten','LoRez',
+ 'Luma Is Alpha','Luma Key','Luma Key I','Meta Mix','Multi Task','Multiply','Noisy','Overlay',
+ 'Parts','Push Down','Push Left','Push Right','Push Up','RGB','Rotate X','Rotate Y','Screen',
+ 'Shift RGB','Side by Side','Soft Light','Static','Subtract','TimeSwitcher','to Black','to Color',
+ 'to White','Transform','Twitch','Wipe Ellipse','Zoom In','Zoom Out'];
+document.querySelectorAll('.pm-play').forEach(s => PLAY_MODES.forEach(v => s.appendChild(new Option(v,v))));
+document.querySelectorAll('.pm-transport').forEach(s => TRANSPORTS.forEach(v => s.appendChild(new Option(v,v))));
+BLEND_MODES.forEach(v => document.getElementById('defBlend').appendChild(new Option(v,v)));
+document.getElementById('defBlend').value = 'Add';
+
+/* every slider writes back into the <output> in its row */
+document.querySelectorAll('input[type=range]').forEach(r => r.addEventListener('input', () => {
+  const o = r.parentElement.querySelector('output'); if(o) o.value = r.value;
+}));
+
+/* ---- the pane rail, down the left hand side ---------------------------- */
+const tabs = document.querySelectorAll('.side-tab');
+function go(t){
+  tabs.forEach(x => x.classList.toggle('active', x.dataset.t === t));
+  document.querySelectorAll('[data-tab]').forEach(s => s.hidden = s.dataset.tab !== t);
+}
+tabs.forEach(t => t.addEventListener('click', () => go(t.dataset.t)));
+if(location.hash) go(location.hash.slice(1));
+
+/* ---- "If an ASIO device is selected, an extra button will be displayed" -- */
+const audioOut = document.getElementById('audioOut');
+const asioBtn  = document.getElementById('asioBtn');
+function syncAsio(){ asioBtn.hidden = !/ASIO/i.test(audioOut.value); }
+audioOut.addEventListener('change', syncAsio);
+syncAsio();
+
+/* ---- VST / FFGL directory lists ---------------------------------------- */
+document.querySelectorAll('.dirbox').forEach(box => {
+  const list  = box.querySelector('.dirlist');
+  const field = box.querySelector('input[type=text]');
+  const add   = box.querySelector('[data-add]');
+  const rem   = box.querySelector('[data-remove]');
+  list.addEventListener('click', e => {
+    const row = e.target.closest('div');
+    if(!row || row.parentElement !== list || row.classList.contains('locked')) return;
+    list.querySelectorAll('div').forEach(d => d.classList.remove('sel'));
+    row.classList.add('sel');
+    rem.disabled = false;
+  });
+  add.addEventListener('click', () => {
+    const v = field.value.trim();
+    if(!v){ field.focus(); return; }
+    const row = document.createElement('div');
+    row.textContent = v;
+    list.appendChild(row);
+    field.value = '';
+    rem.disabled = true;
+    list.querySelectorAll('div').forEach(d => d.classList.remove('sel'));
+  });
+  rem.addEventListener('click', () => {
+    const sel = list.querySelector('div.sel');
+    if(sel) sel.remove();
+    rem.disabled = true;
+  });
+});
+
+/* ---- honest no-ops: this clone talks to nothing ------------------------ */
+document.getElementById('updBtn').addEventListener('click', () => {
+  document.getElementById('updNote').textContent =
+    'This interface clone does not contact the update server.';
+});
+document.getElementById('fbSend').addEventListener('click', () => {
+  document.getElementById('fbNote').textContent =
+    'Nothing was sent. This interface clone has no mail transport.';
+});
+
+/* ---- the monitor pop-ups ----------------------------------------------- */
+function openMon(id){ document.getElementById(id).classList.add('show'); }
+document.getElementById('midiMonBtn').addEventListener('click', () => openMon('midiMon'));
+document.getElementById('oscMonBtn').addEventListener('click', () => openMon('oscMon'));
+
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('mousedown', e => { if(e.target === o) o.classList.remove('show'); });
+  o.querySelectorAll('.win-chip[data-dir]').forEach(c =>
+    c.addEventListener('click', () => c.classList.toggle('on')));
+  const x = o.querySelector('[data-close]');
+  if(x) x.addEventListener('click', () => o.classList.remove('show'));
+  const clr = o.querySelector('[data-clear]');
+  if(clr) clr.addEventListener('click', () => { o.querySelector('.monlog').innerHTML = ''; });
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') document.querySelectorAll('.overlay.show')
+    .forEach(o => o.classList.remove('show'));
+});
+
+/* incoming and/or outgoing traffic, filtered by the In / Out chips */
+function monPush(id, dir, text){
+  const root = document.getElementById(id);
+  if(!root.classList.contains('show')) return;
+  const chip = root.querySelector('.win-chip[data-dir="' + dir + '"]');
+  if(!chip || !chip.classList.contains('on')) return;
+  const log = root.querySelector('.monlog');
+  const row = document.createElement('div');
+  row.className = 'ml ' + dir;
+  row.innerHTML = '<b>' + dir.toUpperCase() + '</b>';
+  row.appendChild(document.createTextNode(text));
+  log.appendChild(row);
+  while(log.children.length > 200) log.firstElementChild.remove();
+  log.scrollTop = log.scrollHeight;
+}
+const rnd = n => Math.floor(Math.random() * n);
+setInterval(() => {
+  monPush('midiMon', 'in',
+    'APC40 mkII · CC ' + rnd(119) + ' · Ch 1 · val ' + rnd(127));
+  if(Math.random() < .5) monPush('midiMon', 'out',
+    'loopMIDI Port · Note ' + (36 + rnd(48)) + ' · Ch 1 · vel ' + rnd(127));
+  monPush('oscMon', 'in',
+    '/composition/layers/' + (1 + rnd(5)) + '/video/opacity ' + Math.random().toFixed(2));
+  if(Math.random() < .5) monPush('oscMon', 'out',
+    '/composition/layers/' + (1 + rnd(5)) + '/clips/' + (1 + rnd(8)) + '/connect 1');
+}, 700);
+</script>
+</body>
+</html>

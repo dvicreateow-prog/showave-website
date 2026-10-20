@@ -1,0 +1,27 @@
+/* Native footer particles copy the white source SVG pixels. Resolve contrast
+   on this monochrome mark only; preserve alpha, animation and the hidden source. */
+.footer .footer-logo-canvas,
+.footer #footer-particle-canvas {
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+.footer #footer-particle-canvas,
+.footer .footer-logo-placeholder img,
+.footer #source-image-footer {
+  filter: brightness(0) !important;
+}
+/* Appearance resolves custom/automatic palettes to the ink direction, so these
+   selectors also cover custom dark bases and light bases without recolouring
+   any photographs, app previews, world-map colours or interactive controls. */
+html[data-showave-scheme="dark"] .footer #footer-particle-canvas,
+html[data-showave-scheme="dark"] .footer .footer-logo-placeholder img,
+html[data-showave-scheme="dark"] .footer #source-image-footer {
+  filter: brightness(0) invert(1) !important;
+}
+/* Keep the native source hidden; it remains the particle mask rather than a
+   second solid wordmark. The existing responsive placeholder remains the
+   fallback where the native canvas is intentionally not initialized. */
+.footer .footer-logo-main {
+  opacity: 0;
+  pointer-events: none;
+}

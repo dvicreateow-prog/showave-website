@@ -1,0 +1,45 @@
+/* Homepage presentation polish. Spacing and alignment only: no scene, globe,
+   canvas, animation timing or content rules. Remove the <link> to revert. */
+
+/* Welcome card: share one inset across the portrait, the body, the footer and
+   the Continue row, so the wordmark, credit, version, close and pause controls
+   line up with the workspace columns and links below them. The body inset
+   comes from welcome-overlay.css and globe-composition.css (22px up to 767px);
+   the footer and portrait follow it at every width. */
+#showave-welcome-overlay .welcome-home-brand { left: 32px; }
+#showave-welcome-overlay .welcome-home-credit { left: 32px; }
+#showave-welcome-overlay .welcome-home-version { right: 32px; }
+#showave-welcome-overlay .welcome-overlay-close { right: 32px; }
+#showave-welcome-overlay .welcome-home-pause { right: 32px; }
+
+@media (max-width: 767px) {
+  #showave-welcome-overlay .welcome-home-footer,
+  #showave-welcome-overlay .welcome-home-bottom { margin-inline: 22px; }
+  #showave-welcome-overlay .welcome-home-brand,
+  #showave-welcome-overlay .welcome-home-credit { left: 22px; }
+  #showave-welcome-overlay .welcome-home-version,
+  #showave-welcome-overlay .welcome-overlay-close,
+  #showave-welcome-overlay .welcome-home-pause { right: 22px; }
+}
+
+@media (max-width: 380px) {
+  #showave-welcome-overlay .welcome-home-body { padding-inline: 16px; }
+  #showave-welcome-overlay .welcome-home-footer,
+  #showave-welcome-overlay .welcome-home-bottom { margin-inline: 16px; }
+  #showave-welcome-overlay .welcome-home-brand,
+  #showave-welcome-overlay .welcome-home-credit { left: 16px; }
+  #showave-welcome-overlay .welcome-home-version,
+  #showave-welcome-overlay .welcome-overlay-close,
+  #showave-welcome-overlay .welcome-home-pause { right: 16px; }
+}
+
+/* Hero: the sticky header overlaps the hero by the news-bar height, which
+   pushed the call-to-action buttons against the bottom edge on first load.
+   Add that height back so the buttons keep the template's 4rem margin. */
+@media (min-width: 992px) {
+  .home-hero-text-wrap { padding-bottom: 6.4rem; }
+}
+
+/* The km/h readout belonged to the original logistics template and has no
+   meaning for SHOWAVE. Keep its sticky box so the scene layout is unchanged. */
+.home-service-speed { visibility: hidden; }

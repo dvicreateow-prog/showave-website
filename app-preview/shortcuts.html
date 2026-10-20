@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<title>Shortcuts: SHOWAVE Live</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<script src="showave-brand.js"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+  /* ---------------------------------------------------------------------
+     Page-specific layout only. Every look this window needs already exists
+     in windows.css (.win-root/.win-tabs/.tb-btn/.formrow/.formgroup/
+     table.datatable/.statusline) or arena.css (.dropdown/.tree/.titem),
+     so nothing here re-declares a shared rule — it only places things.
+     The manual puts the shortcut list in the panel and the options for the
+     selected shortcut "at the bottom of the panel", so the panel is a
+     column: list on top, options underneath.
+     --------------------------------------------------------------------- */
+
+  .s-tree{ flex:0 0 220px; width:220px; background:var(--panel);
+    border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; }
+  .s-tree .tree{ flex:1; min-height:0; }
+  .s-tree .hint{ border-top:1px solid var(--line); }
+
+  .s-list{ flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; }
+  .s-listhead{ flex:0 0 auto; display:flex; align-items:center; gap:var(--space-3);
+    padding:var(--space-2) var(--space-3); background:var(--strip);
+    border-bottom:1px solid var(--line); }
+  .s-listhead .hint{ margin-left:auto; padding:0; }
+  .s-body{ flex:1; min-height:0; overflow:auto; }
+
+  /* the options strip, at the bottom of the panel */
+  .s-opts{ flex:0 0 auto; max-height:44%; overflow-y:auto; display:flex; flex-wrap:wrap;
+    gap:var(--space-3); padding:var(--space-3); background:var(--panel);
+    border-top:1px solid var(--line); }
+  .s-opts .formgroup{ max-width:none; margin-bottom:0; flex:1 1 296px; min-width:264px; }
+  /* the shared form row keeps its right-aligned label; only the column is
+     narrower here, because these cards sit three-across instead of full width */
+  .s-opts .formrow{ max-width:330px; }
+  .s-opts .formrow label{ flex-basis:104px; width:104px; min-width:104px; }
+  .s-opts .formrow label.inline{ flex:0 0 auto; width:auto; min-width:0; text-align:left;
+    display:inline-flex; align-items:center; gap:var(--space-1); }
+  /* the option cards fold from their heading, like every other section head;
+     !important so a folded card wins over the per-row display the script sets */
+  .s-opts .formgroup[data-folded="1"] > *:not(h3){ display:none !important; }
+  .s-opts .formgroup > h3{ cursor:pointer; }
+  .s-opts .formgroup > h3::before{ content:'▼ '; font-size:7px; color:var(--n600); }
+  .s-opts .formgroup[data-folded="1"] > h3::before{ content:'▶ '; }
+
+  /* the protocol strip that only appears while a shortcut mode is running */
+  .learn{ flex:0 0 auto; display:none; align-items:center; gap:var(--space-3);
+    padding:var(--space-2) var(--space-4); background:var(--head);
+    border-bottom:1px solid var(--line); font-size:11px; color:var(--n300);
+    box-shadow:inset 0 -2px 0 var(--color-accent); }
+  .learn.on{ display:flex; }
+  .learn b{ font-weight:500; color:var(--a200); }
+  .learn .note{ font-size:10.5px; color:var(--n600); }
+
+  .keycap{ display:inline-block; background:var(--inset); border:1px solid var(--n800);
+    border-bottom-width:2px; border-radius:var(--radius-sm); padding:1px var(--space-2);
+    font-size:10.5px; color:var(--n200); min-width:22px; text-align:center; }
+
+  /* the status line is one 20px band, so its items never wrap */
+  #winStatus{ overflow:hidden; }
+  #winStatus span{ white-space:nowrap; }
+
+  .s-body td.path{ cursor:copy; }
+  .s-body td.num{ font-variant-numeric:tabular-nums; }
+  .s-opts .tagread{ font-size:10.5px; color:var(--n500); }
+
+  /* drop target for a preset dragged in from the file browser */
+  #dropZone{ position:fixed; inset:var(--space-6); display:none; place-items:center;
+    align-content:center; z-index:1200; background:var(--bg); }
+  #dropZone.on{ display:grid; }
+</style>
+</head>
+<body>
+<div class="win-root">
+
+  <!-- =====================================================================
+       TITLE STRIP — "You create shortcuts by opening the Shortcuts menu, and
+       choosing which protocol you want to create a shortcut for."  The menu
+       is a real dropdown carrying the manual's four Edit entries and their
+       documented keys, plus Stop Shortcut Editing on Esc.
+       ===================================================================== -->
+  <div class="win-title">
+    <span data-showave-brand="live">SHOWAVE Live</span>
+    <div class="menu-top" id="mShortcuts">Shortcuts</div>
+    <span class="win-chip" id="modeChip" title="Shortcut Mode">Shortcut Mode · off</span>
+    <span class="sp"></span>
+    <a class="plainlink" href="index.html">← back to SHOWAVE Live</a>
+  </div>
+
+  <!-- =====================================================================
+       SHORTCUT PRESETS — "You can switch presets via the dropdown in the
+       Shortcuts panel. Here you can also manage your presets via the
+       New.../Save as.../Remove and Rename... options at the bottom of the
+       list."  A real dropdown, not a bare select, because the list carries
+       commands as well as values.
+       ===================================================================== -->
+  <div class="win-toolbar">
+    <span class="tb-label">Shortcut Presets</span>
+    <button class="tb-btn" id="presetBtn" type="button">Default ▾</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="learnBtn" type="button">Learn</button>
+    <button class="tb-btn" id="clearOne" type="button">Clear Shortcut</button>
+    <button class="tb-btn" id="clearAll" type="button">Clear Shortcuts</button>
+    <button class="tb-btn" id="dupBtn" type="button">Duplicate Shortcut</button>
+    <div class="tb-sp"></div>
+    <span class="tb-label" id="countLabel"></span>
+  </div>
+
+  <!-- one shortcut editor, a tab per protocol -->
+  <div class="win-tabs" id="mapTabs">
+    <div class="win-tab active" data-map="key">Keyboard</div>
+    <div class="win-tab" data-map="midi">MIDI</div>
+    <div class="win-tab" data-map="osc">OSC</div>
+    <div class="win-tab" data-map="dmx">DMX</div>
+  </div>
+
+  <div class="learn" id="learnBar">
+    <b id="learnTitle">Keyboard</b>
+    <span id="learnMsg">Press a key on your keyboard.</span>
+    <span class="note" id="learnNote"></span>
+    <span class="tb-sp"></span>
+    <button class="tb-btn small" id="learnStop" type="button">Stop Shortcut Editing · Esc</button>
+  </div>
+
+  <div class="win-main">
+
+    <!-- the addressable surface — stands in for the highlighted interface -->
+    <div class="s-tree">
+      <div class="browser-tools"><input type="text" id="tSearch" placeholder="Search targets…"></div>
+      <div class="tree" id="targets"></div>
+      <div class="hint">Click on a highlighted interface element. Right-click a target to create
+        a shortcut for it directly.</div>
+    </div>
+
+    <div class="s-list">
+      <div class="s-listhead">
+        <span class="tb-label">Shortcut List</span>
+        <span class="hint" id="listHint">Right-click the list to change the sorting. A shortcut
+          used twice is shown in red.</span>
+      </div>
+
+      <div class="s-body">
+        <table class="datatable" id="tbl">
+          <thead><tr id="hdr"></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <!-- ===============================================================
+           OPTIONS — "At the bottom of the panel, you can choose different
+           options for your selected shortcut."
+           =============================================================== -->
+      <div class="s-opts" id="opts">
+
+        <div class="formgroup">
+          <h3>Shortcut</h3>
+          <div class="formrow"><label>Name</label><span class="pval" id="iTarget">N/A</span></div>
+          <div class="formrow" id="rowMode"><label>Shortcut Mode</label>
+            <select id="modeSel"></select></div>
+          <div class="formrow" id="rowTarget"><label>Shortcut Target</label>
+            <select id="targetSel">
+              <option>By Position</option>
+              <option>This Clip, Layer or Group</option>
+              <option>Selected Clip, Layer or Group</option>
+            </select></div>
+          <div class="formrow" id="rowPiano"><label>Piano</label>
+            <input type="checkbox" id="pianoChk"></div>
+          <div class="formrow" id="rowPianoInv"><label>Invert</label>
+            <input type="checkbox" id="pianoInv"></div>
+          <div class="formrow" id="rowMouseDir"><label>Direction</label>
+            <select id="mouseDir"><option>Horizontal</option><option>Vertical</option>
+              <option>Sticky</option></select></div>
+        </div>
+
+        <div class="formgroup" id="grpRange">
+          <h3>Set Range</h3>
+          <div class="formrow"><label>Low</label>
+            <input type="range" min="0" max="100" value="0" data-out><span class="unit">0.00</span></div>
+          <div class="formrow"><label>High</label>
+            <input type="range" min="0" max="100" value="100" data-out><span class="unit">1.00</span></div>
+          <div class="formrow"><label>Invert Value</label><input type="checkbox" id="rangeInv"></div>
+          <div class="hint">Set the minimum and maximum value of the parameter.</div>
+        </div>
+
+        <div class="formgroup" id="grpKey">
+          <h3>Keyboard</h3>
+          <div class="formrow"><label>Key</label><span class="keycap" id="keyCap">Q</span>
+            <button class="tb-btn small" id="reassignBtn" type="button">Re-assign…</button></div>
+          <div class="formrow"><label>Modifiers</label>
+            <label class="inline"><input type="checkbox" data-mod="Ctrl"> Ctrl</label>
+            <label class="inline"><input type="checkbox" data-mod="Shift"> Shift</label>
+            <label class="inline"><input type="checkbox" data-mod="Alt"> Alt</label></div>
+          <div class="hint">Mouse mode lets the mouse drive the parameter while the key is held.</div>
+        </div>
+
+        <div class="formgroup" id="grpMidi">
+          <h3>MIDI</h3>
+          <div class="formrow"><label>Input Device</label><select id="midiIn"></select></div>
+          <div class="formrow"><label>Channel</label><select id="chSel"></select></div>
+          <div class="formrow"><label>Status</label>
+            <select id="midiType"><option>Note</option><option>CC</option><option>CC Fine</option>
+              <option>PitchBend</option></select></div>
+          <div class="formrow"><label>Note / CC</label>
+            <input type="number" id="midiNum" value="60" min="0" max="127"></div>
+          <div class="formrow" id="rowRel"><label>Steps</label>
+            <input type="number" id="midiSteps" value="128" min="1" max="1024"></div>
+          <div class="formrow" id="rowRel2"><label>Step Size</label>
+            <input type="number" id="midiStepSize" value="1" min="1" max="64"></div>
+          <div class="formrow" id="rowLoop"><label>Loop</label><input type="checkbox" id="midiLoop"></div>
+          <div class="formrow"><label>14-Bit</label><input type="checkbox" id="midi14"></div>
+          <div class="formrow"><label>Output</label><select id="midiOut"></select></div>
+          <div class="formrow"><label>MIDI Out Velocity</label>
+            <input type="number" id="velOff" value="0" min="0" max="127" title="Off state">
+            <input type="number" id="velOn" value="127" min="0" max="127" title="On state"></div>
+          <div class="hint">Off and On velocity set the colour the pad shows back on the controller.</div>
+        </div>
+
+        <div class="formgroup" id="grpOsc">
+          <h3>OSC</h3>
+          <div class="formrow"><label>Input Address</label>
+            <input type="text" id="oscIn" value="/composition/layers/1/video/opacity"></div>
+          <div class="formrow"><label>Output Address</label>
+            <input type="text" id="oscOut" value="/composition/layers/1/video/opacity"></div>
+          <div class="formrow"><label>OSC Type Tag</label>
+            <span class="pval tagread" id="oscTag">Float 0.0 – 1.0</span></div>
+          <div class="formrow"><label>OSC Output</label><input type="checkbox" id="oscOutEnable" checked></div>
+          <div class="formrow"><label>Scope</label><select id="oscScope"></select></div>
+          <div class="hint">This tells you what type of argument to send to this address, and what
+            range to send it in. Click an OSC Path in the list to copy it.</div>
+        </div>
+
+        <div class="formgroup" id="grpDmx">
+          <h3>DMX</h3>
+          <div class="formrow"><label>Universe:</label><select id="uniSel"></select></div>
+          <div class="formrow"><label>Channel:</label>
+            <input type="number" id="dmxCh" value="1" min="1" max="512"></div>
+          <div class="formrow"><label>Channel Offset</label>
+            <input type="number" id="dmxOff" value="0" min="0" max="511"></div>
+          <div class="formrow"><label>With offset</label><input type="checkbox" id="dmxUseOff"></div>
+          <div class="formrow"><label>16 bit</label><input type="checkbox" id="dmx16"></div>
+          <div class="formrow"><label>Invert Value</label><input type="checkbox" id="dmxInv"></div>
+          <div class="formrow"><label>Resulting channel</label>
+            <span class="pval" id="dmxCalc">1</span></div>
+          <div class="hint" id="dmxWarn"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="statusline" id="winStatus">
+    <span>Shift+Ctrl+ <b class="v">K</b> Keyboard · <b class="v">M</b> MIDI ·
+      <b class="v">O</b> OSC · <b class="v">X</b> DMX</span>
+    <span>Esc Stop Shortcut Editing</span>
+    <span>Backspace deletes</span>
+    <span class="tb-sp"></span>
+    <span>Preset <b class="v" id="stPreset">Default</b></span>
+  </div>
+</div>
+
+<!-- "Presets from other computers can be loaded quickly via drag and dropping
+     them from your file browser to the shortcuts panel." -->
+<div id="dropZone"><div class="win-drop" id="dropInner">Drop a shortcut preset (.xml) here</div></div>
+
+<script src="arena-data.js"></script>
+<script>
+'use strict';
+/* Retained only as a visual-reference fixture. The live editor is implemented
+   by shortcuts-controller.js below and reads the host ArenaEngine registry;
+   keeping this inactive block makes the parity markup easy to compare without
+   ever installing its historical demo rows or editor-local fake state. */
+if(false){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+/* ---------------------------------------------------------------------------
+   The addressable surface. In Arena these are the highlighted controls in the
+   main window; here the tree stands in for them, so a target can be picked
+   without a second window being open.
+   --------------------------------------------------------------------------- */
+const TARGETS = [
+  {group:'Composition', items:['Master','Speed','Opacity','Volume','Pan','BPM','Tap','Resync',
+    'Nudge Up','Nudge Down','Bypass','Eject All','Previous Column','Next Column','Crossfader']},
+  {group:'Layer 1', items:['Master','Video Opacity','Volume','Pan','Bypass','Solo','Eject',
+    'Blend Mode','Previous Clip','Next Clip','Transition Duration','Crossfader Group']},
+  {group:'Layer 2', items:['Master','Video Opacity','Volume','Pan','Bypass','Solo','Eject']},
+  {group:'Layer 3', items:['Master','Video Opacity','Volume','Pan','Bypass','Solo','Eject']},
+  {group:'Group 1', items:['Master','Opacity','Speed','Bypass','Solo','Eject','Blend Mode']},
+  {group:'Columns', items:['Column 1','Column 2','Column 3','Column 4','Column 5','Column 6','Column 7','Column 8']},
+  {group:'Decks', items:['Intro','Build','Peak','Chill','Logos','Previous Deck','Next Deck']},
+  {group:'Clips: Layer 1', items:['Clip 1','Clip 2','Clip 3','Clip 4','Clip 5','Clip 6','Clip 7','Clip 8']},
+  {group:'Dashboard', items:['Dial 1','Dial 2','Dial 3','Dial 4','Dial 5','Dial 6','Dial 7','Dial 8']},
+  {group:'Output', items:['Disable Output','Test Card','Snapshot','Record','Fullscreen 1','Fullscreen 2']},
+  {group:'Autopilot', items:['Play Next Column','Play Previous Column','Play Random Column',
+    'Play First Column','Play Last Column']}
+];
+
+/* one editor, a tab per protocol — the four entries of the Shortcuts menu */
+const MAPS = {
+  key: {
+    menu:'Edit Keyboard', k:'Shift+Ctrl+K',
+    learn:'Press a key on your keyboard.',
+    note:'',
+    cols:[['name','Name'],['key','Key'],['mode','Shortcut Mode'],['target','Shortcut Target']],
+    sorts:[['name','Sorted by name'],['key','Sorted by key']],
+    dupe:r=>r.key,
+    modes:['Toggle','Value','Mouse','Select Next Item','Select Previous Item','Random Item'],
+    create:[]
+  },
+  midi: {
+    menu:'Edit MIDI', k:'Shift+Ctrl+M',
+    learn:'Press MIDI note or dial MIDI controller.',
+    note:'No MIDI device is reachable from a web page. Set Channel and Note / CC by hand below.',
+    cols:[['name','Name'],['device','Device'],['ch','Channel'],['msg','MIDI Message'],
+          ['mode','Shortcut Mode'],['target','Shortcut Target']],
+    sorts:[['name','Sorted by name'],['msg','Sorted by MIDI message']],
+    dupe:r=>r.device+' '+r.ch+' '+r.msg,
+    modes:['Absolute','Button','Relative','Fake relative','Toggle','Value','Velocity',
+           'Select Next Item','Select Previous Item','Random Item'],
+    create:['Create Note Shortcut','Create Controller Shortcut','Create PitchBend Shortcut']
+  },
+  osc: {
+    menu:'Edit OSC', k:'Shift+Ctrl+O',
+    learn:'Click on a highlighted interface element.',
+    note:'OSC addresses are fixed, so there is nothing to learn. Pick a target to read its address.',
+    cols:[['name','Name'],['path','OSC Path'],['tag','OSC Type Tag'],['scope','Scope']],
+    sorts:[['name','Sorted by name'],['path','Sorted by OSC path']],
+    dupe:r=>r.path,
+    modes:[],
+    create:['Create OSC Output Shortcut']
+  },
+  dmx: {
+    menu:'Edit DMX', k:'Shift+Ctrl+X',
+    learn:'Send DMX channel to assign it to this interface element.',
+    note:'A web page cannot receive Art-Net. Set the Lumiverse and Channel by hand below.',
+    cols:[['name','Name'],['uni','Lumiverse'],['ch','Channel'],['mode','Shortcut Mode'],
+          ['target','Shortcut Target']],
+    sorts:[['name','Sorted by name'],['ch','Sorted by DMX message']],
+    dupe:r=>r.uni+' '+r.ch,
+    modes:['Absolute','Select Next Item','Select Previous Item','Random Item'],
+    create:['Create DMX Shortcut']
+  }
+};
+
+/* Shortcut Target carries the application-versus-composition scope: a
+   By Position shortcut lives in the preset, a This/Selected one follows the
+   clip, layer or group it was made on and leaves with it. */
+const DATA = {
+  key: [
+    {name:'Composition · Tap',      key:'T',            mode:'Toggle', target:'By Position'},
+    {name:'Composition · Eject All',key:'Esc',          mode:'Toggle', target:'By Position'},
+    {name:'Composition · Bypass',   key:'Spacebar',     mode:'Toggle', target:'By Position'},
+    {name:'Layer 1 · Bypass',       key:'Ctrl + 1',     mode:'Toggle', target:'By Position'},
+    {name:'Column 1',               key:'Q',            mode:'Toggle', target:'By Position'},
+    {name:'Column 2',               key:'W',            mode:'Toggle', target:'By Position'},
+    {name:'Column 3',               key:'E',            mode:'Toggle', target:'By Position'},
+    {name:'Clips: Layer 1 · Clip 3', key:'F',          mode:'Value',  target:'This Clip, Layer or Group'},
+    {name:'Output · Test Card',     key:'Ctrl + Shift + L', mode:'Toggle', target:'By Position'}
+  ],
+  midi: [
+    {name:'Composition · Master',    device:'APC 40 MK II', ch:'1', msg:'CC 7',  mode:'Absolute', target:'By Position'},
+    {name:'Layer 1 · Video Opacity', device:'APC 40 MK II', ch:'1', msg:'CC 14', mode:'Absolute', target:'By Position'},
+    {name:'Layer 2 · Video Opacity', device:'APC 40 MK II', ch:'1', msg:'CC 15', mode:'Absolute', target:'By Position'},
+    {name:'Layer 3 · Video Opacity', device:'APC 40 MK II', ch:'1', msg:'CC 16', mode:'Absolute', target:'By Position'},
+    {name:'Composition · Crossfader',device:'APC 40 MK II', ch:'1', msg:'CC 8',  mode:'Absolute', target:'By Position'},
+    {name:'Composition · BPM',       device:'APC 40 MK II', ch:'1', msg:'CC 47', mode:'Relative', target:'By Position'},
+    {name:'Composition · Tap',       device:'APC 40 MK II', ch:'16',msg:'D#4',   mode:'Toggle',   target:'By Position'},
+    {name:'Clips: Layer 1 · Clip 1',device:'APC MINI',     ch:'1', msg:'C3',    mode:'Toggle',   target:'This Clip, Layer or Group'},
+    {name:'Clips: Layer 1 · Clip 2',device:'APC MINI',     ch:'1', msg:'C#3',   mode:'Toggle',   target:'This Clip, Layer or Group'},
+    {name:'Column 1',                device:'APC MINI',     ch:'2', msg:'C3',    mode:'Toggle',   target:'By Position'},
+    {name:'Dashboard · Dial 1',      device:'Nano Kontrol 2',ch:'2',msg:'CC 21', mode:'Absolute', target:'By Position'}
+  ],
+  osc: [
+    {name:'Composition · Master',    path:'/composition/master',                       tag:'Float 0.0 – 1.0',            scope:'Only This Layer Position'},
+    {name:'Layer 1 · Video Opacity', path:'/composition/layers/1/video/opacity',       tag:'Float 0.0 – 1.0',            scope:'All Layers'},
+    {name:'Layer 1 · Blend Mode',    path:'/composition/layers/1/video/mixer/blendmode',tag:'Int 0 – 50',                scope:'Selected Layer'},
+    {name:'Column 1',                path:'/composition/columns/1/connect',            tag:'Int 0 – 1',                  scope:'All Columns'},
+    {name:'Composition · BPM',       path:'/composition/tempocontroller/tempo',        tag:'Float 0.0 – 1.0 (20 – 500)', scope:'Only This Layer Position'}
+  ],
+  dmx: [
+    {name:'Composition · Master',    uni:'Lumiverse 1', ch:'1', mode:'Absolute', target:'By Position'},
+    {name:'Layer 1 · Video Opacity', uni:'Lumiverse 1', ch:'2', mode:'Absolute', target:'By Position'},
+    {name:'Layer 1 · Blend Mode',    uni:'Lumiverse 1', ch:'3', mode:'Select Next Item', target:'By Position'},
+    {name:'Dashboard · Dial 1',      uni:'Lumiverse 1', ch:'4', mode:'Absolute', target:'By Position'}
+  ]
+};
+
+/* OSC output scopes — the wildcards the manual uses to widen a shortcut */
+const SCOPES = ['Only This Clip Position','All Clips In Layer','All Clips In Composition',
+  'Selected Clip','Only This Layer Position','All Layers','Selected Layer',
+  'Only This Group Position','All Groups','Selected Group','Only This Column Position',
+  'All Columns','Selected Column','Custom Address'];
+
+const DEVICES = ['Any Device'].concat((typeof PRESETS!=='undefined' && PRESETS['MIDI Shortcuts']) || []);
+
+let current   = 'key';     /* which protocol tab is showing */
+let editing   = false;     /* are we in Shortcut mode */
+let learning  = false;     /* is Learn waiting for an assignment */
+let selRow    = null;      /* the selected shortcut object */
+let sortKey   = {key:'name', midi:'name', osc:'name', dmx:'name'};
+let oscPathMode = 'readable';
+let preset    = 'Default';
+
+/* =========================================================================
+   Dropdowns — the main window's builder, over arena.css's .dropdown classes
+   ========================================================================= */
+let dd=[];
+function closeDD(n=0){ while(dd.length>n) dd.pop().remove();
+  if(!n) $$('.menu-top.open').forEach(m=>m.classList.remove('open')); }
+function buildDD(items,x,y,lvl){
+  closeDD(lvl);
+  const d=document.createElement('div'); d.className='dropdown';
+  items.forEach(it=>{
+    if(it.sep){ d.appendChild(Object.assign(document.createElement('div'),{className:'dd-sep'})); return; }
+    const e=document.createElement('div'); e.className='dd-item'+(it.dis?' disabled':'');
+    e.innerHTML='<span class="chk">'+(it.on?'✓':'')+'</span><span></span>'+
+      (it.k?'<span class="kbd"></span>':'');
+    e.children[1].textContent=it.l;
+    if(it.k) e.querySelector('.kbd').textContent=it.k;
+    e.addEventListener('click',()=>{ if(it.dis) return; if(it.fn) it.fn(); closeDD(); });
+    d.appendChild(e);
+  });
+  document.body.appendChild(d);
+  const r=d.getBoundingClientRect();
+  d.style.left=Math.min(x,innerWidth-r.width-4)+'px';
+  d.style.top =Math.min(y,innerHeight-r.height-4)+'px';
+  dd.push(d); return d;
+}
+addEventListener('mousedown',e=>{
+  if(!e.target.closest('.dropdown')&&!e.target.closest('.menu-top')) closeDD();
+});
+
+/* ---- the Shortcuts menu, the documented way into shortcut mode ---- */
+const mS=$('#mShortcuts');
+mS.addEventListener('mousedown',e=>{
+  e.stopPropagation();
+  if(mS.classList.contains('open')) return closeDD();
+  closeDD(); mS.classList.add('open');
+  const r=mS.getBoundingClientRect();
+  const items=Object.keys(MAPS).map(k=>({l:MAPS[k].menu, k:MAPS[k].k,
+    on:editing&&current===k, fn:()=>startMode(k)}));
+  items.push({sep:1},{l:'Stop Shortcut Editing', k:'Esc', dis:!editing, fn:stopMode});
+  buildDD(items,r.left,r.bottom,0);
+});
+
+/* =========================================================================
+   Shortcut mode
+   ========================================================================= */
+function startMode(k){
+  if(k!==current) selRow=null;      /* a shortcut belongs to one protocol only */
+  current=k; editing=true; learning=false;
+  $$('#mapTabs .win-tab').forEach(t=>t.classList.toggle('active',t.dataset.map===k));
+  paintMode(); render();
+}
+function stopMode(){ editing=false; learning=false; paintMode(); }
+function paintMode(){
+  const m=MAPS[current], chip=$('#modeChip');
+  chip.textContent = editing ? 'Shortcut Mode · '+m.menu.replace('Edit ','') : 'Shortcut Mode · off';
+  chip.classList.toggle('on', editing);
+  $('#learnBar').classList.toggle('on', editing);
+  $('#learnTitle').textContent=m.menu;
+  $('#learnMsg').textContent = learning ? m.learn : 'Click on a highlighted interface element.';
+  $('#learnNote').textContent = learning ? m.note : '';
+  $('#learnBtn').classList.toggle('on', learning);
+  $('#learnBtn').disabled = (current==='osc');
+}
+
+/* =========================================================================
+   Target tree
+   ========================================================================= */
+function buildTargets(){
+  const el=$('#targets'); el.innerHTML='';
+  const q=$('#tSearch').value.toLowerCase();
+  TARGETS.forEach(g=>{
+    const kids=g.items.filter(i=>!q||(g.group+' '+i).toLowerCase().includes(q));
+    if(!kids.length) return;
+    const h=document.createElement('div'); h.className='tgroup'; h.textContent=g.group; el.appendChild(h);
+    const nodes=[];
+    kids.forEach(i=>{
+      const d=document.createElement('div'); d.className='titem'; d.textContent=i;
+      const full=g.group+' · '+i;
+      d.addEventListener('click',()=>{
+        el.querySelectorAll('.titem').forEach(x=>x.classList.remove('sel'));
+        d.classList.add('sel');
+        $('#iTarget').textContent=full;
+        if(learning) $('#learnMsg').textContent=MAPS[current].learn;
+      });
+      d.addEventListener('contextmenu',ev=>{
+        ev.preventDefault();
+        el.querySelectorAll('.titem').forEach(x=>x.classList.remove('sel'));
+        d.classList.add('sel'); $('#iTarget').textContent=full;
+        const items=[{l:full, dis:true},{sep:1}];
+        MAPS[current].create.forEach(c=>items.push({l:c, fn:()=>createShortcut(full,c)}));
+        if(!MAPS[current].create.length)
+          items.push({l:'Learn', fn:()=>{ startMode(current); startLearn(); }});
+        items.push({sep:1},{l:'Clear Shortcut', fn:()=>clearFor(full)},
+                   {l:'Clear Shortcuts', fn:clearAll});
+        buildDD(items,ev.clientX,ev.clientY,0);
+      });
+      el.appendChild(d); nodes.push(d);
+    });
+    h.addEventListener('click',()=>nodes.forEach(n=>n.style.display=n.style.display==='none'?'':'none'));
+  });
+}
+$('#tSearch').addEventListener('input',buildTargets);
+
+/* "Resolume will automatically assign the next available channel to this button." */
+function nextFree(used,max){
+  for(let i=1;i<=max;i++) if(!used.has(i)) return String(i);
+  return String(max);
+}
+function createShortcut(name,cmd){
+  if(current==='dmx')
+    DATA.dmx.push({name, uni:$('#uniSel').value||'Lumiverse 1',
+      ch:nextFree(new Set(DATA.dmx.map(r=>parseInt(r.ch,10))),512),
+      mode:'Absolute', target:'By Position'});
+  else if(current==='midi'){
+    const kind = cmd.includes('Controller') ? 'CC' : cmd.includes('PitchBend') ? 'PitchBend' : 'Note';
+    const used = new Set(DATA.midi.filter(r=>r.msg.startsWith(kind))
+      .map(r=>parseInt(r.msg.replace(/\D+/g,''),10)).filter(n=>!isNaN(n)));
+    DATA.midi.push({name, device:$('#midiIn').value||'Any Device', ch:$('#chSel').value||'1',
+      msg:kind+' '+nextFree(used,127), mode: kind==='CC' ? 'Absolute':'Toggle', target:'By Position'});
+  } else if(current==='osc')
+    DATA.osc.push({name, path:oscPathFor(name), tag:'Float 0.0 – 1.0',
+      scope:'Only This Layer Position'});
+  render();
+}
+function oscPathFor(name){
+  return '/composition/'+name.toLowerCase().replace(/[^a-z0-9]+/g,'/').replace(/^\/|\/$/g,'');
+}
+function clearFor(name){
+  DATA[current]=DATA[current].filter(r=>r.name!==name); selRow=null; render();
+}
+function clearAll(){
+  if(confirm('Are you sure you want to remove all '+DATA[current].length+' shortcuts?')){
+    DATA[current]=[]; selRow=null; render();
+  }
+}
+
+/* =========================================================================
+   Shortcut List
+   ========================================================================= */
+const LIST_HINT=$('#listHint').textContent;
+
+function sorted(){
+  const sk=sortKey[current];
+  return DATA[current].slice()
+    .sort((a,b)=>String(a[sk]).localeCompare(String(b[sk]),undefined,{numeric:true}));
+}
+
+function render(){
+  const m=MAPS[current];
+  $('#hdr').innerHTML='';
+  m.cols.forEach(([f,label])=>{
+    const th=document.createElement('th');
+    th.textContent=label;
+    if(f==='ch') th.className='num';
+    $('#hdr').appendChild(th);
+  });
+  $('#hdr').appendChild(document.createElement('th'));
+
+  const list=sorted();
+
+  /* "If a certain shortcut is used twice, it's shown in red." */
+  const seen={}; list.forEach(r=>{ const v=m.dupe(r); seen[v]=(seen[v]||0)+1; });
+
+  const b=$('#rows'); b.innerHTML='';
+  list.forEach(r=>{
+    const tr=document.createElement('tr');
+    if(seen[m.dupe(r)]>1) tr.className='missing';
+    m.cols.forEach(([f])=>{
+      const td=document.createElement('td');
+      let v=r[f];
+      if(f==='path'&&oscPathMode==='param') v=v.replace(/\/(\d+)\//g,'/*/');
+      td.textContent=v===undefined?'N/A':v;
+      if(f==='ch') td.className='num';
+      if(f==='path'){ td.className='path'; td.title='Click to copy'; }
+      tr.appendChild(td);
+    });
+    const x=document.createElement('td');
+    const xb=document.createElement('button');
+    xb.className='tb-btn small'; xb.type='button'; xb.textContent='✕';
+    xb.title='Clear Shortcut';
+    xb.addEventListener('click',ev=>{ ev.stopPropagation(); remove(r); });
+    x.appendChild(xb); tr.appendChild(x);
+
+    tr.addEventListener('click',ev=>{
+      select(r);
+      if(ev.target.classList.contains('path')){
+        const t=ev.target.textContent;
+        if(navigator.clipboard) navigator.clipboard.writeText(t).catch(()=>{});
+        $('#listHint').textContent='Copied '+t;
+        setTimeout(()=>{ $('#listHint').textContent=LIST_HINT; },1800);
+      }
+    });
+    tr.addEventListener('contextmenu',ev=>{ ev.preventDefault(); select(r); rowMenu(r,ev); });
+    if(r===selRow) tr.classList.add('sel');
+    b.appendChild(tr);
+  });
+
+  $('#countLabel').textContent=DATA[current].length+' shortcuts';
+  $('#stPreset').textContent=preset;
+  paintOptions();
+}
+
+function select(r){
+  selRow=r;
+  paintSelection();
+  $('#iTarget').textContent=r.name;
+  if(r.key) $('#keyCap').textContent=r.key.split('+').pop().trim();
+  if(r.mode){ const s=$('#modeSel'); if([...s.options].some(o=>o.value===r.mode)) s.value=r.mode; }
+  if(r.target) $('#targetSel').value=r.target;
+  if(r.ch && current==='dmx'){ $('#dmxCh').value=parseInt(r.ch,10)||1; calcDmx(); }
+  if(r.ch && current==='midi') $('#chSel').value=r.ch;
+  if(r.uni) $('#uniSel').value=r.uni;
+  if(r.device) $('#midiIn').value=r.device;
+  if(r.path){ $('#oscIn').value=r.path; $('#oscOut').value=r.path; }
+  if(r.tag) $('#oscTag').textContent=r.tag;
+  if(r.scope) $('#oscScope').value=r.scope;
+  if(r.key){
+    const mods=r.key.split('+').map(s=>s.trim());
+    $$('#grpKey input[data-mod]').forEach(c=>c.checked=mods.includes(c.dataset.mod));
+  }
+  paintOptions();
+}
+function paintSelection(){
+  const rows=[...$('#rows').children];
+  rows.forEach(tr=>tr.classList.remove('sel'));
+  const idx=sorted().indexOf(selRow);
+  if(idx>=0 && rows[idx]) rows[idx].classList.add('sel');
+}
+function remove(r){
+  const i=DATA[current].indexOf(r); if(i>=0) DATA[current].splice(i,1);
+  if(selRow===r) selRow=null; render();
+}
+function duplicate(r){
+  const i=DATA[current].indexOf(r); if(i<0) return;
+  const c=Object.assign({},r); DATA[current].splice(i+1,0,c); selRow=c; render();
+}
+
+/* right-click the list — Duplicate Shortcut, Delete, and the sorting */
+function rowMenu(r,ev){
+  const m=MAPS[current];
+  const items=[{l:r.name, dis:true},{sep:1},
+    {l:'Duplicate Shortcut', fn:()=>duplicate(r)},
+    {l:'Delete', k:'Backspace', fn:()=>remove(r)},
+    {sep:1},
+    {l:'Clear Shortcuts', fn:clearAll},
+    {sep:1}];
+  m.sorts.forEach(([f,label])=>items.push({l:label, on:sortKey[current]===f,
+    fn:()=>{ sortKey[current]=f; render(); }}));
+  if(current==='osc') items.push({sep:1},
+    {l:'Show readable path', on:oscPathMode==='readable', fn:()=>{ oscPathMode='readable'; render(); }},
+    {l:'Show param path',    on:oscPathMode==='param',    fn:()=>{ oscPathMode='param';    render(); }});
+  buildDD(items,ev.clientX,ev.clientY,0);
+}
+
+/* =========================================================================
+   Options — only the ones that belong to this protocol and this mode
+   ========================================================================= */
+function show(el,on){ $(el).style.display = on ? '' : 'none'; }
+function paintOptions(){
+  const m=MAPS[current];
+
+  const sel=$('#modeSel');
+  if(sel.dataset.for!==current){
+    sel.innerHTML=''; m.modes.forEach(o=>sel.appendChild(new Option(o,o)));
+    sel.dataset.for=current;
+    if(selRow&&selRow.mode&&m.modes.includes(selRow.mode)) sel.value=selRow.mode;
+  }
+
+  show('#rowMode',   m.modes.length>0);
+  show('#rowTarget', current!=='osc');
+  const buttonish=['Toggle','Value','Button','Velocity'].includes(sel.value)||current==='key';
+  show('#rowPiano',  m.modes.length>0 && buttonish && sel.value!=='Mouse');
+  show('#rowPianoInv', $('#rowPiano').style.display!=='none' && $('#pianoChk').checked);
+  show('#rowMouseDir', current==='key' && sel.value==='Mouse');
+
+  show('#grpKey',  current==='key');
+  show('#grpMidi', current==='midi');
+  show('#grpOsc',  current==='osc');
+  show('#grpDmx',  current==='dmx');
+  const rel = current==='midi' && (sel.value==='Relative'||sel.value==='Fake relative');
+  show('#rowRel',  rel); show('#rowRel2', rel); show('#rowLoop', rel);
+}
+
+/* =========================================================================
+   Learn
+   ========================================================================= */
+function startLearn(){
+  if(current==='osc') return;
+  editing=true; learning=true; paintMode();
+}
+$('#learnBtn').addEventListener('click',()=>{ learning ? (learning=false, paintMode()) : startLearn(); });
+$('#learnStop').addEventListener('click',stopMode);
+$('#reassignBtn').addEventListener('click',()=>{ startMode('key'); startLearn(); });
+$('#clearOne').addEventListener('click',()=>{ if(selRow) remove(selRow); });
+$('#clearAll').addEventListener('click',clearAll);
+$('#dupBtn').addEventListener('click',()=>{ if(selRow) duplicate(selRow); });
+
+addEventListener('keydown',e=>{
+  /* the documented ways in and out of shortcut mode */
+  if(e.shiftKey&&e.ctrlKey){
+    const hit={k:'key',m:'midi',o:'osc',x:'dmx'}[e.key.toLowerCase()];
+    if(hit){ e.preventDefault(); startMode(hit); return; }
+  }
+  if(e.key==='Escape'){ closeDD(); stopMode(); return; }
+
+  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+
+  /* "You can delete a unwanted shortcut by hitting backspace" */
+  if(e.key==='Backspace'&&!typing&&selRow){ e.preventDefault(); remove(selRow); return; }
+
+  if(learning&&current==='key'&&!typing&&e.key.length===1){
+    e.preventDefault();
+    const name=$('#iTarget').textContent;
+    if(name!=='N/A'){
+      const mods=[e.ctrlKey&&'Ctrl',e.shiftKey&&'Shift',e.altKey&&'Alt'].filter(Boolean);
+      const cap=e.key===' ' ? 'Spacebar' : e.key.toUpperCase();
+      const combo=mods.concat(cap).join(' + ');
+      const row={name, key:combo, mode:'Toggle', target:'By Position'};
+      DATA.key.push(row); selRow=row; learning=false; paintMode(); render();
+    }
+  }
+});
+
+/* =========================================================================
+   Shortcut Presets — values, then the management commands at the bottom
+   ========================================================================= */
+function presetList(){
+  const base=['Default'].concat((typeof PRESETS!=='undefined'&&PRESETS['MIDI Shortcuts'])||[]);
+  return current==='osc'
+    ? ['Default','Output All OSC Messages','Output No OSC Messages'] : base;
+}
+$('#presetBtn').addEventListener('mousedown',e=>{
+  e.stopPropagation();
+  const r=e.currentTarget.getBoundingClientRect();
+  const items=presetList().map(p=>({l:p, on:p===preset,
+    fn:()=>{ preset=p; $('#presetBtn').textContent=p+' ▾'; render(); }}));
+  items.push({sep:1},
+    {l:'New...',    fn:()=>newPreset('')},
+    {l:'Save as...',fn:()=>newPreset(preset)},
+    {l:'Remove',    fn:()=>{ preset='Default'; $('#presetBtn').textContent='Default ▾'; render(); }},
+    {l:'Rename...', fn:()=>newPreset(preset)});
+  buildDD(items,r.left,r.bottom,0);
+});
+function newPreset(seed){
+  const n=prompt('Preset name', seed||'untitled');
+  if(n){ preset=n.trim()||'untitled'; $('#presetBtn').textContent=preset+' ▾'; render(); }
+}
+
+/* dragging a preset in from the file browser */
+let dragDepth=0;
+addEventListener('dragenter',e=>{ e.preventDefault(); dragDepth++;
+  $('#dropZone').classList.add('on'); $('#dropInner').classList.add('over'); });
+addEventListener('dragover',e=>e.preventDefault());
+addEventListener('dragleave',()=>{ if(--dragDepth<=0){ dragDepth=0;
+  $('#dropZone').classList.remove('on'); $('#dropInner').classList.remove('over'); } });
+addEventListener('drop',e=>{
+  e.preventDefault(); dragDepth=0;
+  $('#dropZone').classList.remove('on'); $('#dropInner').classList.remove('over');
+  const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+  if(f){ preset=f.name.replace(/\.xml$/i,''); $('#presetBtn').textContent=preset+' ▾'; render(); }
+});
+
+/* =========================================================================
+   Tabs
+   ========================================================================= */
+$('#mapTabs').addEventListener('click',e=>{
+  const t=e.target.closest('.win-tab'); if(!t) return;
+  startMode(t.dataset.map);
+});
+
+/* =========================================================================
+   Wiring the option controls
+   ========================================================================= */
+DEVICES.forEach(d=>{ $('#midiIn').appendChild(new Option(d,d)); });
+['All Devices','Disabled'].concat(DEVICES.slice(1)).forEach(d=>$('#midiOut').appendChild(new Option(d,d)));
+for(let i=1;i<=16;i++) $('#chSel').appendChild(new Option(i,i));
+((typeof LUMIVERSES!=='undefined')?LUMIVERSES:['Lumiverse 1']).forEach(u=>$('#uniSel').appendChild(new Option(u,u)));
+SCOPES.forEach(s=>$('#oscScope').appendChild(new Option(s,s)));
+
+$$('#opts input[type=range][data-out]').forEach(r=>{
+  const paint=()=>{ const u=r.parentElement.querySelector('.unit');
+    if(u) u.textContent=(r.value/100).toFixed(2); };
+  r.addEventListener('input',paint); paint();
+});
+$('#modeSel').addEventListener('change',()=>{
+  if(selRow) selRow.mode=$('#modeSel').value;
+  paintOptions(); if(selRow) render();
+});
+$('#targetSel').addEventListener('change',()=>{
+  if(selRow){ selRow.target=$('#targetSel').value; render(); }
+});
+$('#oscScope').addEventListener('change',()=>{
+  if(selRow&&current==='osc'){ selRow.scope=$('#oscScope').value; render(); }
+});
+$('#pianoChk').addEventListener('change',paintOptions);
+$$('#grpKey input[data-mod]').forEach(c=>c.addEventListener('change',()=>{
+  if(!selRow||current!=='key') return;
+  const base=$('#keyCap').textContent;
+  const mods=$$('#grpKey input[data-mod]').filter(x=>x.checked).map(x=>x.dataset.mod);
+  selRow.key=mods.concat(base).join(' + '); render();
+}));
+
+function calcDmx(){
+  const ch=parseInt($('#dmxCh').value,10)||1;
+  const off=$('#dmxUseOff').checked ? (parseInt($('#dmxOff').value,10)||0) : 0;
+  const total=ch+off;
+  $('#dmxCalc').textContent=total;
+  $('#dmxWarn').textContent = total>512
+    ? 'Warning! Channel exceeds maximum channel number, check the offset setting in the preferences!'
+    : 'Lumiverses are virtual inputs, so a shortcut survives its Art-Net node being unplugged.';
+  if(selRow&&current==='dmx'){ selRow.ch=String(ch); selRow.uni=$('#uniSel').value; }
+}
+['#dmxCh','#dmxOff','#dmxUseOff','#uniSel'].forEach(s=>{
+  $(s).addEventListener('input',()=>{ calcDmx(); if(selRow&&current==='dmx') render(); });
+  $(s).addEventListener('change',()=>{ calcDmx(); if(selRow&&current==='dmx') render(); });
+});
+
+/* the option cards fold, like every other section head in the application */
+$$('#opts .formgroup > h3').forEach(h=>{
+  h.addEventListener('click',()=>{
+    const g=h.parentElement;
+    g.dataset.folded = g.dataset.folded==='1' ? '0' : '1';
+  });
+});
+
+/* the window is opened from Shortcuts > Edit Keyboard, so it starts in that mode */
+buildTargets(); calcDmx(); startMode('key');
+}
+</script>
+<script src="shortcuts-controller.js"></script>
+</body>
+</html>

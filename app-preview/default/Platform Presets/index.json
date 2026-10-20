@@ -1,0 +1,119 @@
+{
+  "note": "Templates, not integrations. Each row is an ingest URL pattern plus the encoder settings that platform publishes. OpenLive holds no account with any of these services and fetches nothing at runtime — edit this file to add, remove or correct a row. Figures are the platforms' own published recommendations and go stale; check them against the source before a show that matters.",
+  "presets": [
+    {
+      "name": "YouTube",
+      "protocol": "rtmp",
+      "url": "rtmps://a.rtmp.youtube.com/live2/",
+      "recommended": "H.264 High, 1080p60 6000 kbps, 2s keyframes, CBR"
+    },
+    {
+      "name": "Twitch",
+      "protocol": "rtmp",
+      "url": "rtmp://live.twitch.tv/app/",
+      "recommended": "H.264 High, 1080p60 6000 kbps, 2s keyframes, CBR"
+    },
+    {
+      "name": "Facebook Live",
+      "protocol": "rtmp",
+      "url": "rtmps://live-api-s.facebook.com:443/rtmp/",
+      "recommended": "H.264, 1080p30 4000 kbps, 2s or 4s keyframes, CBR"
+    },
+    {
+      "name": "Kick",
+      "protocol": "rtmp",
+      "url": "rtmps://",
+      "recommended": "paste the server URL and stream key issued for this channel; review encoder settings"
+    },
+    {
+      "name": "X (Twitter)",
+      "protocol": "rtmp",
+      "url": "rtmp://va.pscp.tv:80/x/",
+      "recommended": "H.264, 720p/1080p 2500-6000 kbps, 2s keyframes"
+    },
+    {
+      "name": "LinkedIn Live",
+      "protocol": "rtmp",
+      "url": "rtmps://1-rtmps.linkedin.com:443/live/",
+      "recommended": "H.264, 1080p30 3500-5000 kbps, 2s keyframes"
+    },
+    {
+      "name": "TikTok Live",
+      "protocol": "rtmp",
+      "url": "rtmp://",
+      "recommended": "H.264, 1080p60 6000-8000 kbps, 2s keyframes"
+    },
+    {
+      "name": "Instagram Live",
+      "protocol": "rtmp",
+      "url": "rtmps://live-upload.instagram.com:443/rtmp/",
+      "recommended": "H.264, 720p/1080p 3000-4500 kbps, 2s keyframes"
+    },
+    {
+      "name": "Amazon Live",
+      "protocol": "rtmp",
+      "url": "rtmps://",
+      "recommended": "H.264, 1080p30 3500 kbps, 2s keyframes"
+    },
+    {
+      "name": "Rumble",
+      "protocol": "rtmp",
+      "url": "rtmp://live.rumble.com/live/",
+      "recommended": "H.264, 1080p60 6000 kbps, 2s keyframes"
+    },
+    {
+      "name": "Steam Broadcast",
+      "protocol": "rtmp",
+      "url": "rtmp://",
+      "recommended": "H.264, 1080p60 6000 kbps, 2s keyframes"
+    },
+    {
+      "name": "DLive",
+      "protocol": "rtmp",
+      "url": "rtmp://stream.dlive.tv/live/",
+      "recommended": "H.264, 1080p60 6000 kbps, 2s keyframes"
+    },
+    {
+      "name": "Bilibili",
+      "protocol": "rtmp",
+      "url": "rtmp://live-push.bilivideo.com/live-bvc/",
+      "recommended": "H.264, 1080p60 6000 kbps, 2s keyframes"
+    },
+    {
+      "name": "Custom RTMP",
+      "protocol": "rtmp",
+      "url": "rtmp://",
+      "recommended": "whatever your server accepts"
+    },
+    {
+      "name": "Custom RTMPS",
+      "protocol": "rtmps",
+      "url": "rtmps://",
+      "recommended": "whatever your server accepts"
+    },
+    {
+      "name": "Custom SRT",
+      "protocol": "srt",
+      "url": "srt://",
+      "recommended": "set latency to match the venue link"
+    },
+    {
+      "name": "Custom WHIP",
+      "protocol": "whip",
+      "url": "https://",
+      "recommended": "H.264 or VP9, 2s keyframes"
+    },
+    {
+      "name": "Restream WHIP",
+      "protocol": "whip",
+      "url": "https://",
+      "recommended": "paste the WHIP Stream URL from Restream Streaming Setup; H.264, 2s keyframes"
+    },
+    {
+      "name": "Local file",
+      "protocol": "file",
+      "url": "",
+      "recommended": "H.264 High + AAC, MP4"
+    }
+  ]
+}

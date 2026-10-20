@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<title>Fixture Editor: SHOWAVE Map</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<script src="showave-brand.js"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+  /* ---------------------------------------------------------------------
+     Page-specific only — sizing, position and the two states the shared
+     sheets have no name for. Everything they already theme
+     (.win-root .win-title .win-main .win-content .win-toolbar .browser-tools
+      .formgroup .formrow .tb-btn .pval .statusline .sect-body .hint .tgroup
+      .titem .dropdown table.datatable) is used as-is and never re-declared.
+     --------------------------------------------------------------------- */
+
+  /* the fixture list, down the left hand side */
+  .fe-left{ flex:0 0 236px; width:236px; min-width:236px; background:var(--panel);
+    border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; }
+  .fe-list{ flex:1; min-height:0; overflow-y:auto; }
+  /* the footer is a .win-toolbar at the bottom of the rail, so its edge flips */
+  .fe-foot{ border-bottom:0; border-top:1px solid var(--line); }
+  .fe-foot .sp{ flex:1; }
+  /* arena.css sets .titem:hover{color:#fff} and nocturne.css only replaces the
+     background, so the hover text has to be pulled back onto the ramp here */
+  .fe-left .titem:hover{ color:var(--n200); }
+  .fe-left .titem .cnt{ margin-left:auto; font-size:9.5px;
+    letter-spacing:.06em; color:var(--n700); font-variant-numeric:tabular-nums; }
+  .fe-left .titem.sel .cnt{ color:var(--a300); }
+
+  /* the preview, on the right hand side */
+  .fe-right{ flex:0 0 306px; width:306px; min-width:306px; background:var(--panel);
+    border-left:1px solid var(--line); overflow-y:auto; }
+  #pixPrev{ display:block; width:100%; height:auto; background:var(--inset);
+    border:1px solid var(--n800); border-radius:var(--radius-sm); }
+  /* arena.css only folds .sbody; these panels use the shared .sect-body */
+  .sect.folded > .sect-body{ display:none; }
+  .fe-right .sect-body .hint{ padding:var(--space-1) 0 0; }
+  /* the shared .formrow, with its label column narrowed to fit a 300px panel */
+  .fe-right .formrow{ max-width:none; }
+  .fe-right .formrow label{ flex-basis:112px; width:112px; min-width:112px; }
+  .fe-right .formrow input[type=number]{ flex:0 0 68px; }
+
+  /* the Parameters list is a table.datatable in a box — only the column
+     widths, the fields and the drag states are page business */
+  .chan-list{ border:1px solid var(--n800); border-radius:var(--radius-sm);
+    background:var(--inset); overflow:hidden; }
+  .chan-list table{ table-layout:fixed; }
+  .chan-list tbody tr:last-child td{ border-bottom:0; }
+  .chan-list .c-ch{ width:66px; }
+  .chan-list td.c-ch{ font-size:10.5px; color:var(--n600); }
+  .chan-list .c-def{ width:60px; }
+  .chan-list .c-hnd{ width:22px; text-align:center; }
+  .chan-list tr.dragging{ opacity:.45; }
+  .chan-list tr.drop-before td{ box-shadow:inset 0 2px 0 var(--color-accent); }
+  .chan-list tr.drop-after td{ box-shadow:inset 0 -2px 0 var(--color-accent); }
+  .chan-list .nm{ width:100%; min-width:0; background:transparent;
+    border:1px solid transparent; color:var(--n300);
+    padding:1px var(--space-2); border-radius:var(--radius-sm); font-size:11.5px; }
+  .chan-list .nm:hover{ border-color:var(--n800); }
+  .chan-list .nm:focus{ background:var(--inset); border-color:var(--color-accent);
+    box-shadow:0 0 0 1px var(--color-accent); outline:none; }
+  .chan-list .nm[readonly]{ color:var(--n500); }
+  .chan-list .nm[readonly]:hover{ border-color:transparent; }
+  .chan-list .dv{ width:100%; min-width:0; text-align:right; background:var(--inset);
+    border:1px solid var(--n800); color:var(--n200);
+    padding:1px var(--space-2); border-radius:var(--radius-sm); font-size:11px;
+    font-variant-numeric:tabular-nums; }
+  /* CASING. Resolume shouts in the string, never with a stylesheet: of the 878
+     keys in reference/docs/gui/English.txt exactly 25 are all-caps, and each is a
+     compact transport/action button (RECORD, STOP, TAP, RESYNC, LINK, PAUSE,
+     METRONOME, PICK, ADD), an alarm (LOW MEMORY!!) or an acronym. Section
+     headers, menu group headings, tab labels, column headers and state chips are
+     Title Case throughout the string table and all 83 manual pages. The blanket
+     text-transform rules in this window were removed for that reason and the
+     caps-tuned tracking relaxed with them; nocturne.css and windows.css, which
+     this window also loads, no longer shout their equivalents, so leaving these
+     would paint one class of element in two conventions in one window. */
+  .chan-list .dvx{ font-size:9.5px; letter-spacing:.01em;
+    color:var(--n700); }
+  .chan-list .drag-handle{ color:var(--n700); cursor:grab; }
+  .chan-list .drag-handle:hover{ color:var(--a300); }
+  .chan-list .drag-handle:active{ cursor:grabbing; }
+  .chan-foot{ display:flex; align-items:center; gap:var(--space-3); margin-top:var(--space-2); }
+  .chan-foot .hint{ padding:0; }
+
+  /* small type helpers */
+  .fe-sub{ color:var(--n600); }
+  .statusline > span{ white-space:nowrap; }
+  .statusline .sp{ flex:1 1 auto; min-width:0; }
+  .statusline .el{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .fe-warn{ color:var(--amber); }
+</style>
+</head>
+<body>
+<div class="win-root">
+
+  <div class="win-title"><span data-showave-brand="map">SHOWAVE Map</span> Fixture Editor
+    <span class="fe-sub">fixture presets</span>
+    <span class="sp"></span>
+    <a class="plainlink" href="advanced-output.html">← back to SHOWAVE Map</a></div>
+
+  <div class="win-main">
+
+    <!-- ============ the fixture list, down the left hand side ============ -->
+    <div class="fe-left">
+      <div class="browser-tools"><input type="text" id="fq" placeholder="Search fixtures…"></div>
+      <div class="fe-list" id="fixList"></div>
+      <!-- "hitting the plus icon on the bottom" -->
+      <div class="fe-foot">
+        <button class="tb-btn" type="button" id="newFix" title="New fixture">+</button>
+        <button class="tb-btn" type="button" id="dupFix" title="Duplicate fixture">⧉</button>
+        <button class="tb-btn" type="button" id="delFix" title="Delete fixture">🗑</button>
+        <span class="sp"></span>
+        <span class="tb-label" id="fixCount">0</span>
+      </div>
+    </div>
+
+    <!-- ============ the fixture itself, in the manual's own order ======== -->
+    <div class="win-content">
+      <h2 id="fixTitle">Generic RGB Tile 8×8</h2>
+
+      <!-- 1. Creating a New Fixture -->
+      <div class="formgroup"><h3>Fixture</h3>
+        <div class="formrow"><label>Name</label><input type="text" id="fName" value="Generic RGB Tile 8×8"></div>
+        <div class="hint">The manufacturer name and the amount of pixels are usually a good convention.</div>
+      </div>
+
+      <!-- 2. Setting up Parameters  (+ 3. Dummy channels) -->
+      <div class="formgroup"><h3>Parameters</h3>
+        <div class="formrow"><label>Width</label><input type="number" id="fW" value="8" min="1" max="512"><span class="unit">pixels</span></div>
+        <div class="formrow"><label>Height</label><input type="number" id="fH" value="8" min="1" max="512"><span class="unit">pixels</span></div>
+        <div class="fe-note">A 16 pixel LED strip has a width of 16 and a height of 1. A square LED tile
+          with 64 pixels has a width of 8 and a height of also 8.</div>
+
+        <div class="chan-list" id="chanList" style="margin-top:var(--space-3)">
+          <div class="chan-hd"><span class="ch">Channel</span><span class="nm">Name</span>
+            <span class="dv">Default</span><span class="hnd"></span></div>
+        </div>
+
+        <!-- "the + icon in the bottom of the Parameters tab" -->
+        <div class="chan-foot">
+          <button class="tb-btn small" type="button" id="addParam" title="Add parameter">+</button>
+          <span class="hint">Certain channels can be reserved for specific features of the light: a chase
+            preset, a dimmer. Drag the three bar handle on the right of a parameter to re-arrange the order.</span>
+        </div>
+        <div class="fe-note">Sending nothing is not a concept that exists in DMX, so the value set as
+          Default is always sent. A Dimmer channel usually wants a Default of 255.</div>
+      </div>
+
+      <!-- 4. Channel Distribution -->
+      <div class="formgroup"><h3>Channel Distribution</h3>
+        <div class="formrow"><label>Distribution</label><select id="fDist"></select></div>
+        <div class="formrow"><label>Channels per pixel</label><span class="pval" id="chanPer">3</span>
+          <span class="unit">total</span><span class="pval" id="chanTotal">192</span></div>
+        <div class="fe-note">Only grid based distributions are supported. Having more than one pixel
+          block is not supported.</div>
+      </div>
+
+      <!-- 5. Color Space -->
+      <div class="formgroup"><h3>Color Space</h3>
+        <div class="formrow"><label>Color Space</label><select id="fColor"></select></div>
+        <div class="formrow"><label>Invert value</label><input type="checkbox" id="fInv"></div>
+        <div class="formrow"><label>16 bit</label><input type="checkbox" id="f16" disabled>
+          <span class="unit">not supported</span></div>
+        <div class="fe-note" id="csNote">Full colour LEDs create colour from separate red, green and blue
+          values. L sends the weighted luminance of the sampled pixel over a single channel; Alpha uses the
+          presence of the content instead of its luminance. CMY is a 1:1 conversion from RGB. RGBW and RGBWA
+          approximate the colour on the extra white and/or amber LEDs by dimming the other channels.
+          Other colour spaces (16 bit, UV and other exotic types) are not supported.</div>
+      </div>
+
+      <!-- 6. Gamma Correction -->
+      <div class="formgroup"><h3>Gamma Correction</h3>
+        <div class="formrow"><label>Gamma Correction</label><select id="fGamma">
+          <option>Off</option><option>1.0</option><option>1.8</option><option>2.0</option>
+          <option>2.2</option><option selected>2.5</option><option>2.8</option><option>3.0</option>
+        </select></div>
+        <div class="fe-note">For an unusual type of LED you can tweak this. Most of the time the default
+          setting of 2.5 should be fine.</div>
+      </div>
+
+      <div class="hint">Updating a fixture that is already being used on the Input Selection stage updates
+        all instances of the existing fixture as well. To make changes without affecting the current setup,
+        make a duplicate of the fixture preset first.</div>
+    </div>
+
+    <!-- ============ "On the right you will see a preview" ================ -->
+    <div class="fe-right">
+      <div class="sect"><h3>Preview</h3><div class="sect-body">
+        <canvas id="pixPrev" width="284" height="284"></canvas>
+        <div class="hint" id="prevInfo">8 × 8 = 64 pixels · RGB · 192 channels</div>
+        <div class="fe-note">The line follows the channel layout. Change the distribution and the
+          layout changes with it.</div>
+      </div></div>
+
+      <div class="sect"><h3>Addressing</h3><div class="sect-body">
+        <div class="formrow"><label>Start Channel</label><input type="number" id="fStart" value="1" min="1" max="512"></div>
+        <div class="formrow"><label>Universe</label><input type="number" id="fUni" value="0" min="0" max="63"></div>
+        <div class="formrow"><label>Last channel</label><span class="pval" id="lastCh">192</span></div>
+        <div class="formrow"><label>Fits per universe</label><span class="pval" id="fitCount">2</span></div>
+        <div class="fe-note" id="addrNote">Dummy parameters sit in front of the pixel data, so the pixel
+          data lands on the correct channels without offsetting the Start Channel.</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="statusline">
+    <span class="el">Opened from the gear icon next to the Fixture selection drop down.</span>
+    <span class="sp"></span>
+    <span>Pixels <b class="v" id="sbPix">64</b></span>
+    <span>Channels <b class="v" id="sbCh">192</b></span>
+    <span class="el">Fixtures are saved in Documents\Resolume Arena\Presets\Fixtures as XML.</span>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+
+/* theme tokens, read once, so the canvas paints from the same palette as the CSS */
+const CSSV = getComputedStyle(document.documentElement);
+const tok = (n, fb) => (CSSV.getPropertyValue(n) || '').trim() || fb;
+
+/* ------------------------------------------------------------------ menus --
+   The house dropdown: arena.css/.nocturne.css already give .dropdown, .dd-item,
+   .dd-sep and .dd-item .chk the main window's look, so this only builds them. */
+let dd = [];
+function closeDD(){ while(dd.length) dd.pop().remove(); }
+function menu(items, x, y){
+  closeDD();
+  const d = document.createElement('div'); d.className = 'dropdown';
+  items.forEach(it => {
+    if(it.sep){ const s = document.createElement('div'); s.className = 'dd-sep'; d.appendChild(s); return; }
+    const e = document.createElement('div');
+    e.className = 'dd-item' + (it.dis ? ' disabled' : '');
+    const chk = document.createElement('span'); chk.className = 'chk'; chk.textContent = it.on ? '✓' : '';
+    const lab = document.createElement('span'); lab.textContent = it.l;
+    e.appendChild(chk); e.appendChild(lab);
+    if(it.k){ const k = document.createElement('span'); k.className = 'kbd'; k.textContent = it.k; e.appendChild(k); }
+    if(!it.dis && it.fn) e.addEventListener('click', () => { closeDD(); it.fn(); });
+    d.appendChild(e);
+  });
+  document.body.appendChild(d);
+  const r = d.getBoundingClientRect();
+  d.style.left = Math.max(4, Math.min(x, innerWidth  - r.width  - 4)) + 'px';
+  d.style.top  = Math.max(4, Math.min(y, innerHeight - r.height - 4)) + 'px';
+  dd.push(d);
+}
+addEventListener('mousedown', e => {
+  const t = e.target;
+  if(!(t && t.closest && t.closest('.dropdown'))) closeDD();
+});
+addEventListener('keydown',   e => { if(e.key === 'Escape') closeDD(); });
+
+/* --------------------------------------------------------- colour spaces --
+   name, channels per pixel. Decoded from Arena.exe; L and Alpha are the two
+   the manual calls out for mono LEDs and for content presence.              */
+const COLOR_SPACES = [
+  ['Full Colour LEDs', [['RGB',3],['BGR',3],['GRB',3],['GBR',3],['BRG',3],['RBG',3],['RGB3',3]]],
+  ['Mono Coloured LEDs', [['L',1]]],
+  ['Alpha', [['Alpha',1]]],
+  ['CMY', [['CMY',3]]],
+  ['White and Amber LEDs', [['RGBW',4],['GRBW',4],['WRGB',4],['RGBA',4],['RGBX',4],
+                            ['RGBAW',5],['RGBWA',5],['WARGB',5]]]
+];
+const CS_CH = {};
+(() => {
+  const sel = $('#fColor');
+  COLOR_SPACES.forEach(([g, list]) => {
+    const og = document.createElement('optgroup'); og.label = g;
+    list.forEach(([n, ch]) => { CS_CH[n] = ch; og.appendChild(new Option(n, n)); });
+    sel.appendChild(og);
+  });
+})();
+
+/* ------------------------------------------------------- 16 distributions --
+   "You can come across pretty much every variation of this, which are all
+    covered with the 16 distribution options."                               */
+const DISTRIBUTIONS = [
+  ['Top Left, Left to Right',            {sx:0, sy:0, vert:false, snake:false}],
+  ['Top Left, Left to Right, Snake',     {sx:0, sy:0, vert:false, snake:true }],
+  ['Top Right, Right to Left',           {sx:1, sy:0, vert:false, snake:false}],
+  ['Top Right, Right to Left, Snake',    {sx:1, sy:0, vert:false, snake:true }],
+  ['Bottom Left, Left to Right',         {sx:0, sy:1, vert:false, snake:false}],
+  ['Bottom Left, Left to Right, Snake',  {sx:0, sy:1, vert:false, snake:true }],
+  ['Bottom Right, Right to Left',        {sx:1, sy:1, vert:false, snake:false}],
+  ['Bottom Right, Right to Left, Snake', {sx:1, sy:1, vert:false, snake:true }],
+  ['Top Left, Top to Bottom',            {sx:0, sy:0, vert:true,  snake:false}],
+  ['Top Left, Top to Bottom, Snake',     {sx:0, sy:0, vert:true,  snake:true }],
+  ['Top Right, Top to Bottom',           {sx:1, sy:0, vert:true,  snake:false}],
+  ['Top Right, Top to Bottom, Snake',    {sx:1, sy:0, vert:true,  snake:true }],
+  ['Bottom Left, Bottom to Top',         {sx:0, sy:1, vert:true,  snake:false}],
+  ['Bottom Left, Bottom to Top, Snake',  {sx:0, sy:1, vert:true,  snake:true }],
+  ['Bottom Right, Bottom to Top',        {sx:1, sy:1, vert:true,  snake:false}],
+  ['Bottom Right, Bottom to Top, Snake', {sx:1, sy:1, vert:true,  snake:true }]
+];
+DISTRIBUTIONS.forEach(([n], i) => $('#fDist').appendChild(new Option(n, String(i))));
+
+/* the pixel order a distribution walks, as [x,y] pairs */
+function pixelOrder(w, h, d){
+  const out = [];
+  if(!d.vert){
+    for(let r = 0; r < h; r++){
+      const y = d.sy ? h - 1 - r : r;
+      let rev = !!d.sx; if(d.snake && r % 2 === 1) rev = !rev;
+      for(let c = 0; c < w; c++) out.push([rev ? w - 1 - c : c, y]);
+    }
+  } else {
+    for(let c = 0; c < w; c++){
+      const x = d.sx ? w - 1 - c : c;
+      let rev = !!d.sy; if(d.snake && c % 2 === 1) rev = !rev;
+      for(let r = 0; r < h; r++) out.push([x, rev ? h - 1 - r : r]);
+    }
+  }
+  return out;
+}
+
+/* ---------------------------------------------------------- the fixtures --
+   Every entry carries its own parameters, so switching fixture and coming
+   back keeps the edit — "you can create a new fixture, adjust an existing
+   fixture or duplicate an existing fixture and go from there".              */
+const P = () => [{ pixels:true }];
+const FIXTURES = [
+  { g:'Generic', items:[
+    { n:'Generic RGB Pixel',       w:1,  h:1, cs:'RGB',  d:0, gm:'2.5', params:P() },
+    { n:'Generic RGB Strip 1×16',  w:16, h:1, cs:'RGB',  d:0, gm:'2.5', params:P() },
+    { n:'Generic RGB Tile 8×8',    w:8,  h:8, cs:'RGB',  d:1, gm:'2.5', params:P() },
+    { n:'Generic RGBW Tile 8×8',   w:8,  h:8, cs:'RGBW', d:1, gm:'2.5', params:P() } ]},
+  { g:'LED Strips', items:[
+    { n:'WS2812B 1×60',            w:60, h:1, cs:'GRB',  d:0, gm:'2.5', params:P() },
+    { n:'WS2812B 1×144',           w:144,h:1, cs:'GRB',  d:0, gm:'2.5', params:P() },
+    { n:'APA102 1×64',             w:64, h:1, cs:'BGR',  d:0, gm:'2.5', params:P() } ]},
+  { g:'Tiles & Panels', items:[
+    /* "it could be that the first channel switches between different chase
+        presets. You see this often in off-the-shelf LED tiles."             */
+    { n:'Off-the-shelf Tile 16×16',w:16, h:16,cs:'RGB',  d:1, gm:'2.5',
+      params:[{ name:'Chase Preset', def:0 }, { pixels:true }] },
+    { n:'Matrix Panel 32×8',       w:32, h:8, cs:'RGB',  d:1, gm:'2.5', params:P() } ]},
+  { g:'Moving / Other', items:[
+    /* "if you are adding a Dimmer channel to a fixture, you'll want to set
+        the Default to 255."                                                 */
+    { n:'RGB Par Can',             w:1,  h:1, cs:'RGB',  d:0, gm:'2.5',
+      params:[{ name:'Dimmer', def:255 }, { pixels:true }] },
+    { n:'Pixel Bar 1×12',          w:12, h:1, cs:'RGB',  d:0, gm:'2.5', params:P() },
+    { n:'Custom…',                 w:1,  h:1, cs:'RGB',  d:0, gm:'2.5', params:P() } ]}
+];
+let cur = FIXTURES[0].items[2];
+
+const groupOf = f => FIXTURES.find(g => g.items.indexOf(f) >= 0);
+const allFixtures = () => FIXTURES.reduce((a, g) => a.concat(g.items), []);
+
+/* The fixture window owns the editable native objects above.  Other windows
+   consume a serialisable library through this deliberately small adapter;
+   they never replace FIXTURES with strings or reach into this IIFE. */
+const fixtureSubscribers = new Set();
+let fixtureApplying = false;
+let fixtureIdentity = 0;
+function fixtureUid(prefix){
+  const random = window.crypto && crypto.randomUUID ? crypto.randomUUID()
+    : Date.now().toString(36) + ':' + (++fixtureIdentity).toString(36);
+  return (prefix || 'fixture') + ':' + random;
+}
+function ensureFixtureIdentity(f){
+  if(!f._hubId) f._hubId = fixtureUid('fixture');
+  if(!f._hubUuid) f._hubUuid = fixtureUid('fixture-uuid');
+  (f.params || []).forEach(p => { if(!p._hubId) p._hubId = fixtureUid('fixture-param'); });
+  return f;
+}
+function fixtureRecord(f){
+  ensureFixtureIdentity(f);
+  const width = clamp(+f.w || 1, 1, 512), height = clamp(+f.h || 1, 1, 512);
+  const channelsPerPixel = CS_CH[f.cs] || 3;
+  const pixelChannelCount = width * height * channelsPerPixel;
+  const parameters = (f.params || []).map((p, order) => ({
+    id: p._hubId, order,
+    name: p.pixels ? 'Pixel data' : (p.name || ('Parameter ' + (order + 1))),
+    type: p.pixels ? 'pixel' : 'dummy',
+    channelCount: p.pixels ? pixelChannelCount : 1,
+    defaultValue: p.pixels ? 0 : clamp(+p.def || 0, 0, 255)
+  }));
+  const dummyChannelCount = parameters.filter(p => p.type === 'dummy').length;
+  return {
+    id: f._hubId, uuid: f._hubUuid, name: String(f.n || 'Fixture'),
+    category: (groupOf(f) || {}).g || 'Custom',
+    width, height, colorSpace: f.cs || 'RGB', bitDepth: 8,
+    invert: !!f.inv, gamma: String(f.gm || '2.5'),
+    distributionIndex: clamp(+f.d || 0, 0, DISTRIBUTIONS.length - 1),
+    distribution: DISTRIBUTIONS[clamp(+f.d || 0, 0, DISTRIBUTIONS.length - 1)][0],
+    parameters, channelsPerPixel, pixelCount: width * height,
+    pixels: width * height, pixelChannelCount, dummyChannelCount,
+    channelCount: pixelChannelCount + dummyChannelCount,
+    channels: pixelChannelCount + dummyChannelCount
+  };
+}
+function fixtureSnapshot(){
+  if(cur) save();
+  const records = allFixtures().map(fixtureRecord);
+  const selected = cur ? ensureFixtureIdentity(cur) : null;
+  return { items:records, selectedId:selected ? selected._hubId : null };
+}
+function restoreFixtures(value){
+  const state = Array.isArray(value) ? {items:value} : (value || {});
+  if(!Array.isArray(state.items) || !state.items.length) return fixtureSnapshot();
+  fixtureApplying = true;
+  const grouped = new Map();
+  state.items.forEach(rawItem => {
+    /* Migrate both the old name-only adapter and its short-lived broken shape,
+       where a native fixture object was accidentally stored in `name`. */
+    const embedded = rawItem && rawItem.name && typeof rawItem.name === 'object' ? rawItem.name : null;
+    const item = typeof rawItem === 'string' ? {name:rawItem} : Object.assign({}, embedded || {}, rawItem || {});
+    item.name = String((embedded && embedded.n) || item.name || item.n || 'Fixture');
+    const category = item.category || 'Custom';
+    if(!grouped.has(category)) grouped.set(category, []);
+    const parameters = (Array.isArray(item.parameters) ? item.parameters : item.params || [])
+      .slice().sort((a,b) => (+a.order || 0) - (+b.order || 0)).map(parameter => {
+        const p = parameter.pixels || parameter.type === 'pixel' || /pixel/i.test(parameter.name || '')
+          ? {pixels:true} : {name:parameter.name || 'Parameter',
+            def:clamp(parameter.defaultValue == null ? (+parameter.def || 0) : +parameter.defaultValue, 0, 255)};
+        p._hubId = parameter.id || parameter._hubId || fixtureUid('fixture-param');
+        return p;
+      });
+    if(!parameters.some(p => p.pixels)) parameters.push({pixels:true, _hubId:fixtureUid('fixture-param')});
+    let distributionIndex = Number.isFinite(+item.distributionIndex) ? +item.distributionIndex
+      : Number.isFinite(+item.d) ? +item.d
+      : DISTRIBUTIONS.findIndex(entry => entry[0] === item.distribution);
+    if(distributionIndex < 0) distributionIndex = 0;
+    const f = {
+      n:item.name || 'Fixture', w:clamp(+item.width || +item.w || 1,1,512),
+      h:clamp(+item.height || +item.h || 1,1,512),
+      cs:item.colorSpace || item.cs || 'RGB', d:clamp(distributionIndex,0,DISTRIBUTIONS.length - 1),
+      gm:String(item.gamma || item.gm || '2.5'), inv:item.invert == null ? !!item.inv : !!item.invert,
+      params:parameters,
+      _hubId:item.id || fixtureUid('fixture'), _hubUuid:item.uuid || fixtureUid('fixture-uuid')
+    };
+    grouped.get(category).push(f);
+  });
+  FIXTURES.splice(0, FIXTURES.length,
+    ...[...grouped].map(([g, items]) => ({g, items})));
+  cur = allFixtures().find(f => f._hubId === state.selectedId || f._hubUuid === state.selectedId)
+    || allFixtures()[0];
+  if(cur) load();
+  fixtureApplying = false;
+  return fixtureSnapshot();
+}
+function notifyFixture(operation, ids){
+  if(fixtureApplying) return;
+  const state = fixtureSnapshot();
+  const detail = {operation:operation || 'update', ids:ids || (state.selectedId ? [state.selectedId] : []), state};
+  fixtureSubscribers.forEach(listener => { try{ listener(detail); }catch(error){ console.error(error); } });
+}
+
+/* ------------------------------------------------------------- the list ---- */
+const list = $('#fixList');
+function renderList(){
+  const q = $('#fq').value.toLowerCase();
+  list.innerHTML = '';
+  FIXTURES.forEach(gr => {
+    const hits = gr.items.filter(f => f.n.toLowerCase().includes(q));
+    if(!hits.length) return;
+    const g = document.createElement('div'); g.className = 'tgroup'; g.textContent = gr.g;
+    list.appendChild(g);
+    hits.forEach(f => {
+      const it = document.createElement('div');
+      it.className = 'titem' + (f === cur ? ' sel' : '');
+      const nm = document.createElement('span'); nm.textContent = f.n;
+      const ct = document.createElement('span'); ct.className = 'cnt';
+      ct.textContent = f.w + '×' + f.h;
+      it.appendChild(nm); it.appendChild(ct);
+      it.addEventListener('click', () => { save(); cur = f; load(); notifyFixture('select', [ensureFixtureIdentity(f)._hubId]); });
+      it.addEventListener('contextmenu', e => {
+        e.preventDefault(); save(); cur = f; load(); notifyFixture('select', [ensureFixtureIdentity(f)._hubId]);
+        menu([
+          { l:f.n, dis:true },
+          { sep:1 },
+          { l:'New Fixture', fn:newFixture },
+          { l:'Duplicate',   fn:duplicateFixture },
+          { l:'Delete',      fn:deleteFixture, dis:allFixtures().length < 2 }
+        ], e.clientX, e.clientY);
+      });
+      list.appendChild(it);
+    });
+  });
+  $('#fixCount').textContent = allFixtures().length + ' fixtures';
+}
+$('#fq').addEventListener('input', renderList);
+
+/* ------------------------------------------------------ load / save state -- */
+function load(){
+  $('#fName').value = cur.n;
+  $('#fixTitle').textContent = cur.n;
+  $('#fW').value = cur.w; $('#fH').value = cur.h;
+  $('#fColor').value = cur.cs;
+  $('#fDist').value = String(cur.d);
+  $('#fGamma').value = cur.gm;
+  $('#fInv').checked = !!cur.inv;
+  renderList(); renderParams(); refresh();
+}
+function save(){
+  cur.n  = $('#fName').value.trim() || cur.n;
+  cur.w  = clamp(+$('#fW').value || 1, 1, 512);
+  cur.h  = clamp(+$('#fH').value || 1, 1, 512);
+  cur.cs = $('#fColor').value;
+  cur.d  = +$('#fDist').value;
+  cur.gm = $('#fGamma').value;
+  cur.inv = $('#fInv').checked;
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ------------------------------------------------------- the plus icon ----
+   "hitting the plus icon on the bottom ... creates a default 1 RGB pixel
+    fixture called New Fixture"                                              */
+function newFixture(){
+  save();
+  const f = { n:'New Fixture', w:1, h:1, cs:'RGB', d:0, gm:'2.5', params:P() };
+  (groupOf(cur) || FIXTURES[FIXTURES.length - 1]).items.push(f);
+  cur = ensureFixtureIdentity(f); load(); notifyFixture('create', [f._hubId]);
+  $('#fName').focus(); $('#fName').select();
+}
+/* "If you want to make changes without affecting the current setup, make a
+    duplicate of the fixture preset first."                                  */
+function duplicateFixture(){
+  save();
+  const gr = groupOf(cur) || FIXTURES[0];
+  const f = JSON.parse(JSON.stringify(cur));
+  delete f._hubId; delete f._hubUuid;
+  (f.params || []).forEach(p => { delete p._hubId; });
+  f.n = cur.n + ' copy';
+  gr.items.splice(gr.items.indexOf(cur) + 1, 0, f);
+  cur = ensureFixtureIdentity(f); load(); notifyFixture('duplicate', [f._hubId]);
+}
+function deleteFixture(){
+  if(allFixtures().length < 2) return;
+  const removed = ensureFixtureIdentity(cur)._hubId;
+  const gr = groupOf(cur); const i = gr.items.indexOf(cur);
+  gr.items.splice(i, 1);
+  cur = gr.items[Math.min(i, gr.items.length - 1)] || allFixtures()[0];
+  load(); notifyFixture('remove', [removed]);
+}
+$('#newFix').addEventListener('click', newFixture);
+$('#dupFix').addEventListener('click', duplicateFixture);
+$('#delFix').addEventListener('click', deleteFixture);
+
+/* --------------------------------------------------------- the parameters --
+   Dummy channels first, the pixel data block among them; re-ordered by
+   dragging the three bar handle on the right of the parameter.              */
+const chanList = $('#chanList');
+let dragFrom = -1;
+
+function perPixel(){ return CS_CH[$('#fColor').value] || 3; }
+
+function renderParams(){
+  chanList.querySelectorAll('.chan-row').forEach(r => r.remove());
+  const w = clamp(+$('#fW').value || 1, 1, 512);
+  const h = clamp(+$('#fH').value || 1, 1, 512);
+  const per = perPixel();
+  let ch = 1;
+
+  cur.params.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'chan-row'; row.dataset.i = String(i);
+
+    const cell = document.createElement('span'); cell.className = 'ch';
+    const span = p.pixels ? w * h * per : 1;
+    cell.textContent = span > 1 ? (ch + '–' + (ch + span - 1)) : String(ch);
+    ch += span;
+    row.appendChild(cell);
+
+    const nm = document.createElement('input');
+    nm.type = 'text'; nm.className = 'nm';
+    if(p.pixels){
+      nm.readOnly = true;
+      nm.value = 'Pixel data: ' + $('#fColor').value + ' × ' + (w * h);
+    } else {
+      nm.value = p.name;
+      nm.addEventListener('input', () => { p.name = nm.value; });
+      nm.addEventListener('change', () => notifyFixture('parameter-update', [ensureFixtureIdentity(cur)._hubId]));
+    }
+    row.appendChild(nm);
+
+    if(p.pixels){
+      const x = document.createElement('span'); x.className = 'dvx'; x.textContent = 'video';
+      row.appendChild(x);
+    } else {
+      const dv = document.createElement('input');
+      dv.type = 'number'; dv.className = 'dv'; dv.min = '0'; dv.max = '255';
+      dv.value = String(p.def == null ? 0 : p.def);
+      dv.title = 'Default value sent on this channel';
+      dv.addEventListener('input', () => { p.def = clamp(+dv.value || 0, 0, 255); });
+      dv.addEventListener('change', () => notifyFixture('parameter-update', [ensureFixtureIdentity(cur)._hubId]));
+      row.appendChild(dv);
+    }
+
+    const hnd = document.createElement('span');
+    hnd.className = 'drag-handle'; hnd.textContent = '≡';
+    hnd.title = 'Drag up or down to re-arrange';
+    hnd.addEventListener('mousedown', () => { row.draggable = true; });
+    row.appendChild(hnd);
+
+    row.addEventListener('dragstart', e => {
+      dragFrom = i; row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      try{ e.dataTransfer.setData('text/plain', String(i)); }catch(_){}
+    });
+    row.addEventListener('dragend', () => {
+      row.draggable = false; row.classList.remove('dragging');
+      chanList.querySelectorAll('.chan-row').forEach(r =>
+        r.classList.remove('drop-before', 'drop-after'));
+      dragFrom = -1;
+    });
+    row.addEventListener('dragover', e => {
+      if(dragFrom < 0) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+      const r = row.getBoundingClientRect();
+      const after = e.clientY > r.top + r.height / 2;
+      row.classList.toggle('drop-after', after);
+      row.classList.toggle('drop-before', !after);
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('drop-before', 'drop-after'));
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      if(dragFrom < 0) return;
+      const r = row.getBoundingClientRect();
+      let to = i + (e.clientY > r.top + r.height / 2 ? 1 : 0);
+      const moved = cur.params.splice(dragFrom, 1)[0];
+      if(dragFrom < to) to--;
+      cur.params.splice(clamp(to, 0, cur.params.length), 0, moved);
+      dragFrom = -1; renderParams(); refresh(); notifyFixture('parameter-reorder', [ensureFixtureIdentity(cur)._hubId]);
+    });
+
+    row.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      menu([
+        { l:p.pixels ? 'Pixel data' : (p.name || 'Parameter'), dis:true },
+        { sep:1 },
+        { l:'Rename', dis:!!p.pixels, fn:() => { nm.focus(); nm.select(); } },
+        { l:'Move Up',   dis:i === 0, fn:() => moveParam(i, i - 1) },
+        { l:'Move Down', dis:i === cur.params.length - 1, fn:() => moveParam(i, i + 1) },
+        { sep:1 },
+        { l:'Delete', dis:!!p.pixels, fn:() => {
+          cur.params.splice(i, 1); renderParams(); refresh();
+          notifyFixture('parameter-remove', [ensureFixtureIdentity(cur)._hubId]);
+        } }
+      ], e.clientX, e.clientY);
+    });
+
+    chanList.appendChild(row);
+  });
+}
+function moveParam(from, to){
+  if(to < 0 || to >= cur.params.length) return;
+  const m = cur.params.splice(from, 1)[0];
+  cur.params.splice(to, 0, m);
+  renderParams(); refresh(); notifyFixture('parameter-reorder', [ensureFixtureIdentity(cur)._hubId]);
+}
+/* "you can create extra parameters by clicking on the + icon in the bottom of
+    the Parameters tab" */
+function addDummy(){
+  const n = cur.params.filter(p => !p.pixels).length + 1;
+  const idx = cur.params.findIndex(p => p.pixels);
+  cur.params.splice(idx < 0 ? cur.params.length : idx, 0, { name:'Parameter ' + n, def:0 });
+  ensureFixtureIdentity(cur);
+  renderParams(); refresh(); notifyFixture('parameter-add', [cur._hubId]);
+}
+$('#addParam').addEventListener('click', addDummy);
+window.addDummy = addDummy;
+
+/* ------------------------------------------------------------- the preview --
+   "On the right you will see a preview of how your fixture is arranged."
+   "When you change your distribution, you'll also see the channel layout
+    change in the preview."                                                   */
+const cv = $('#pixPrev'), cx = cv.getContext('2d');
+
+function drawPrev(){
+  const w = clamp(+$('#fW').value || 1, 1, 512);
+  const h = clamp(+$('#fH').value || 1, 1, 512);
+  const dist = DISTRIBUTIONS[clamp(+$('#fDist').value || 0, 0, 15)][1];
+  const ord = pixelOrder(w, h, dist);
+
+  cx.fillStyle = tok('--inset', 'hsl(233 25% 10%)');
+  cx.fillRect(0, 0, cv.width, cv.height);
+
+  const pad = 10;
+  const cell = Math.min((cv.width - pad * 2) / w, (cv.height - pad * 2) / h);
+  const ox = (cv.width - cell * w) / 2, oy = (cv.height - cell * h) / 2;
+  const inv = $('#fInv').checked;
+
+  /* pixels shaded along the channel order, in the accent's own hue so the
+     preview stays inside the palette */
+  ord.forEach(([x, y], i) => {
+    const t = ord.length > 1 ? i / (ord.length - 1) : 0;
+    const l = inv ? 52 - t * 39 : 13 + t * 39;
+    cx.fillStyle = 'hsl(249 30% ' + l.toFixed(1) + '%)';
+    cx.fillRect(ox + x * cell + 0.5, oy + y * cell + 0.5, Math.max(1, cell - 1), Math.max(1, cell - 1));
+  });
+
+  /* the channel layout, drawn as the path the data walks */
+  if(ord.length > 1){
+    cx.strokeStyle = tok('--a300', 'hsl(247 94% 90%)');
+    cx.lineWidth = Math.max(1, Math.min(2, cell / 12));
+    cx.globalAlpha = .8;
+    cx.beginPath();
+    ord.forEach(([x, y], i) => {
+      const px = ox + x * cell + cell / 2, py = oy + y * cell + cell / 2;
+      if(i) cx.lineTo(px, py); else cx.moveTo(px, py);
+    });
+    cx.stroke();
+    cx.globalAlpha = 1;
+  }
+
+  /* the order number, when there is room for it */
+  if(cell >= 17){
+    cx.font = Math.min(11, Math.round(cell * 0.34)) + 'px Inter, system-ui, sans-serif';
+    cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    const dark = tok('--n900', 'hsl(228 8% 18%)'), light = tok('--n200', 'hsl(230 46% 93%)');
+    ord.forEach(([x, y], i) => {
+      const t = ord.length > 1 ? i / (ord.length - 1) : 0;
+      cx.fillStyle = (inv ? 1 - t : t) > .82 ? dark : light;
+      cx.fillText(String(i + 1), ox + x * cell + cell / 2, oy + y * cell + cell / 2);
+    });
+  }
+
+  /* pixel one gets the accent mark */
+  const first = ord[0] || [0, 0];
+  cx.strokeStyle = tok('--color-accent', 'hsl(249 55% 68%)');
+  cx.lineWidth = 2;
+  cx.strokeRect(ox + first[0] * cell + 1, oy + first[1] * cell + 1,
+                Math.max(1, cell - 2), Math.max(1, cell - 2));
+}
+
+/* --------------------------------------------------------------- read-outs -- */
+function refresh(){
+  const w = clamp(+$('#fW').value || 1, 1, 512);
+  const h = clamp(+$('#fH').value || 1, 1, 512);
+  const per = perPixel(), cs = $('#fColor').value;
+  const dummies = cur.params.filter(p => !p.pixels).length;
+  const pixels = w * h;
+  const total = dummies + pixels * per;
+
+  $('#chanPer').textContent   = per;
+  $('#chanTotal').textContent = total;
+  $('#prevInfo').textContent  =
+    w + ' × ' + h + ' = ' + pixels + ' pixels · ' + cs + ' · ' + per +
+    ' ch/pixel' + (dummies ? ' · ' + dummies + ' dummy' : '') + ' · ' + total + ' channels';
+
+  const start = clamp(+$('#fStart').value || 1, 1, 512);
+  const last  = start + total - 1;
+  $('#lastCh').textContent   = last;
+  $('#lastCh').classList.toggle('fe-warn', last > 512);
+  $('#fitCount').textContent = Math.floor(512 / total);
+  $('#addrNote').classList.toggle('fe-warn', last > 512);
+  $('#addrNote').textContent = last > 512
+    ? 'This fixture runs past channel 512. It needs ' + Math.ceil(total / 512) +
+      ' universes, or a lower Start Channel.'
+    : 'Dummy parameters sit in front of the pixel data, so the pixel data lands on the correct ' +
+      'channels without offsetting the Start Channel.';
+
+  $('#sbPix').textContent = pixels;
+  $('#sbCh').textContent  = total;
+  drawPrev();
+}
+
+/* ------------------------------------------------------------------ wiring -- */
+$('#fName').addEventListener('input', () => {
+  cur.n = $('#fName').value;
+  $('#fixTitle').textContent = cur.n || 'Untitled Fixture';
+  renderList();
+});
+['fW', 'fH'].forEach(id => $('#' + id).addEventListener('input', () => {
+  save(); renderParams(); refresh(); renderList();
+}));
+$('#fColor').addEventListener('change', () => { save(); renderParams(); refresh(); });
+$('#fDist').addEventListener('change',  () => { save(); refresh(); });
+$('#fGamma').addEventListener('change', save);
+$('#fInv').addEventListener('change',   () => { save(); refresh(); });
+$('#f16').addEventListener('change',    refresh);
+$('#fStart').addEventListener('input',  refresh);
+$('#fUni').addEventListener('input',    refresh);
+
+/* Library edits are committed on the end of a control gesture. Preview-only
+   Start Channel/Universe fields deliberately remain local to this window. */
+['fName', 'fW', 'fH', 'fColor', 'fDist', 'fGamma', 'fInv'].forEach(id =>
+  $('#' + id).addEventListener('change', () => notifyFixture('update', [ensureFixtureIdentity(cur)._hubId])));
+
+/* the right hand panels fold, the way every .sect does */
+document.querySelectorAll('.sect > h3').forEach(hd =>
+  hd.addEventListener('click', () => hd.parentElement.classList.toggle('folded')));
+
+load();
+window.OpenLiveFixtureEditor = Object.freeze({
+  snapshot:fixtureSnapshot,
+  restore:restoreFixtures,
+  selectedId:() => ensureFixtureIdentity(cur)._hubId,
+  subscribe(listener){
+    if(typeof listener !== 'function') return () => {};
+    fixtureSubscribers.add(listener);
+    return () => fixtureSubscribers.delete(listener);
+  }
+});
+})();
+</script>
+<script src="openlive-hub.js"></script>
+<script src="utility-hub-adapters.js"></script>
+</body>
+</html>

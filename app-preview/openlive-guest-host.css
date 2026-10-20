@@ -1,0 +1,103 @@
+/* Guests & backstage is operator chrome. Inherit SHOWAVE Appearance rather
+   than a separate dark palette; programme media is not recolored by this sheet. */
+.guest-host-dialog {
+  /* Restore native modal centering after arena.css's universal margin reset. */
+  position:fixed; inset:0; margin:auto; box-sizing:border-box;
+  width:min(720px,calc(100vw - 32px)); max-width:calc(100vw - 32px);
+  max-height:calc(100vh - 32px); max-height:calc(100dvh - 32px);
+  padding:24px; overflow:auto; overscroll-behavior:contain;
+  border:1px solid var(--glass-border,var(--line2)); border-radius:var(--radius-lg);
+  background:
+    linear-gradient(180deg,var(--glass-reflection-start,transparent),var(--glass-reflection-end,transparent) 46%),
+    color-mix(in srgb,var(--glass-bg,var(--panel)) 22%,var(--panel));
+  color:var(--txt); font:inherit; line-height:1.5;
+  -webkit-backdrop-filter:blur(50px) saturate(200%);
+  backdrop-filter:blur(50px) saturate(200%);
+  box-shadow:0 14px 28px -20px var(--glass-shadow),
+    0 3px 12px -7px var(--glass-shadow),
+    inset 0 2px 3px -1px var(--glass-highlight),
+    inset 0 -2px 4px -1px var(--glass-caustic),
+    inset 0 0 0 1px var(--glass-border);
+}
+.guest-host-dialog::backdrop {
+  background:color-mix(in srgb,var(--glass-shadow,var(--bg)) 65%,transparent);
+  backdrop-filter:blur(4px);
+}
+.guest-host-dialog h2 {
+  margin:0 0 12px; color:var(--txt-hi); font-family:inherit;
+  font-size:22px; font-weight:600; line-height:1.2;
+}
+.guest-host-dialog h3 {
+  margin:18px 0 4px; color:var(--txt-hi); font-family:inherit;
+  font-size:13px; font-weight:600;
+}
+.guest-host-dialog p {
+  line-height:1.5; color:var(--txt-dim); overflow-wrap:anywhere;
+}
+.guest-host-actions {
+  display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:10px 0;
+  min-width:0;
+}
+.guest-host-actions input {
+  flex:1 1 180px; min-width:0; max-width:100%; box-sizing:border-box; padding:9px 10px;
+  background:var(--ctl-face,var(--btn)); color:var(--txt-hi);
+  border:1px solid var(--ctl-edge,var(--line2)); border-radius:var(--radius-sm);
+  font:inherit; user-select:text;
+}
+.guest-host-actions input::placeholder { color:var(--txt-dim); opacity:1; }
+.guest-host-dialog .tb-btn {
+  display:inline-flex; align-items:center; justify-content:center; min-height:30px;
+  max-width:100%; padding:6px 10px; white-space:normal; overflow-wrap:anywhere;
+  color:var(--ctl-text,var(--txt)); background:var(--ctl-face,var(--btn));
+  border:1px solid var(--ctl-edge,var(--line2)); border-radius:var(--radius-sm);
+  font:inherit; font-weight:600; line-height:1.4; cursor:pointer; text-decoration:none;
+}
+.guest-host-dialog .tb-btn:hover:not(:disabled) {
+  color:var(--txt-hi); background:var(--ctl-face-hi,var(--btn-hi));
+  border-color:var(--color-accent);
+}
+.guest-host-dialog .tb-btn:disabled { opacity:.45; cursor:not-allowed; }
+/* The shared .tb-btn face is !important. Override only this action's material
+   with the same accent/ink pair used by active SHOWAVE controls. */
+.guest-host-dialog .guest-host-actions button[type=submit] {
+  background:var(--color-accent) !important; color:var(--mint-t);
+  border-color:var(--color-accent);
+}
+.guest-host-dialog .guest-host-actions button[type=submit]:hover:not(:disabled) {
+  color:var(--mint-t);
+}
+.guest-host-dialog [hidden] { display:none !important; }
+.guest-host-dialog :is(button,a,input):focus-visible {
+  outline:2px solid var(--theme-focus,var(--color-accent)); outline-offset:2px;
+}
+.guest-host-person {
+  min-width:0; border:1px solid var(--glass-border,var(--line2));
+  border-radius:var(--radius-md); background:var(--panel); padding:14px; margin:12px 0;
+}
+.guest-host-person > strong { color:var(--txt-hi); overflow-wrap:anywhere; }
+.guest-host-person p { margin:5px 0; }
+.guest-host-previews { display:flex; flex-wrap:wrap; gap:10px; min-width:0; }
+.guest-host-previews video {
+  width:180px; max-width:100%; height:102px; object-fit:contain;
+  border:1px solid var(--line2); border-radius:var(--radius-sm);
+  background:var(--inset);
+}
+.guest-host-previews video[hidden] { display:none; }
+.guest-host-chat {
+  height:150px; min-width:0; margin-top:8px; overflow:auto; overscroll-behavior:contain;
+  padding:8px 14px; border:1px solid var(--line2); border-radius:var(--radius-md);
+  background:var(--inset); color:var(--txt);
+}
+.guest-host-chat p {
+  margin:8px 0; color:var(--txt); white-space:pre-wrap; overflow-wrap:anywhere;
+  user-select:text;
+}
+.guest-host-dialog [role=status] { color:var(--txt-hi); }
+@media (max-width:560px) {
+  .guest-host-dialog {
+    width:calc(100vw - 24px); max-width:calc(100vw - 24px); padding:18px 14px;
+  }
+  .guest-host-dialog h2 { font-size:20px; }
+  .guest-host-person { padding:10px; }
+  .guest-host-dialog .tb-btn { min-height:34px; }
+}

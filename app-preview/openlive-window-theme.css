@@ -1,0 +1,352 @@
+@import url("openlive-window-preferences.css");
+
+/* Shared utility-window language, sampled from the SHOWAVE startup window.
+   Scope to window surfaces: workspace grids, previews and output artwork keep
+   their own metrics. Application font scaling continues to apply once. */
+:root {
+  --showave-window-bg:#181818;
+  --showave-window-surface:#202020;
+  --showave-window-field:#252525;
+  --showave-window-line:#303030;
+  --showave-window-edge:#111;
+  --showave-window-control-border:#494949;
+  --showave-window-text:#d4d4d4;
+  --showave-window-muted:#ababab;
+  --showave-window-hover:#333;
+  --showave-window-focus:#b7cce3;
+  --showave-window-shadow:0 2px 6px #0009;
+  --showave-window-font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+  /* InterfaceTypography scales authored font sizes; layout-only slots may use
+     the compatibility factor without multiplying the font baseline. */
+  --showave-window-font-size:12px;
+  --showave-utility-header-height:calc(36px * var(--openlive-ui-font-scale,1));
+  --showave-window-name-height:calc(var(--showave-window-font-size) * 2.4 * var(--openlive-ui-font-scale,1));
+  --showave-window-font:var(--showave-window-font-size)/1.5 var(--showave-window-font-family);
+  --showave-window-padding:24px;
+  --showave-window-width:500px;
+  --showave-window-height:566px;
+  --showave-window-cover-height:248px;
+  --showave-window-content-inset:32px;
+}
+html[data-appearance-mode="light"] {
+  --showave-window-bg:#f3f3f3;
+  --showave-window-surface:#ededed;
+  --showave-window-field:#fff;
+  --showave-window-line:#d4d4d4;
+  --showave-window-edge:#bdbdbd;
+  --showave-window-control-border:#b8b8b8;
+  --showave-window-text:#292929;
+  --showave-window-muted:#656565;
+  --showave-window-hover:#e1e1e1;
+  --showave-window-focus:#436c96;
+  --showave-window-shadow:0 2px 6px #0002;
+}
+
+/* Native dialogs cover dynamically created tools. Explicit surfaces cover
+   legacy non-native windows; their overlay, placement and display stay owned
+   by the existing controllers. */
+html body :is(dialog,.dialog,.floatwin,[role="dialog"],[role="alertdialog"],.network-speed-window)
+  :where(button,input,select,textarea) {
+  font-family:var(--showave-window-font-family);
+}
+html body :is(dialog,.dialog,.floatwin,[role="dialog"],[role="alertdialog"],.network-speed-window):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked) {
+  --bg:var(--showave-window-bg); --panel:var(--showave-window-bg);
+  --panel2:var(--showave-window-surface); --head:var(--showave-window-surface);
+  --strip:var(--showave-window-surface); --inset:var(--showave-window-field);
+  --line:var(--showave-window-line); --line2:var(--showave-window-control-border);
+  --txt:var(--showave-window-text); --txt-dim:var(--showave-window-muted);
+  --txt-hi:var(--showave-window-text);
+  --n100:var(--showave-window-text); --n200:var(--showave-window-text);
+  --n300:var(--showave-window-text); --n400:var(--showave-window-text);
+  --n500:var(--showave-window-muted); --n600:var(--showave-window-muted);
+  --n700:var(--showave-window-muted); --n800:var(--showave-window-control-border);
+  --btn:var(--showave-window-field); --btn-hi:var(--showave-window-hover);
+  --btn-line:var(--showave-window-control-border);
+  --font:var(--showave-window-font);
+  font:var(--showave-window-font);
+  letter-spacing:normal;
+  color:var(--showave-window-text) !important;
+  background:var(--showave-window-bg) !important;
+  border:1px solid var(--showave-window-edge) !important;
+  border-radius:2px !important;
+  box-shadow:var(--showave-window-shadow) !important;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Window bars use the same quiet surface, 23px icon actions and small labels.
+   Extra specificity is deliberate: the older glass theme uses !important. */
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"],.network-speed-window):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  > :is(.fw-title,header,.dialog-header,.network-speed-titlebar,.audio-advanced-head),
+html body.showave-utility-window .win-title {
+  box-sizing:border-box;
+  min-height:36px; height:auto; flex-shrink:0;
+  padding:6px 12px 6px var(--showave-window-padding);
+  gap:8px;
+  background:var(--showave-window-bg) !important;
+  color:var(--showave-window-text) !important;
+  border-bottom:1px solid var(--showave-window-line);
+  border-radius:0;
+  box-shadow:none !important;
+  font-family:var(--showave-window-font-family); font-size:var(--showave-window-font-size);
+  font-weight:500; line-height:1.5;
+  letter-spacing:normal;
+}
+
+/* Utility titles and their actions occupy one quiet row. Detached desktop
+   windows put the title in the native frame and keep this as an action row;
+   a direct editor toolbar absorbs it instead of adding another strip. */
+html body.showave-utility-window :is(.win-title.openlive-glass-header,[data-openlive-utility-toolbar]) {
+  display:flex; align-items:center; flex-wrap:nowrap;
+  box-sizing:border-box; min-width:0;
+  height:var(--showave-utility-header-height) !important;
+  min-height:var(--showave-utility-header-height) !important;
+  flex:0 0 var(--showave-utility-header-height) !important;
+  gap:8px; padding:6px 12px;
+  white-space:nowrap; overflow-x:auto; overflow-y:hidden;
+  scrollbar-width:none;
+  background:var(--showave-window-bg) !important;
+  color:var(--showave-window-text) !important;
+  border-bottom:1px solid var(--showave-window-line);
+  border-radius:0; box-shadow:none !important;
+  font:var(--showave-window-font);
+}
+html body.showave-utility-window .win-title.openlive-glass-header::before { display:none; }
+html body.showave-utility-window :is(.win-title.openlive-glass-header,[data-openlive-utility-toolbar])::-webkit-scrollbar { display:none; }
+html body.showave-utility-window .openlive-utility-actions {
+  display:flex; align-items:center; flex-wrap:nowrap; gap:8px;
+  flex:0 0 auto; min-width:0; white-space:nowrap;
+  font:var(--showave-window-font); color:var(--showave-window-text);
+}
+html body.showave-utility-window .win-toolbar > .openlive-utility-actions { margin-left:auto; }
+html body.showave-utility-window .openlive-utility-caption { display:none !important; }
+html body.showave-utility-window .openlive-utility-actions .sp { margin-left:auto; }
+html body.showave-utility-window :is(.win-title,.openlive-utility-actions) :is(button,a,.menu-top,.openlive-window-controls) { flex-shrink:0; }
+html body.showave-utility-window :is(.win-title,.openlive-utility-actions) :is(.cmp,.sub,.t-dim,#winMode) {
+  min-width:0; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* Embedded editors keep their actual title and action nodes inside the iframe.
+   The container's detach/close targets occupy the reserved right edge of that
+   same row, so child menus, status lookups and listeners keep their ownership. */
+html body #dlgPanel .panel-dialog[data-utility-title-owner="child"] { position:relative; }
+html body #dlgPanel .panel-dialog[data-utility-title-owner="child"].placed { position:absolute; }
+html body #dlgPanel .panel-dialog[data-utility-title-owner="child"] > .fw-title {
+  position:absolute; z-index:2; top:0; right:0;
+  height:var(--showave-utility-header-height) !important;
+  min-height:var(--showave-utility-header-height) !important;
+  padding:6px 8px !important; gap:6px;
+  border:0 !important; background:var(--showave-window-bg) !important;
+  pointer-events:none;
+}
+html body #dlgPanel .panel-dialog[data-utility-title-owner="child"] > .fw-title :is(.rlogo,#panelTitle) { display:none; }
+html body #dlgPanel .panel-dialog[data-utility-title-owner="child"] > .fw-title :is(.panel-pop,.x) {
+  pointer-events:auto; flex-shrink:0; min-height:23px;
+}
+html body #dlgPanel .panel-dialog[data-utility-title-owner="child"] .panel-body { flex:1 1 100%; }
+html[data-openlive-title-owner="embedded"] body.showave-utility-window .win-title {
+  width:calc(100% - var(--openlive-host-header-width,148px)) !important;
+  padding-right:8px;
+  cursor:move;
+}
+html[data-openlive-title-owner="embedded"] body.showave-utility-window .win-title > [data-showave-brand] { display:none; }
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"],.network-speed-window):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(.fw-title,header,.dialog-header,.network-speed-titlebar,.audio-advanced-head) :is(h1,h2,h3) {
+  margin:0; font:inherit; color:inherit; letter-spacing:normal;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"],.network-speed-window):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(.fw-title,header,.dialog-header,.network-speed-titlebar,.audio-advanced-head) :is(.x,button[aria-label^="Close"],button[data-close]) {
+  display:inline-grid; place-items:center; box-sizing:border-box;
+  flex:0 0 23px; width:23px; min-width:23px; height:23px; min-height:23px;
+  padding:0; border:0; border-radius:3px;
+  background:transparent !important; color:var(--showave-window-muted) !important;
+  box-shadow:none !important; font:inherit; cursor:pointer;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(.fw-body,.tl-modal-body,.bc-source-body,.dialog-body,.audio-advanced-body) {
+  padding:15px var(--showave-window-padding);
+  min-width:0; line-height:1.5;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  > :is(.btnrow,footer,.dialog-actions,.fw-foot) {
+  padding:12px var(--showave-window-padding) 15px;
+  gap:8px; flex-shrink:0; flex-wrap:wrap;
+  background:var(--showave-window-bg) !important;
+  border-top:1px solid var(--showave-window-line);
+  box-shadow:none !important;
+}
+
+/* Form text and actions share Home's type rhythm. Do not size preview text,
+   numerical meters, code editors or color swatches as ordinary form controls. */
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(button,select,input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]),textarea) {
+  font-family:var(--showave-window-font-family);
+  font-size:var(--showave-window-font-size);
+  line-height:1.5;
+  font-weight:400;
+  letter-spacing:normal;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(.formrow,label,p,legend) {
+  font-family:var(--showave-window-font-family);
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(.formrow,label):not(.bc-source-filters label) {
+  font-size:var(--showave-window-font-size); line-height:1.5;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked) p {
+  font-size:calc(var(--showave-window-font-size) * 11 / 12); line-height:1.5;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked) small {
+  font-family:var(--showave-window-font-family); font-size:calc(var(--showave-window-font-size) * 11 / 12);
+  font-weight:400; line-height:1.5;
+  color:var(--showave-window-muted);
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(label,.fw-title,header) strong {
+  font-family:inherit; font-size:inherit; line-height:inherit; font-weight:500;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(h3,legend,.bc-source-step) {
+  font-family:var(--showave-window-font-family); font-size:calc(var(--showave-window-font-size) * 11 / 12);
+  font-weight:500; line-height:1.5;
+  color:var(--showave-window-muted); letter-spacing:normal;
+  text-transform:none;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(.formrow,.bc-source-body > label) { gap:8px; margin-block:8px; }
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(.formgroup,.bc-source-category) {
+  background:transparent !important; border-color:var(--showave-window-line) !important;
+  border-radius:2px; box-shadow:none !important;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(button:not(.swatch):not([role="switch"]),.btn,.tb-btn) {
+  min-height:23px;
+  border-radius:3px;
+  border-color:var(--showave-window-control-border) !important;
+  background:var(--showave-window-field) !important;
+  color:var(--showave-window-text);
+  box-shadow:none !important;
+  text-shadow:none;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(button,.btn,.tb-btn):hover:not(:disabled) { background:var(--showave-window-hover) !important; }
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(button,.btn,.tb-btn):is(.on,.active,[aria-pressed="true"],[aria-selected="true"]) {
+  border-color:var(--showave-window-focus) !important;
+  background:var(--showave-window-hover) !important;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked)
+  :is(input[type="text"],input[type="number"],input[type="password"],input[type="url"],input[type="search"],input[type="email"],select,textarea) {
+  box-sizing:border-box; min-height:25px;
+  border:1px solid var(--showave-window-control-border);
+  border-radius:3px; background:var(--showave-window-field) !important;
+  color:var(--showave-window-text); box-shadow:none !important;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked) :focus-visible {
+  outline:2px solid var(--showave-window-focus) !important; outline-offset:1px;
+}
+html body :is(.dialog,.floatwin,dialog,[role="dialog"],[role="alertdialog"]):not(#showave-start-panel):not([role="region"]):not(.bc-source-embedded):not(.is-docked) :disabled {
+  opacity:.45; cursor:default;
+}
+
+/* Keep modal forms usable on small screens without changing editor canvases
+   or the separately draggable/resizable utility window container. */
+html body .dialog:not(.panel-dialog):not([role="region"]) {
+  max-width:calc(100vw - 24px); max-height:calc(100vh - 32px);
+  min-width:min(420px,calc(100vw - 24px)); overflow:auto;
+}
+html body :is(.composition-settings,.composition-change-confirm) { width:480px; }
+html body #dlgPanel .panel-dialog:is([data-panel="preferences.html"],[data-panel="preferences-legacy.html"],[data-panel="wire-settings.html"],[data-panel="shortcuts.html"],[data-panel="presets.html"],[data-panel="reference.html"],[data-panel="encoder-editor.html"]) {
+  min-width:min(420px,calc(100vw - 48px));
+  max-width:calc(100vw - 48px); max-height:calc(100vh - 64px);
+}
+html body #dlgPanel .panel-dialog:is([data-panel="preferences.html"],[data-panel="preferences-legacy.html"]) {
+  width:500px; height:566px;
+  min-width:min(500px,calc(100vw - 48px)); min-height:min(420px,calc(100vh - 64px));
+}
+html body #dlgPanel .panel-dialog:is([data-panel="preferences.html"],[data-panel="preferences-legacy.html"]):not(.placed) {
+  transform:translateY(14px);
+}
+html body #dlgPanel .panel-dialog:not(#showave-start-panel):is([data-panel="preferences.html"],[data-panel="preferences-legacy.html"]) > .fw-title {
+  min-height:42px; padding:12px 10px 7px 32px;
+  border-bottom:0; font-size:calc(var(--showave-window-font-size) * 11 / 12);
+  font-weight:500; color:var(--showave-window-muted) !important;
+}
+html body #dlgPanel .panel-dialog:is([data-panel="preferences.html"],[data-panel="preferences-legacy.html"]) .rlogo { display:none; }
+html body #dlgPanel .panel-dialog:not(#showave-start-panel):is([data-panel="preferences.html"],[data-panel="preferences-legacy.html"]) #panelPop {
+  background:transparent !important; border:0 !important; padding:2px 4px;
+  font-size:calc(var(--showave-window-font-size) * 11 / 12); color:var(--showave-window-muted);
+}
+html body .composition-settings .formrow label { color:var(--showave-window-muted); }
+html body .composition-settings-owner {
+  margin:15px 0 0; padding:0; border:0; background:transparent;
+  font-size:calc(var(--showave-window-font-size) * 11 / 12); color:var(--showave-window-muted);
+}
+html body .composition-settings-status { margin-left:0; }
+html body .bc-source-dialog:not(.bc-source-embedded) {
+  --lc-ctl:25px; --lc-gap:4px; width:min(400px,calc(100vw - 24px));
+}
+html body .bc-source-dialog:not(.bc-source-embedded) .bc-source-types button {
+  border:0; background:transparent !important; text-align:left;
+  padding:3px 6px; gap:8px; min-height:27px;
+}
+html body .bc-source-dialog:not(.bc-source-embedded) .bc-source-types button:hover:not(:disabled) { background:var(--showave-window-hover) !important; }
+html body .bc-source-dialog:not(.bc-source-embedded) .bc-source-icon { width:15px; height:15px; flex-basis:15px; }
+
+/* Full utility documents use the same surfaces, while keeping their original
+   navigation, tables and editor-specific layout. */
+html body.showave-utility-window {
+  --bg:var(--showave-window-bg); --panel:var(--showave-window-bg);
+  --panel2:var(--showave-window-surface); --strip:var(--showave-window-surface);
+  --head:var(--showave-window-surface); --inset:var(--showave-window-field);
+  --line:var(--showave-window-line); --line2:var(--showave-window-control-border);
+  --txt:var(--showave-window-text); --txt-dim:var(--showave-window-muted);
+  --n100:var(--showave-window-text); --n200:var(--showave-window-text); --n300:var(--showave-window-text);
+  --n400:var(--showave-window-text); --n500:var(--showave-window-muted); --n600:var(--showave-window-muted);
+  --font:var(--showave-window-font);
+  font:var(--showave-window-font); letter-spacing:normal;
+  color:var(--showave-window-text); background:var(--showave-window-bg) !important;
+}
+html body.showave-utility-window :is(.win-root,.win-main,.win-content) { background:var(--showave-window-bg) !important; }
+html body.showave-utility-window :is(.formgroup,.pref-help) {
+  background:transparent !important; border-color:var(--showave-window-line) !important;
+  border-radius:2px; box-shadow:none !important;
+}
+html body.showave-utility-window :is(.win-content,.side-tab,.formrow,button,select,input) {
+  font-family:var(--showave-window-font-family); font-size:var(--showave-window-font-size);
+}
+html body.showave-utility-window :is(.formgroup h3,.sect h3) {
+  font-family:var(--showave-window-font-family); font-size:calc(var(--showave-window-font-size) * 11 / 12);
+  font-weight:500; line-height:1.5;
+  color:var(--showave-window-muted); letter-spacing:normal;
+}
+html body.showave-utility-window :is(.btn,.tb-btn,select,input[type="text"],input[type="number"],input[type="search"]) {
+  min-height:23px; border-radius:3px; box-shadow:none !important;
+  background:var(--showave-window-field) !important;
+  border-color:var(--showave-window-control-border) !important;
+  color:var(--showave-window-text); line-height:1.5;
+}
+html body.showave-utility-window :is(.btn,.tb-btn):hover:not(:disabled) { background:var(--showave-window-hover) !important; }
+html body.showave-utility-window :focus-visible { outline:2px solid var(--showave-window-focus); outline-offset:1px; }
+html body.ol-area-popup { font:var(--showave-window-font); color:var(--showave-window-text); background:var(--showave-window-bg); }
+html body.ol-area-popup > .ol-area > .ol-area-header {
+  flex:0 0 auto; min-height:2em; padding:0 4px; gap:3px;
+  font-family:inherit; font-size:11px; line-height:1.2; color:var(--txt,var(--showave-window-text));
+  background:var(--head,var(--showave-window-surface)); border-color:var(--line,var(--showave-window-line));
+}
+html body.ol-area-popup > .ol-area > .ol-area-header button {
+  min-width:20px; min-height:1.8182em; border-radius:2px;
+}
+
+/* The manual bandwidth test must retain its live-output warning after the
+   shared dialog button paint is applied. Keep the state visible on hover too. */
+html body #networkSpeedWindow[data-state="warning"] #networkSpeedStart {
+  background:color-mix(in srgb,var(--net-idle) 22%,var(--showave-window-field)) !important;
+  border-color:var(--net-idle) !important;
+}
+html body #networkSpeedWindow[data-state="error"] #networkSpeedStart {
+  background:color-mix(in srgb,var(--net-error) 22%,var(--showave-window-field)) !important;
+  border-color:var(--net-error) !important;
+}
+@media(max-width:540px) { :root { --showave-window-padding:16px; } }

@@ -1,5 +1,5 @@
 // Reuse the homepage's native globe, routes and graphics fallback unchanged.
-import { r as createGlobe } from './africa-globe.js?v=smooth-1';
+import { r as createGlobe } from './africa-globe.js?v=africa-mark-9';
 
 const scene = document.querySelector('[data-welcome-globe]');
 const canvas = scene?.querySelector('canvas');

@@ -1,0 +1,65 @@
+{
+  "note": "A browser cannot enumerate a directory, so this manifest lists the library. Add an .xml here and add its row to keep it visible.",
+  "encoders": [
+    {
+      "file": "H.264 High 1080p60.xml",
+      "name": "H.264 High 1080p60",
+      "uuid": "dc2929e82b8d49f5a6e6a1f50d703325",
+      "codec": "avc1.640028",
+      "width": 1920,
+      "height": 1080,
+      "framerate": 60,
+      "bitrate": 6000
+    },
+    {
+      "file": "H.264 High 1080p30.xml",
+      "name": "H.264 High 1080p30",
+      "uuid": "570acfa50c624b6fa6407c7f8d6c6691",
+      "codec": "avc1.640028",
+      "width": 1920,
+      "height": 1080,
+      "framerate": 30,
+      "bitrate": 4500
+    },
+    {
+      "file": "H.264 High 720p60.xml",
+      "name": "H.264 High 720p60",
+      "uuid": "164193181dc349abb680a0104814b5ab",
+      "codec": "avc1.64001f",
+      "width": 1280,
+      "height": 720,
+      "framerate": 60,
+      "bitrate": 3500
+    },
+    {
+      "file": "H.264 Vertical 1080x1920p30.xml",
+      "name": "H.264 Vertical 1080x1920p30",
+      "uuid": "ad0552ff16824fd6954230845c8666eb",
+      "codec": "avc1.640028",
+      "width": 1080,
+      "height": 1920,
+      "framerate": 30,
+      "bitrate": 4500
+    },
+    {
+      "file": "HEVC 2160p60.xml",
+      "name": "HEVC 2160p60",
+      "uuid": "9a19468b61384184ab686a2278b0f5c1",
+      "codec": "hev1.1.6.L153.B0",
+      "width": 3840,
+      "height": 2160,
+      "framerate": 60,
+      "bitrate": 20000
+    },
+    {
+      "file": "AV1 1080p60.xml",
+      "name": "AV1 1080p60",
+      "uuid": "99af884521214e6aaba959c8bc43524c",
+      "codec": "av01.0.08M.08",
+      "width": 1920,
+      "height": 1080,
+      "framerate": 60,
+      "bitrate": 4000
+    }
+  ]
+}

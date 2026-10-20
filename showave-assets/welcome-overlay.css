@@ -72,3 +72,6 @@ html[data-welcome-overlay-open]:has(#showave-welcome-overlay[open]) :is(.home-he
 @media(max-height:600px) and (min-width:541px){.welcome-home-hero{flex-basis:160px}}
 @media(max-width:380px){#showave-welcome-overlay .welcome-home-body .welcome-home-pitch-title{font-size:22px}#showave-welcome-overlay .welcome-home-pitch .welcome-home-pitch-kicker{font-size:8px;margin-bottom:7px}#showave-welcome-overlay .welcome-home-pitch .welcome-home-pitch-intro{font-size:10px;line-height:1.5;margin-top:9px}}
 @media(prefers-reduced-motion:reduce){.welcome-home-portrait-secondary{transition:none}#showave-welcome-overlay[open] .welcome-home-pitch,:is(.home-hero-text-wrap,.welcome-home-website-menu).welcome-home-handoff{animation:none}}
+.showave-startup-recovery{position:fixed;z-index:1100;bottom:20px;left:20px;right:20px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;padding:14px 18px;border:1px solid #606975;border-radius:5px;background:#10151cf5;color:#fff;font:14px/1.5 'Segoe UI',Arial,sans-serif;box-shadow:0 8px 30px #0005}
+.showave-startup-recovery button{border:1px solid #aeb8c6;border-radius:4px;padding:8px 14px;background:#f6f7fa;color:#10151c;font:inherit;cursor:pointer}
+.showave-startup-recovery button:focus-visible{outline:2px solid #ffb477;outline-offset:3px}

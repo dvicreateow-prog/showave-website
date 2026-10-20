@@ -1,0 +1,159 @@
+/* Compact Broadcast panel chrome. The native dialog still owns modality and
+   viewport scrolling; Appearance owns its panel, header, controls and ink. */
+.bc-modes > .sp { flex:1; }
+.bc-create-stream {
+  align-self:center; margin:0 10px 4px; padding:4px 10px;
+  border:1px solid var(--ctl-edge,var(--line2)); border-radius:var(--radius-sm);
+  background:var(--ctl-face,var(--btn)); color:var(--txt-hi);
+  font:inherit; font-size:10.5px; font-weight:600; cursor:pointer;
+}
+.bc-create-stream:hover {
+  border-color:var(--color-accent); background:var(--ctl-face-hi,var(--btn-hi));
+}
+
+.studio-launcher-dialog {
+  /* arena.css resets all margins, including the browser's modal auto margin. */
+  position:fixed; inset:0; margin:auto;
+  width:min(480px,calc(100vw - 32px)); max-width:calc(100vw - 32px);
+  max-height:calc(100vh - 32px); max-height:calc(100dvh - 32px);
+  padding:0; overflow:auto; overscroll-behavior:contain; box-sizing:border-box;
+  border:1px solid var(--line2); border-radius:var(--radius-sm);
+  background:var(--panel); color:var(--txt); font:inherit; font-size:11px; line-height:1.35;
+  box-shadow:0 7px 20px var(--menu-shadow);
+}
+.studio-launcher-dialog::backdrop {
+  background:color-mix(in srgb,var(--bg) 65%,transparent);
+}
+.studio-launcher-head {
+  position:sticky; top:0; z-index:2; display:flex; align-items:center;
+  justify-content:space-between; gap:8px; min-height:32px; padding:4px 5px 4px 10px;
+  border-bottom:1px solid var(--line); background:var(--head);
+}
+.studio-launcher-head > span {
+  display:flex; align-items:baseline; min-width:0; gap:10px;
+}
+.studio-launcher-head small {
+  flex:none; color:var(--txt-dim); font-size:10px; font-weight:400;
+  letter-spacing:.01em;
+}
+.studio-launcher-head h2,.studio-launcher-formtitle {
+  margin:0; min-width:0; color:var(--txt-hi); font-family:inherit;
+  font-size:12px; font-weight:600; line-height:1.25;
+}
+.studio-launcher-close,.studio-launcher-back,
+.studio-launcher-actions button,.studio-launcher-return {
+  border:1px solid var(--ctl-edge,var(--line2)); border-radius:var(--radius-sm);
+  background:var(--ctl-face,var(--btn)); color:var(--txt-hi);
+  font:inherit; text-decoration:none; cursor:pointer;
+  transition:background-color var(--pref-anim,120ms),border-color var(--pref-anim,120ms);
+}
+.studio-launcher-close {
+  display:grid; place-items:center; flex:0 0 22px; width:22px; height:22px; padding:0;
+  font-size:16px; line-height:1;
+}
+.studio-launcher-body { padding:10px; }
+.studio-launcher-intro { margin:0 0 9px; color:var(--txt-dim); font-size:10.5px; line-height:1.4; }
+.studio-launcher-grid { display:grid; grid-template-columns:1fr; gap:5px; }
+.studio-launcher-card,.studio-launcher-savedcard {
+  display:flex; align-items:center; gap:9px; min-width:0; padding:8px 9px;
+  border:1px solid var(--ctl-edge,var(--line2)); border-radius:var(--radius-sm);
+  background:var(--inset); color:var(--ctl-text,var(--txt));
+  font:inherit; text-align:left; cursor:pointer;
+  transition:background-color var(--pref-anim,120ms),border-color var(--pref-anim,120ms);
+}
+.studio-launcher-card:hover:not(.is-unavailable),.studio-launcher-savedcard:hover,
+.studio-launcher-close:hover,.studio-launcher-back:hover,
+.studio-launcher-actions button:hover,.studio-launcher-return:hover {
+  border-color:var(--color-accent); background:var(--ctl-face-hi,var(--btn-hi));
+  color:var(--txt-hi);
+}
+.studio-launcher-card.is-featured { border-color:var(--color-accent); background:var(--panel2); }
+.studio-launcher-savedcard[data-current=true] {
+  border-color:var(--color-accent);
+  box-shadow:inset 3px 0 0 var(--color-accent);
+  background:color-mix(in srgb,var(--color-accent) 8%,var(--inset));
+}
+/* Keep the explanation readable. These aria-disabled cards can explain why
+   the workflow is unavailable, but still never create a draft or go live. */
+.studio-launcher-card.is-unavailable { cursor:help; background:var(--panel); }
+.studio-launcher-mark {
+  display:grid; place-items:center; flex:0 0 28px; height:28px;
+  border:1px solid var(--line2); border-radius:var(--radius-sm);
+  background:var(--color-accent); color:var(--mint-t); font-size:16px;
+}
+.studio-launcher-card.is-unavailable .studio-launcher-mark {
+  background:var(--ctl-face,var(--btn)); color:var(--txt-dim);
+}
+.studio-launcher-cardcopy,.studio-launcher-savedcard > span:first-child {
+  display:flex; flex:1; min-width:0; flex-direction:column; gap:2px;
+}
+.studio-launcher-card strong,.studio-launcher-savedcard strong {
+  color:var(--txt-hi); font-size:11px; font-weight:600; overflow-wrap:anywhere;
+}
+.studio-launcher-card small,.studio-launcher-savedcard small {
+  color:var(--txt-dim); font-size:10.5px; line-height:1.35; overflow-wrap:anywhere;
+}
+.studio-launcher-state,.studio-launcher-open {
+  flex:0 0 58px; color:var(--txt-hi); font-size:10px; font-weight:500; text-align:right;
+}
+.studio-launcher-card.is-unavailable .studio-launcher-state { color:var(--txt-dim); }
+.studio-launcher-subhead {
+  margin:10px -10px 6px; padding:4px 10px; border-block:1px solid var(--line);
+  background:var(--head); color:var(--txt-dim); font:inherit; font-size:10.5px; font-weight:400;
+}
+.studio-launcher-saved {
+  display:grid; grid-template-columns:1fr; gap:4px;
+}
+.studio-launcher-savedcard { padding:6px 9px; }
+.studio-launcher-empty {
+  margin:0; padding:7px 9px; border:1px solid var(--line2);
+  border-radius:var(--radius-sm); background:var(--inset); color:var(--txt-dim); font-size:10.5px;
+}
+.studio-launcher-back { min-height:24px; padding:3px 8px; margin-bottom:9px; }
+.studio-launcher-formtitle { font-size:12px; margin-bottom:10px; }
+.studio-launcher-form { display:grid; gap:10px; }
+.studio-launcher-form > label { display:grid; gap:4px; color:var(--txt); }
+.studio-launcher-form input[type=text],.studio-launcher-form textarea {
+  width:100%; min-width:0; box-sizing:border-box; border:1px solid var(--ctl-edge,var(--line2));
+  border-radius:var(--radius-sm); background:var(--inset);
+  color:var(--txt-hi); font:inherit; padding:6px 7px; user-select:text;
+}
+.studio-launcher-form input::placeholder,.studio-launcher-form textarea::placeholder {
+  color:var(--txt-dim); opacity:1;
+}
+.studio-launcher-form textarea { resize:vertical; }
+.studio-launcher-modes {
+  display:flex; flex-wrap:wrap; gap:16px; min-width:0; margin:0; padding:7px 9px;
+  border:1px solid var(--line2); border-radius:var(--radius-sm); background:var(--inset);
+}
+.studio-launcher-modes legend { padding:0 4px; color:var(--txt-dim); }
+.studio-launcher-modes label { display:flex; align-items:center; gap:6px; }
+.studio-launcher-modes input { accent-color:var(--color-accent); }
+.studio-launcher-disclosure { margin:0; color:var(--txt-dim); font-size:10.5px; }
+.studio-launcher-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px; padding-top:8px; border-top:1px solid var(--line); }
+.studio-launcher-actions button,.studio-launcher-return { min-height:26px; padding:4px 10px; }
+.studio-launcher-actions .primary {
+  border-color:var(--color-accent); background:var(--color-accent);
+  color:var(--mint-t); font-weight:600;
+}
+.studio-launcher-actions .primary:hover { background:var(--color-accent); color:var(--mint-t); }
+.bc-create-stream:focus-visible,
+.studio-launcher-dialog :is(button,input,textarea,a):focus-visible {
+  outline:2px solid var(--theme-focus,var(--color-accent)); outline-offset:2px;
+}
+.studio-launcher-status { margin:0 10px 10px; padding-top:7px; border-top:1px solid var(--line); color:var(--txt-hi); font-size:10.5px; }
+.studio-launcher-status:empty { display:none; }
+.studio-launcher-fatal { max-width:480px; padding:14px; }
+.studio-launcher-fatal h2 { margin-top:0; color:var(--txt-hi); font-family:inherit; font-size:12px; }
+.studio-launcher-return { display:inline-block; margin-top:8px; }
+@media (max-width:560px) {
+  .studio-launcher-dialog { width:min(480px,calc(100vw - 24px)); max-width:calc(100vw - 24px); }
+  .studio-launcher-grid,.studio-launcher-saved { grid-template-columns:1fr; }
+  .studio-launcher-head small { display:none; }
+  .studio-launcher-card { flex-wrap:wrap; column-gap:8px; row-gap:4px; padding:8px; }
+  .studio-launcher-cardcopy { flex-basis:calc(100% - 36px); }
+  .studio-launcher-state { flex-basis:auto; margin-left:36px; text-align:left; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .studio-launcher-dialog button { transition:none; }
+}

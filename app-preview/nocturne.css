@@ -1,0 +1,364 @@
+/* ===========================================================================
+   nocturne.css — the design base, applied as a theme layer over arena.css.
+   ---------------------------------------------------------------------------
+   Source of truth: Design app/_ds/nocturne-2a4d8e14-.../{readme.md,styles.css}
+     ground   #161826   surface #232532   text #e9e9ed
+     accent   #9184d9   (mono scheme — one accent, carried as line and glow)
+     radii    4 / 8 / 14      spacing scale at 0.70x density      Inter
+   House rules taken from the readme and honoured below:
+     · no pure black, no pure white — every value comes from the ramps
+     · the accent is never flooded across a large area; it is an edge, a
+       mark, or a glow
+     · elevation on a dark ground is a hairline edge plus ambient darkness,
+       never a stack of heavy shadows
+     · keyboard focus is a 2px accent :focus-visible ring, never the default
+     · disabled controls drop to 45% opacity
+   This also retires the Resolume visual identity the interface study carried,
+   which FOUNDATION-DECISION.md flags as trade-dress risk.
+   =========================================================================== */
+500;600&display=swap');
+
+:root{
+  /* ---- Nocturne tokens, verbatim ---- */
+  --color-bg:#161826; --color-surface:#232532; --color-text:#e9e9ed;
+  /* ACCENT = ARENA'S MINT, sampled from the user's Resolume Arena 7.27.1
+     screenshots. Every selection in the real application is mint green: the
+     connected column header, the selected layer's name cell, the play triangle,
+     the selected clip's border and the V fader. This file used to remap all of
+     it onto #9184d9, a purple, so the whole interface read purple where Arena
+     reads mint - the single biggest reason the clone did not look like the
+     thing it clones. arena.css:10 already carried the right value (#3fddaa,
+     "matched to the live application" per its header); nocturne was overriding
+     it three lines later. */
+  --color-accent:#3fddaa;
+  --n100:#f3f5fe; --n200:#e4e7f5; --n300:#cfd3e5; --n400:#b2b6ca; --n500:#9397ab;
+  --n600:#75798c; --n700:#595d6c; --n800:#3f424d; --n900:#292b31;
+  /* the accent ramp rebuilt around that mint, so every tint, hover wash and
+     border derived from --a### follows the accent instead of fighting it */
+  --a100:#f0fdf8; --a200:#d6f8ec; --a300:#a8f0d6; --a400:#6fe6bd; --a500:#3fddaa;
+  --a600:#2fb98c; --a700:#24916e; --a800:#1a6650; --a900:#123f33;
+  /* 5, was 4. --lc-r in arena.css carries the measurement: 51 corners across
+     three control sizes in Layout Buttons/*.svg, all 5px. This token was
+     silently overriding arena.css's radius on .btn, .vfad, .lthumb .box and
+     .colhead, so the strip could not have had the drawing's corners while
+     the two numbers disagreed. Points at the measurement rather than
+     repeating it. Navigation tabs are unaffected - they carry a literal 2px
+     in openlive-appearance.css, which a contract pins. */
+  --radius-sm:var(--lc-r,5px); --radius-md:8px; --radius-lg:14px;
+  --space-1:2.8px; --space-2:5.6px; --space-3:8.4px; --space-4:11.2px;
+  --shadow-sm:0 0 0 1px #3f424d;
+  --shadow-md:0 0 0 1px #595d6c, 0 6px 18px rgba(0,0,0,.55);
+  --shadow-lg:0 0 0 1px #9397ab, 0 16px 40px rgba(0,0,0,.65);
+
+  /* ---- remap the interface study's palette onto those tokens ---- */
+  --bg:var(--color-bg);
+  --panel:var(--color-surface);
+  --panel2:#282b3a;
+  --strip:#1d1f2d;
+  --head:#262938;
+  --inset:#12141f;
+  --line:#12141f;
+  --line2:var(--n800);
+  --btn:#262939;
+  --btn-hi:#31344a;
+  --btn-line:var(--n800);
+  --txt:var(--n300);
+  --txt-dim:var(--n500);
+  --txt-hi:var(--n100);
+  /* the accent takes over every role the old mint filled */
+  --mint:var(--color-accent);
+  --mint-d:var(--a700);
+  --mint-t:#0d2b21;                     /* text sitting on the accent - arena.css */
+  /* mono scheme: "playing" is the accent as a glow, "selected" is a light edge */
+  /* ARENA'S SECOND ACCENT, kept distinct. Magenta was pointed at --a400, so it
+     became another shade of the same hue and the layer strip's A (audio) fader
+     stopped being distinguishable from V (video). The screenshots show them as
+     two different colours - magenta for audio, mint for video - which is the
+     whole point of having three separate M/A/V faders. arena.css values. */
+  --magenta:#c0468a;
+  --magenta-d:#5e2143;
+  /* functional states only — kept low-chroma so they read as state, not as a
+     second accent competing with the blurple */
+  --red:#cf8080; --amber:#d9b980;
+
+  /* ---- menus ----------------------------------------------------------
+     arena.css carries the menu family as measured Resolume greys (#2a2a2a
+     surface, #c5c5c5 text, #000 swatch border, and a separate #343434 slab
+     for the Layer context menu). This theme layer never remapped them, so
+     every menu — and the Layer context menu most visibly, since it also
+     hardcoded its own surface and a 3px radius — rendered as a flat neutral
+     grey panel floating over a blue-tinted interface, and kept the Arena
+     visual identity FOUNDATION-DECISION.md:214 says not to ship. Remapped
+     here rather than edited in arena.css so the measured base stays intact.
+     Only colour is remapped; the measured geometry below is not. */
+  --menu-bar:#1b1d2b;
+  --menu-bg:var(--color-surface);
+  --menu-border:var(--n800);
+  --menu-text:var(--n300);
+  --menu-disabled:var(--n700);
+  --menu-header:var(--n600);
+  --menu-key:var(--n600);
+  --menu-arrow:var(--n500);
+  --menu-none:var(--panel2);
+  --menu-swatch-border:var(--line);     /* house rule: no pure black */
+  --menu-shadow:rgba(0,0,0,.55);
+  /* The Layer context menu is the same primitive as every other menu, so it
+     takes the same surface, text, divider and corner. Its width and row
+     height stay at the measured values — those are geometry, not identity. */
+  --layer-menu-surface:var(--color-surface);
+  --layer-menu-divider:var(--n800);
+  --layer-menu-radius:var(--radius-md);
+
+  --font:11.5px/1.35 "Inter", system-ui, "Segoe UI", sans-serif;
+}
+
+body{ font:var(--font); letter-spacing:.005em; }
+h1,h2,h3,h4,h5,h6{ font-family:"Inter",system-ui,sans-serif; font-weight:500; letter-spacing:-.015em; }
+
+/* no pure black anywhere: the ambient shade tokens replace it */
+::-webkit-scrollbar-track{ background:#12141f; }
+::-webkit-scrollbar-thumb{ background:var(--n800); border:2px solid #12141f; border-radius:5px; }
+::-webkit-scrollbar-thumb:hover{ background:var(--n700); }
+
+/* keyboard focus is themed, never the browser default */
+:focus-visible{ outline:2px solid var(--color-accent); outline-offset:2px; }
+::selection{ background:color-mix(in srgb, var(--color-accent) 35%, transparent); }
+[disabled], .disabled{ opacity:.45; }
+
+/* ---- chrome ------------------------------------------------------------- */
+#menubar{ background:#1b1d2b; border-bottom:1px solid var(--line); }
+.menu-top{ border-radius:var(--radius-sm); }
+.menu-top:hover,.menu-top.open{ background:color-mix(in srgb,var(--color-accent) 22%,transparent);
+  color:var(--n100); box-shadow:inset 0 0 0 1px var(--a600); }
+.dropdown{ background:var(--color-surface); border:1px solid var(--n800);
+  border-radius:var(--radius-md); box-shadow:var(--shadow-md); padding:var(--space-1) 0; }
+.dd-item:hover{ background:color-mix(in srgb,var(--color-accent) 20%,transparent); color:var(--n100); }
+.dd-sep{ background:var(--n800); }
+
+/* buttons are outlined, not filled */
+.btn{ background:transparent; border:1px solid var(--n800); color:var(--n300);
+  border-radius:var(--radius-sm); }
+.btn:hover{ background:color-mix(in srgb,var(--color-accent) 12%,transparent); border-color:var(--a600); }
+.btn:active{ background:color-mix(in srgb,var(--color-accent) 20%,transparent); border-color:var(--a400); }
+.btn.on{ background:transparent; color:var(--a200); border-color:var(--color-accent);
+  box-shadow:0 0 0 1px var(--color-accent), 0 0 10px -3px var(--color-accent); }
+.btn.on-red{ background:transparent; color:#f0cccc; border-color:var(--red);
+  box-shadow:0 0 0 1px var(--red); }
+select,input[type=text],input[type=number],textarea{
+  background:var(--inset); border:1px solid var(--n800); color:var(--n200);
+  border-radius:var(--radius-sm); }
+select:hover,input:hover{ border-color:var(--n700); }
+
+/* ---- layer strips ------------------------------------------------------- */
+.layer{ background:var(--strip); border-bottom:1px solid var(--line); }
+.layer.sel{ background:#242739; box-shadow:inset 3px 0 0 var(--color-accent); }
+.ls-blend{ background:transparent; border:1px solid var(--n800); color:var(--n400);
+  border-radius:var(--radius-sm); }
+.ls-blend:hover{ border-color:var(--a600); color:var(--n200); }
+.vfad{ background:var(--inset); border:1px solid var(--n800); border-radius:var(--radius-sm);
+  overflow:hidden; }
+.vfad i{ background:linear-gradient(180deg,var(--a500),var(--a700)); }
+/* M / A / V, coloured as the real Arena screenshots show them: the MASTER is
+   neutral because it drives both, AUDIO is magenta and VIDEO is mint. This file
+   had audio on the neutral ramp and left master on arena.css's flat mint, so
+   the two were effectively swapped - the audio fader read grey and the master
+   read like the video one. layers.htm names all three ("the 'V' slider", "the
+   'A' slider", "the 'M' slider"), and telling them apart at a glance is the
+   whole reason they are three separate faders. */
+.vfad.m i{ background:linear-gradient(180deg,var(--n400),var(--n600)); }
+.vfad.a i{ background:linear-gradient(180deg,var(--magenta),var(--magenta-d)); }
+.vfad.v i{ background:linear-gradient(180deg,var(--a400),var(--a600)); }
+/* border:0 + inset shadow, matching arena.css. This file loads after it, so a
+   border re-declared here would put the 1px back into the box and shrink the
+   monitor's canvas to 78.4 x 59.4 again — 1.6px smaller in both axes than the
+   clip thumbnail beside it, which the drawings author at the same 80 x 61. */
+.lthumb .box{ border:0; box-shadow:inset 0 0 0 1px var(--n800);
+  border-radius:var(--radius-sm); background:var(--inset); }
+
+/* ---- clip grid ---------------------------------------------------------- */
+/* The edge is an INSET SHADOW here too, and it has to be: this file loads
+   after arena.css, so a border re-declared at this specificity would put the
+   1px back into the 40px height and squeeze the name band to 18.4 again. The
+   header is two 20px bands and nothing else, which is how 10.svg draws it.
+   Every state below therefore paints the ring rather than a border-color. */
+/* --monitor-edge, the layer monitor's own #0d0d0d, so the Cue headers and the
+   Slots under them share one boundary colour. It was --n800, then briefly
+   --glass-border (the button edge); a pale line around every cell read as a
+   highlight rather than a groove. See --clip-rim in arena.css. */
+.colhead{ background:var(--head); border:0;
+  box-shadow:inset 0 0 0 1px var(--monitor-edge,var(--n800));
+  border-radius:var(--radius-sm); color:var(--n400); }
+.colhead:hover{ box-shadow:inset 0 0 0 1px var(--a600); color:var(--n200); }
+/* .sel is the selected column (mint name band); .on is the connected one (lit
+   trigger glyph). Sampled from the screenshot, where those are two different
+   columns. This file previously styled only `.on`, so the two could not differ. */
+.colhead.on{ background:var(--head); color:var(--n300); }
+.colhead.sel{ box-shadow:inset 0 0 0 1px var(--color-accent); }
+.colhead.sel > .cnm{ background:var(--color-accent); color:var(--mint-t); font-weight:600; }
+.colhead.on  > .ico{ color:var(--color-accent); }
+/* --radius-sm, not --radius-md. A clip slot measures a 5px radius in every
+   drawing that shows one - Layout Buttons/2.svg and 10.svg, on the slot,
+   its caption and its folded pill alike - which is the same 5 every button
+   in the strip carries. --radius-md is 8, so the largest surface in the
+   window was the one rounded differently from everything around it. */
+.clip{ background:var(--panel2); border:0; box-shadow:inset 0 0 0 1px var(--n800);
+  border-radius:var(--radius-sm);
+  overflow:hidden; }
+.clip .thumb{ border-radius:0; }
+/* Solid, not dashed. The dash was this theme layer's own addition - the base
+   .clip above is border:1px solid - and Arena's own empty Slots are a plain
+   quiet rectangle. The darker n900 edge is kept, so an empty Slot still
+   reads as empty; it just does it with tone rather than dots. */
+.clip.empty{ background:#1a1c29; border-color:var(--n900); }
+.clip:hover{ border-color:var(--n700); }
+/* playing = the accent as an edge and a glow, never a flood */
+.clip.playing{ border-color:var(--color-accent);
+  box-shadow:0 0 0 1px var(--color-accent), 0 0 16px -5px var(--color-accent); }
+.clip.playing .name{ background:color-mix(in srgb,var(--color-accent) 26%,transparent); color:var(--n100); }
+/* selected = a light neutral edge, so it reads independently of playing */
+.clip.selected{ box-shadow:0 0 0 2px var(--n200); }
+.clip.playing.selected{ box-shadow:0 0 0 2px var(--n200), 0 0 16px -5px var(--color-accent); }
+.clip .name{ background:#1c1e2b; color:var(--n400); }
+.clip .progress{ background:var(--color-accent); }
+.clip.drop, .dropmsg.drop{ border-color:var(--a400);
+  box-shadow:0 0 0 2px var(--a400), 0 0 18px -4px var(--color-accent); }
+
+/* ---- decks / transport -------------------------------------------------- */
+#xfRow,#transport{ background:var(--panel); border-top:1px solid var(--line); }
+.deck-tab{ background:var(--deck-tab-bg); border-color:var(--deck-tab-separator);
+  color:var(--deck-tab-text); border-radius:0; }
+.deck-tab:hover{ background:var(--btn-hi); border-color:var(--deck-tab-separator);
+  color:var(--deck-tab-text); }
+.deck-tab.on{ background:var(--deck-tab-selected); color:var(--deck-tab-selected-text);
+  border-color:var(--deck-tab-separator); box-shadow:none; }
+.deck-tab.has-deck-color:not(.on){ background:var(--deck-color); color:var(--deck-tab-text); }
+.deck-tab.on.drop-before{ box-shadow:inset 3px 0 0 var(--deck-tab-focus); }
+.deck-tab.on.drop-after{ box-shadow:inset -3px 0 0 var(--deck-tab-focus); }
+.bpm-num{ background:var(--inset); border:1px solid var(--n800); color:var(--n100);
+  border-radius:var(--radius-sm); font-variant-numeric:tabular-nums; }
+.bpm-pie{ border:1px solid var(--n800); }
+.bpm-pie.b16{ box-shadow:0 0 0 2px var(--color-accent); }
+input[type=range]{ accent-color:var(--color-accent); }
+
+/* ---- monitors / panels -------------------------------------------------- */
+.mon{ background:var(--panel); border:1px solid var(--n800); border-radius:var(--radius-md); }
+/* Panel headers. Resolume ships "Preview Monitor", "Output Monitor", "Monitor"
+   and "Composition" in Title Case and never uppercases a panel header anywhere.
+   The repo's own contract already agrees: tools/test-powerpoint-time-panel.js
+   pins the markup as "Clip Time", which this rule was contradicting at paint. */
+.mon-head,.ct-head,.comp-bar{ background:var(--head); color:var(--n400);
+  letter-spacing:.01em; font-size:10px; }
+.mon-body{ background:#101220; }
+.mon-foot{ background:var(--panel); color:var(--n500); }
+#props,#rightCol{ background:var(--panel); }
+.ptab{ color:var(--n500); border-radius:var(--radius-sm) var(--radius-sm) 0 0; }
+.ptab:hover{ color:var(--n300); }
+.ptab.on{ color:var(--a200); box-shadow:inset 0 -2px 0 var(--color-accent); }
+/* Property-panel section headers -- the highest-traffic chrome in the app.
+   Resolume ships this exact set in Title Case where it builds the same panel:
+   Dashboard, Autopilot, Common, Audio, Video, Transition, Transform, Transport,
+   CrossFader, Audio Effects, Input Selection, Output Transformation. */
+.sect > h3{ background:var(--head); color:var(--n400);
+  letter-spacing:.01em; font-size:10px; }
+.sect.active > h3{ color:var(--a300); }
+.prow label{ color:var(--n500); }
+.prow .val{ background:var(--inset); border:1px solid var(--n800); color:var(--n200);
+  border-radius:var(--radius-sm); font-variant-numeric:tabular-nums; }
+.stp{ border:1px solid var(--n800); border-radius:var(--radius-sm); color:var(--n400); }
+.stp:hover{ border-color:var(--a600); color:var(--n200); }
+.dial .k{ background:var(--inset); border:1px solid var(--n800); }
+.dial .k::after{ background:var(--color-accent); }
+.dropmsg{ border:1px dashed var(--n800); border-radius:var(--radius-md); color:var(--n600); }
+/* Browser-tree group headings. Resolume's category headings are Title Case
+   (Effects, Sources, Compositions, Files, Slices, Layers, Groups, Presets,
+   Screens) and so are its shipped preset folder names. Decisive: the Slices
+   browser puts a USER-AUTHORED screen name through this rule, so a screen named
+   "Main LED wall" was painting as "MAIN LED WALL — DISPLAY 2". Resolume never
+   re-cases user data -- a composition Name is also the filename on disk. */
+.tgroup{ background:var(--head); color:var(--n500);
+  letter-spacing:.01em; font-size:10px; }
+/* The base row keeps the theme radius: tools/test-browser-tree-interactions.js:265
+   pins this declaration verbatim so nobody re-skins the Browser with a competing
+   token set, and that guard is worth more than squaring a corner that is only
+   visible on hover. The SELECTED row squares itself instead - see below. */
+.titem{ color:var(--n300); border-radius:var(--radius-sm); }
+.titem:hover{ background:color-mix(in srgb,var(--color-accent) 12%,transparent); }
+/* SELECTED IS SOLID, which is what arena.css:2632 said in the first place
+   (background:var(--mint)) before this sheet replaced it with a wash. A 20%
+   tint against hover's 12% is an eight-point difference in something already
+   mostly transparent, so the selected row and the row under the mouse read the
+   same. Solid also removes the soft tinted-pill look entirely.
+   --mint-t is the token for "text on accent" and the Appearance layer remaps it
+   per theme: #0B0C10 in the light theme, measured 4.87:1 on that theme's
+   #007AFF - better than white's 4.02 - and the dark theme's dark-on-#3fddaa is
+   far higher again. So one declaration stays legible in both. */
+.titem.sel{ background:var(--color-accent); color:var(--mint-t); border-radius:0; }
+.titem .heart.on{ color:var(--color-accent); }
+.hint,.hint-bar p{ color:var(--n600); }
+.hb-title{ background:var(--head); color:var(--n400); }
+#status{ background:#1b1d2b; border-top:1px solid var(--line); color:var(--n600); }
+#status .v{ color:var(--n300); font-variant-numeric:tabular-nums; }
+.floatwin,.dialog{ background:var(--color-surface); border:1px solid var(--n800);
+  border-radius:var(--radius-lg); box-shadow:var(--shadow-md); }
+.fw-title{ background:var(--head); color:var(--n300); border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
+.overlay{ background:rgba(11,12,20,.72); }
+
+/* =========================================================================
+   LIVE COMPONENTS — added by the Arena connection, styled in the same system
+   ========================================================================= */
+
+/* connection pill, first item in the status bar */
+.conn{ display:inline-flex; align-items:center; gap:6px; padding:1px 9px 1px 8px;
+  /* A connectivity state, not a transport button, so it sits on the non-shouting
+     side of Resolume's line (Not available, No Device, No Input, Link
+     Unavailable). The glyph is authored in the markup instead. */
+  border:1px solid var(--n800); border-radius:999px; font-size:10px; letter-spacing:.01em;
+  color:var(--n500); cursor:pointer; }
+.conn::before{ content:''; width:6px; height:6px; border-radius:50%; background:var(--n600); }
+.conn:hover{ border-color:var(--a600); color:var(--n300); }
+.conn.live{ color:var(--a200); border-color:var(--color-accent);
+  box-shadow:0 0 0 1px var(--color-accent), 0 0 14px -6px var(--color-accent); }
+.conn.live::before{ background:var(--color-accent); box-shadow:0 0 8px var(--color-accent);
+  animation:pulse 2.4s ease-in-out infinite; }
+.conn.connecting{ color:var(--n300); border-color:var(--n700); }
+.conn.connecting::before{ background:var(--amber); animation:pulse .9s ease-in-out infinite; }
+@keyframes pulse{ 0%,100%{ opacity:1 } 50%{ opacity:.35 } }
+
+/* live parameter rows — Arena's own parameter names run longer than the
+   study's hand-picked labels, so the label column widens when bound */
+.prow.live{ grid-template-columns:12px 132px 54px 16px 16px 1fr; height:19px; }
+.prow.live > label{ text-overflow:ellipsis; }
+.prow.live select{ grid-column:3/7; }
+.prow.live .wide{ grid-column:3/7; justify-self:stretch; height:15px; padding:0 6px;
+  display:inline-flex; align-items:center; }
+.prow[data-pid] label{ cursor:context-menu; }
+.prow[data-pid]:hover label{ color:var(--n300); }
+input[type=range].pbind{ accent-color:var(--color-accent); }
+.pbind.ptext{ flex:1; min-width:0; padding:1px 6px; }
+select.pbind[disabled]{ opacity:.55; }
+
+/* effect rack — matches the design base's Effects section */
+.fx{ border:1px solid var(--n800); border-radius:var(--radius-md); margin:var(--space-2) 0;
+  background:#1e2130; overflow:hidden; }
+.fx .fxhead{ display:flex; align-items:center; gap:var(--space-2); padding:3px var(--space-3);
+  background:var(--head); color:var(--n300); font-size:11px; }
+.fx .fxhead b{ display:inline-grid; place-items:center; width:15px; height:15px;
+  border:1px solid var(--n800); border-radius:var(--radius-sm); font-size:9px;
+  color:var(--n500); font-weight:500; }
+.fx .fxsp{ flex:1; }
+.fx .fxbtn{ cursor:pointer; color:var(--n600); padding:0 3px; border-radius:var(--radius-sm); }
+.fx .fxbtn:hover{ color:var(--n100); background:color-mix(in srgb,var(--color-accent) 18%,transparent); }
+.fx .fxbody{ padding:var(--space-1) var(--space-2) var(--space-2); }
+.fx .fxbody .prow label{ font-size:10.5px; }
+
+/* dragging content out of the browser */
+.titem[draggable=true]{ cursor:grab; }
+.titem[draggable=true]:active{ cursor:grabbing; }
+
+/* The nested Effect/Source preset rows inherit Nocturne like every other tree.
+   Only the hierarchy-specific states need additions to the original theme. */
+#brTree .tree-preset{ color:var(--n500); }
+#brTree .tree-preset:hover{ color:var(--n100); }
+/* Same selection treatment as .titem above - a category row is selected the
+   same way a leaf is, so it cannot be quieter about it. */
+#brTree .tree-category.sel{ background:var(--color-accent); color:var(--mint-t); border-radius:0; }

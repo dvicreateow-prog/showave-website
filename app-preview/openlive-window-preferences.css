@@ -1,0 +1,460 @@
+/* Settings reuse the startup window's typography and quiet, flat surfaces.
+   Geometry and stateful previews remain owned by each settings page. */
+body.showave-settings-window {
+  --bg:var(--showave-window-bg);
+  --panel:var(--showave-window-surface);
+  --panel2:var(--showave-window-surface);
+  --strip:var(--showave-window-surface);
+  --head:var(--showave-window-surface);
+  --inset:var(--showave-window-field);
+  --line:var(--showave-window-line);
+  --line2:var(--showave-window-line);
+  --btn:var(--showave-window-field);
+  --btn-hi:var(--showave-window-hover);
+  --btn-line:var(--showave-window-control-border);
+  --txt:var(--showave-window-text);
+  --txt-hi:var(--showave-window-text);
+  --txt-dim:var(--showave-window-muted);
+  --n100:var(--showave-window-text);
+  --n200:var(--showave-window-text);
+  --n300:var(--showave-window-text);
+  --n400:var(--showave-window-muted);
+  --n450:var(--showave-window-muted);
+  --n500:var(--showave-window-muted);
+  --n600:var(--showave-window-muted);
+  --n700:var(--showave-window-control-border);
+  --n800:var(--showave-window-line);
+  --n900:var(--showave-window-bg);
+  --radius-sm:2px;
+  --radius-md:2px;
+  --pref-nav-w:152px;
+  --pref-control-w:210px;
+  --pref-control-h:25px;
+  --pref-status-h:102px;
+  --font:var(--showave-window-font);
+  background:var(--showave-window-bg);
+  color:var(--showave-window-text);
+  font:var(--showave-window-font);
+  font-size:var(--showave-window-font-size);
+  letter-spacing:0;
+  -webkit-font-smoothing:antialiased;
+}
+
+body.showave-settings-window :is(.win-root,.win-main,.win-content) {
+  background:var(--showave-window-bg) !important;
+  color:var(--showave-window-text);
+  font:inherit;
+  box-shadow:none;
+}
+
+body.showave-settings-window :is(.win-title,.statusline,.win-toolbar,.browser-tools,.mon-bar,.pref-help-t,.win-tabs) {
+  background:var(--showave-window-surface) !important;
+  border-color:var(--showave-window-line) !important;
+  box-shadow:none !important;
+  color:var(--showave-window-muted);
+  font-family:inherit;
+  letter-spacing:0;
+}
+
+body.showave-settings-window .win-title {
+  height:28px;
+  min-height:28px;
+  padding-inline:12px;
+  gap:8px;
+  font-size:var(--showave-window-font-size);
+  font-weight:400;
+}
+
+body.showave-settings-window .win-content {
+  padding:12px 20px 16px;
+}
+
+body.showave-settings-window :is(.pref-side,.side-tabs,.pref-help,.isf-side) {
+  background:var(--showave-window-surface) !important;
+  border-color:var(--showave-window-line) !important;
+  box-shadow:none !important;
+}
+
+body.showave-settings-window .pref-side > .side-tabs { background:transparent !important; }
+body.showave-settings-window .side-tabs { padding:8px 6px; }
+body.showave-settings-window .side-tab {
+  min-height:25px;
+  margin:1px 0;
+  padding:3px 9px;
+  border-radius:2px;
+  color:var(--showave-window-muted);
+  font:inherit;
+  font-weight:400;
+  text-align:left;
+  justify-content:flex-start;
+}
+
+body.showave-settings-window .side-tab:hover {
+  background:var(--showave-window-hover) !important;
+  color:var(--showave-window-text);
+}
+
+body.showave-settings-window .side-tab.active {
+  background:var(--showave-window-hover) !important;
+  color:var(--showave-window-text) !important;
+  box-shadow:inset 2px 0 0 var(--showave-window-focus) !important;
+  font-weight:500;
+}
+
+body.showave-settings-window .win-tab { padding:4px 10px; font:inherit; }
+body.showave-settings-window .win-tab:hover { background:var(--showave-window-hover); }
+body.showave-settings-window :is(.win-tab.active,.win-tab.on) {
+  background:var(--showave-window-hover) !important;
+  color:var(--showave-window-text) !important;
+  box-shadow:inset 0 -2px 0 var(--showave-window-focus) !important;
+}
+
+body.showave-settings-window :is(h1,h2,h3,h4,h5,h6) {
+  font-family:inherit;
+  font-weight:500;
+  letter-spacing:0;
+}
+
+body.showave-settings-window :is(.win-content h2,.win-content section > h2) {
+  margin:0 0 12px;
+  padding:0 0 8px;
+  border-bottom:1px solid var(--showave-window-line);
+  color:var(--showave-window-muted);
+  font-size:calc(var(--showave-window-font-size) * 11 / 12);
+  line-height:18px;
+}
+
+body.showave-settings-window :is(.formgroup,.appearance-custom) {
+  margin-bottom:8px;
+  padding:0 0 8px;
+  border:0;
+  border-bottom:1px solid var(--showave-window-line);
+  border-color:var(--showave-window-line) !important;
+  border-radius:2px;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+
+body.showave-settings-window .formgroup.pref-flash {
+  border-color:var(--showave-window-focus) !important;
+}
+
+body.showave-settings-window :is(.formgroup h3,.side-group,.pref-help-t,.appearance-custom legend,.dmx-history h4) {
+  color:var(--showave-window-muted);
+  font-size:calc(var(--showave-window-font-size) * 11 / 12);
+  line-height:18px;
+  font-weight:500;
+  letter-spacing:0;
+}
+
+body.showave-settings-window .formgroup h3 { margin:0 0 4px; }
+body.showave-settings-window .fg-head h3 { margin:0; }
+body.showave-settings-window .formrow { min-height:25px; margin:4px 0; gap:8px; }
+body.showave-settings-window .formrow label {
+  color:var(--showave-window-muted);
+  font:inherit;
+  line-height:1.5;
+  flex:0 0 176px; width:176px; min-width:0;
+}
+body.showave-settings-window .formrow .audio-value {
+  flex-shrink:1; min-width:0; overflow-wrap:anywhere;
+}
+
+body.showave-settings-window :is(select,input[type="text"],input[type="number"],input[type="password"],input[type="url"],textarea,.dirlist,.pval,.monlog,.temporary-media-categories) {
+  background:var(--showave-window-field) !important;
+  border-color:var(--showave-window-control-border) !important;
+  border-radius:2px;
+  box-shadow:none !important;
+  color:var(--showave-window-text);
+}
+
+body.showave-settings-window :is(select,input[type="text"],input[type="number"],input[type="password"],input[type="url"],textarea) {
+  font:inherit;
+}
+
+body.showave-settings-window :is(select:not([multiple]):not([size]),input[type="text"],input[type="number"],input[type="password"],input[type="url"]) {
+  min-height:25px;
+  padding-block:2px;
+}
+
+/* List boxes and shader/log views keep their dedicated heights and type. */
+body.showave-settings-window :is(.monlog,.isf-code textarea,.midi-log-entry,.osc-log-entry,.dmx-history-entry) {
+  font-family:Consolas,"SF Mono",monospace;
+}
+
+body.showave-settings-window .tb-btn {
+  min-height:25px;
+  height:auto;
+  padding:2px 8px;
+  border:1px solid var(--showave-window-control-border);
+  border-color:var(--showave-window-control-border) !important;
+  border-radius:3px;
+  background:var(--showave-window-field) !important;
+  box-shadow:none !important;
+  color:var(--showave-window-text);
+  font:inherit;
+  line-height:19px;
+  font-weight:400;
+  text-shadow:none;
+}
+
+body.showave-settings-window .tb-btn:hover:not(:disabled) { background:var(--showave-window-hover) !important; }
+body.showave-settings-window .tb-btn.on { border-color:var(--showave-window-focus) !important; }
+body.showave-settings-window .tb-btn.danger:hover:not(:disabled),
+body.showave-settings-window .temporary-media-confirm:not(:disabled) {
+  color:var(--state-err,var(--red));
+  border-color:var(--state-err,var(--red)) !important;
+}
+
+body.showave-settings-window .tb-btn:disabled { opacity:.42; cursor:default; }
+body.showave-settings-window .formrow .tb-btn { height:auto; }
+body.showave-settings-window .tb-btn.small { min-height:23px; padding:1px 6px; }
+
+body.showave-settings-window :is(.pref-callout,.ptip,.audio-input-safety) {
+  padding:8px 10px;
+  background:var(--showave-window-field);
+  color:var(--showave-window-muted);
+  line-height:1.5;
+  box-shadow:none;
+}
+
+body.showave-settings-window :is(.hint,.win-content > p,.win-content .lead,.pref-help-b,.pref-callout,.ptip,.appearance-toolbar-copy p,.appearance-section-note,.appearance-custom-help,.video-builtin) {
+  font-size:calc(var(--showave-window-font-size) * 11 / 12);
+  line-height:1.5;
+  color:var(--showave-window-muted);
+}
+
+body.showave-settings-window .pref-help-t { min-height:27px; }
+body.showave-settings-window .pref-help-b { padding:10px; }
+body.showave-settings-window .pref-step button {
+  width:23px;
+  height:23px;
+  background:transparent;
+  color:var(--showave-window-muted);
+  font:inherit;
+}
+body.showave-settings-window .pref-step button:hover:not(:disabled) { background:var(--showave-window-hover); }
+body.showave-settings-window .pref-step button:disabled { opacity:.42; }
+
+body.showave-settings-window table.datatable { font:inherit; }
+body.showave-settings-window table.datatable th {
+  padding:4px 8px;
+  background:var(--showave-window-surface);
+  color:var(--showave-window-muted);
+  font-size:calc(var(--showave-window-font-size) * 11 / 12);
+  font-weight:500;
+  letter-spacing:0;
+}
+body.showave-settings-window table.datatable td { padding:4px 8px; }
+body.showave-settings-window .appearance-panel::before { display:none; }
+body.showave-settings-window .appearance-savebar {
+  margin-top:15px;
+  border-color:var(--showave-window-line);
+  border-radius:2px;
+  background:var(--showave-window-surface);
+  box-shadow:none;
+}
+body.showave-settings-window .appearance-segments {
+  background:var(--showave-window-field) !important;
+  border-color:var(--showave-window-control-border);
+  box-shadow:none;
+}
+body.showave-settings-window .appearance-segment span { font:inherit; }
+body.showave-settings-window .appearance-segment input:checked + span {
+  background:var(--showave-window-hover);
+  color:var(--showave-window-text);
+  box-shadow:inset 0 -2px 0 var(--showave-window-focus);
+}
+
+body.showave-settings-window :focus-visible {
+  outline:2px solid var(--showave-window-focus);
+  outline-offset:1px;
+}
+body.showave-settings-window .side-tab:focus-visible { outline-offset:-2px; }
+
+@media (max-width:780px) {
+  body.showave-settings-window .win-content { padding:12px 16px 16px; }
+}
+
+@media (max-width:620px) {
+  body.showave-settings-window { --pref-nav-w:130px; }
+  body.showave-settings-window .formgroup { padding:0 0 8px; }
+  body.showave-settings-window .formrow { flex-wrap:wrap; }
+  body.showave-settings-window .formrow > label {
+    flex-basis:100%;
+    width:auto;
+    min-width:0;
+    text-align:left;
+  }
+  body.showave-settings-window .formrow > :is(select,input[type="text"],input[type="number"],.audio-inline-select,.audio-meters,.audio-meter) {
+    max-width:100%;
+  }
+  body.showave-settings-window :is(.video-builtin,.audio-input-safety) { margin-left:0; width:100%; }
+  body.showave-settings-window .pref-split { flex-wrap:wrap; }
+  body.showave-settings-window .pref-col.monitor { flex-basis:100%; width:100%; }
+}
+
+/* Home's actual content rhythm: one surface, 32px inset, quiet 11px section
+   labels, and transparent 23px action rows. Fields retain Home's editable
+   Mirror-field affordance. The narrow window reflows controls, not text size. */
+html body.showave-settings-window.showave-utility-window {
+  --pref-nav-w:114px; --pref-control-w:100%; --pref-control-h:23px;
+  --pref-status-h:0px; --panel:var(--showave-window-bg);
+  --strip:var(--showave-window-bg); --head:var(--showave-window-bg);
+}
+html body.showave-settings-window.showave-utility-window .win-main {
+  box-sizing:border-box; padding:5px 32px 16px; gap:20px;
+}
+html body.showave-settings-window.showave-utility-window :is(.pref-side,.side-tabs,.pref-help,.pref-help-t) {
+  background:var(--showave-window-bg) !important; box-shadow:none !important;
+}
+html body.showave-settings-window.showave-utility-window .pref-side { border:0; }
+html body.showave-settings-window.showave-utility-window .side-tabs { padding:0; }
+html body.showave-settings-window.showave-utility-window .side-tab {
+  min-height:23px; margin:0; padding:2px 0; border:0;
+  border-radius:2px; box-shadow:none !important;
+  font-weight:400; line-height:19px; color:var(--showave-window-text);
+  background:transparent !important;
+}
+html body.showave-settings-window.showave-utility-window .side-tab:is(:hover,.active) {
+  background:var(--showave-window-hover) !important; box-shadow:none !important;
+}
+html body.showave-settings-window.showave-utility-window .win-content {
+  min-width:0; padding:0; scrollbar-width:thin;
+}
+html body.showave-settings-window.showave-utility-window :is(.win-content h2,.win-content section > h2) {
+  margin:0 0 5px; padding:0; border:0; line-height:18px;
+}
+html body.showave-settings-window.showave-utility-window :is(.formgroup,.appearance-custom) {
+  margin:0 0 15px; padding:0; border:0; border-radius:0;
+  background:transparent !important; box-shadow:none !important;
+}
+html body.showave-settings-window.showave-utility-window .formgroup h3 { margin:0 0 5px; }
+html body.showave-settings-window.showave-utility-window .formrow {
+  flex-wrap:wrap; min-height:23px; margin:2px 0; gap:5px 8px;
+}
+html body.showave-settings-window.showave-utility-window .formrow > label {
+  flex:0 0 100%; width:auto; min-width:0; margin:0; text-align:left;
+}
+html body.showave-settings-window.showave-utility-window .formrow:has(input[type="checkbox"]) { flex-wrap:nowrap; }
+html body.showave-settings-window.showave-utility-window .formrow:has(input[type="checkbox"]) > label {
+  flex:1 1 auto; width:auto;
+}
+html body.showave-settings-window.showave-utility-window .formrow input[type="checkbox"] { flex:0 0 auto; }
+html body.showave-settings-window.showave-utility-window .formrow > :is(select,input[type="text"],input[type="number"],input[type="range"],.audio-inline-select,.audio-meters,.audio-meter) {
+  flex:1 1 130px !important; width:auto; min-width:0; max-width:100%;
+}
+html body.showave-settings-window.showave-utility-window .formrow > :is(.audio-value,.hint) { flex-shrink:1; min-width:0; }
+html body.showave-settings-window.showave-utility-window :is(select:not([multiple]):not([size]),input[type="text"],input[type="number"],input[type="password"],input[type="url"]) {
+  min-height:23px; height:23px; padding-block:1px;
+}
+html body.showave-settings-window.showave-utility-window :is(.tb-btn,.btn) {
+  min-height:23px; height:auto; padding:2px 0; margin:0;
+  border:0 !important; border-radius:2px;
+  background:transparent !important; box-shadow:none !important;
+  font-weight:400; line-height:19px; text-align:left;
+}
+html body.showave-settings-window.showave-utility-window :is(.tb-btn,.btn):hover:not(:disabled) { background:var(--showave-window-hover) !important; }
+html body.showave-settings-window.showave-utility-window #appearanceSave {
+  background:transparent !important; color:var(--showave-window-text) !important;
+  border:0 !important; font-weight:400;
+}
+html body.showave-settings-window.showave-utility-window :is(.video-builtin,.audio-input-safety) {
+  box-sizing:border-box; width:100%; margin-left:0;
+}
+html body.showave-settings-window.showave-utility-window .pref-help {
+  max-height:114px; overflow:auto; margin-top:15px; border-top:1px solid var(--showave-window-line);
+  scrollbar-width:thin;
+}
+html body.showave-settings-window.showave-utility-window .pref-help-t {
+  flex-wrap:wrap; min-height:23px; padding:5px 0; border:0;
+}
+html body.showave-settings-window.showave-utility-window .pref-help-b { padding:0 0 5px; }
+html body.showave-settings-window.showave-utility-window .pref-step { margin-left:0; }
+html body.showave-settings-window.showave-utility-window .pref-step button { width:18px; }
+html body.showave-settings-window.showave-utility-window .appearance-grid {
+  grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; max-width:400px;
+  box-sizing:border-box; padding:3px;
+}
+html body.showave-settings-window.showave-utility-window .appearance-card {
+  --ap-rim-width:1px;
+  width:100%; aspect-ratio:1; border-radius:3px;
+}
+html body.showave-settings-window.showave-utility-window .appearance-card-chip {
+  position:absolute; inset:0 0 var(--showave-window-name-height); height:auto;
+}
+html body.showave-settings-window.showave-utility-window .appearance-card-name {
+  position:absolute; inset:auto 0 0; box-sizing:border-box;
+  height:var(--showave-window-name-height); padding:2px 3px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:calc(var(--showave-window-font-size) * 11 / 12);
+  font-weight:400; line-height:1.15; white-space:normal; text-align:center;
+}
+html body.showave-settings-window.showave-utility-window .appearance-theme-input:focus-visible + .appearance-card {
+  outline-offset:1px;
+}
+html body.showave-settings-window.showave-utility-window .appearance-custom-grid { grid-template-columns:1fr; }
+html body.showave-settings-window.showave-utility-window .appearance-savebar { position:static; padding:12px 0 0; border:0; border-top:1px solid var(--showave-window-line); background:transparent; }
+
+/* The compact Preferences window gives contextual help the full footer width.
+   Keep the existing status writers and tab order; only their layout changes. */
+html body.showave-settings-window.showave-utility-window .win-main:has(> .pref-side > .pref-help) {
+  --pref-scroll-outset:24px;
+  display:grid; grid-template-columns:var(--pref-nav-w) minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr) auto; row-gap:15px;
+}
+html body.showave-settings-window.showave-utility-window .pref-side:has(> .pref-help) { display:contents; }
+html body.showave-settings-window.showave-utility-window .pref-side:has(> .pref-help) > .side-tabs {
+  grid-column:1; grid-row:1; min-width:0; scrollbar-width:thin;
+}
+html body.showave-settings-window.showave-utility-window .pref-side:has(> .pref-help) + .win-content {
+  grid-column:2; grid-row:1; min-height:0;
+  /* Put the track at the window edge without moving the form's inner edge. */
+  margin-right:calc(-1 * var(--pref-scroll-outset));
+  padding-right:calc(10px + var(--pref-scroll-outset));
+}
+html body.showave-settings-window.showave-utility-window .pref-help {
+  grid-column:1 / -1; grid-row:2; min-width:0;
+  min-height:72px; max-height:114px; margin:0; overflow:visible;
+}
+html body.showave-settings-window.showave-utility-window .pref-help-t {
+  flex-wrap:nowrap; gap:8px; padding:6px 0 4px;
+}
+html body.showave-settings-window.showave-utility-window #prefStatusTitle { min-width:0; flex:1; }
+html body.showave-settings-window.showave-utility-window .pref-step { margin-left:auto; }
+html body.showave-settings-window.showave-utility-window .pref-help-b {
+  min-height:0; overflow:auto; padding:0; scrollbar-width:thin;
+}
+html body.showave-settings-window.showave-utility-window .pref-note { padding-left:0; border-left:0; }
+html body.showave-settings-window.showave-utility-window .pref-help:has(.pref-none) { min-height:0; }
+html body.showave-settings-window.showave-utility-window .pref-help-b:has(.pref-none) { display:none; }
+html body.showave-settings-window.showave-utility-window .formrow > .audio-value {
+  flex:0 1 auto !important; max-width:100%; text-align:left;
+}
+/* Linked controls stay reachable in the footer without covering a setting. */
+html body.showave-settings-window.showave-utility-window .pref-help .ol-linkdock {
+  position:relative; right:auto; bottom:auto; flex:0 0 auto; margin-left:8px;
+  font:inherit; letter-spacing:0;
+}
+html body.showave-settings-window.showave-utility-window .pref-help .ol-link-toggle {
+  height:23px; min-width:0; padding:2px 0; border:0; border-radius:2px;
+  background:transparent !important; color:var(--showave-window-muted);
+  box-shadow:none; font:inherit; line-height:19px;
+}
+html body.showave-settings-window.showave-utility-window .pref-help .ol-link-toggle:hover {
+  background:var(--showave-window-hover) !important;
+}
+html body.showave-settings-window.showave-utility-window .pref-help .ol-link-label { display:inline; }
+html body.showave-settings-window.showave-utility-window .pref-help .ol-link-bpm {
+  color:var(--showave-window-text); font:inherit; font-variant-numeric:tabular-nums;
+}
+html body.showave-settings-window.showave-utility-window .pref-help .ol-link-panel {
+  bottom:29px; background:var(--showave-window-bg); border-color:var(--showave-window-edge);
+  border-radius:2px; box-shadow:var(--showave-window-shadow); backdrop-filter:none;
+}
+@media(max-width:440px) {
+  html body.showave-settings-window.showave-utility-window { --pref-nav-w:106px; }
+  html body.showave-settings-window.showave-utility-window .win-main { padding-inline:16px; gap:12px; }
+  html body.showave-settings-window.showave-utility-window .win-main:has(> .pref-side > .pref-help) { --pref-scroll-outset:8px; }
+  html body.showave-settings-window.showave-utility-window .appearance-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}

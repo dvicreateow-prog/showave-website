@@ -1,0 +1,24 @@
+/* Scale with the user's interface font. SVG strokes stay sharp on HiDPI screens. */
+.showave-control-icon { display:inline-block; flex:none; vertical-align:middle; pointer-events:none; }
+.showave-vector-control { position:relative; }
+.showave-vector-control > .showave-control-icon {
+  display:inline-block; width:1.15em; height:1.15em; min-width:12px; min-height:12px;
+  max-width:20px; max-height:20px; flex:0 0 auto; vertical-align:-.15em;
+  color:inherit; pointer-events:none;
+}
+.showave-glyph-original {
+  position:absolute !important; width:1px !important; height:1px !important;
+  padding:0 !important; margin:-1px !important; overflow:hidden !important;
+  clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important;
+}
+.showave-vector-control:focus-visible { outline:2px solid var(--color-accent,#0a84ff); outline-offset:2px; }
+.prow>.showave-vector-control>.showave-control-icon { width:9px;height:9px;min-width:0;min-height:0;vertical-align:middle; }
+.sect>h3::before,.sect.folded>h3::before {
+  content:"" !important;display:inline-block;flex:none;width:9px;height:9px;
+  background:currentColor;mask:var(--showave-disclosure-down) center/contain no-repeat;
+  -webkit-mask:var(--showave-disclosure-down) center/contain no-repeat;
+}
+.sect.folded>h3::before {mask-image:var(--showave-disclosure-right);-webkit-mask-image:var(--showave-disclosure-right);}
+@media (prefers-reduced-motion:no-preference) {
+  .showave-vector-control > .showave-control-icon { transition:color 100ms ease; }
+}

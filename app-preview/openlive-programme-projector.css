@@ -1,0 +1,40 @@
+/* Match the small monitor controls and the shared panel chrome. */
+.bc-projector-button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 23px;width:23px;height:18px;padding:0;margin:0 2px 0 0;border:1px solid transparent;border-radius:var(--radius-sm,2px);background:transparent;color:var(--n400);cursor:pointer}
+.bc-projector-button svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.bc-projector-button:hover,.bc-projector-button[aria-expanded=true],.bc-projector-button.has-projector{color:var(--color-accent);border-color:var(--n700);background:color-mix(in srgb,var(--color-accent) 12%,var(--inset))}
+.bc-projector-button:focus-visible,.bc-projector-item:focus-visible{outline:1px solid var(--color-accent);outline-offset:-1px}
+.bc-projector-menu{position:fixed;z-index:1200;box-sizing:border-box;width:292px;max-width:calc(100vw - 12px);max-height:calc(100vh - 12px);overflow:auto;padding:5px;border:1px solid var(--n700);border-radius:var(--radius-sm,2px);background:var(--panel);color:var(--n200);box-shadow:0 8px 24px #0007;font:11px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;text-align:left}
+.bc-projector-menu[hidden],.bc-projector-menu [hidden]{display:none}
+.bc-projector-title{padding:3px 7px 6px;color:var(--n400);font-size:10px;font-weight:600}
+.bc-projector-item{display:block;width:100%;min-height:28px;height:auto;margin:0;padding:6px 7px;border:1px solid transparent;border-radius:var(--radius-sm,2px);background:transparent;color:var(--n200);font:inherit;text-align:left;white-space:normal;cursor:pointer}
+.bc-projector-item:hover:not(:disabled),.bc-projector-item:focus-visible{background:color-mix(in srgb,var(--color-accent) 14%,var(--inset));color:var(--txt-hi)}
+.bc-projector-item:disabled{color:var(--n500);opacity:.65;cursor:default}
+.bc-projector-displays{border-block:1px solid var(--line);margin-block:3px;padding-block:3px}
+.bc-projector-display{padding-left:15px}
+.bc-projector-hint,.bc-projector-status{margin:4px 7px 2px;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.bc-projector-hint{padding-top:7px;border-top:1px solid var(--line);color:var(--n500)}
+.bc-projector-status{color:var(--txt-hi)}
+.bc-camera-menu{padding:6px}
+.bc-camera-state{margin:3px 7px 5px;font-size:11px;color:var(--n200);line-height:1.5}
+.bc-camera-state[data-state=live]{color:#4bc785}
+.bc-camera-device{margin:0 7px;color:var(--n300);font-size:11px;font-weight:600}
+.bc-camera-format{margin:2px 7px 9px;font-size:10px;color:var(--n500)}
+.bc-camera-action{display:block;box-sizing:border-box;width:calc(100% - 14px);min-height:25px;margin:5px 7px 8px;border:1px solid var(--n700);border-radius:var(--radius-sm,2px);background:var(--inset);color:var(--n200);font:inherit;font-size:11px;cursor:pointer}
+.bc-camera-action:hover:not(:disabled),.bc-camera-action:focus-visible{border-color:var(--color-accent);outline:1px solid var(--color-accent);outline-offset:-1px}
+.bc-camera-action:disabled{color:var(--n500);opacity:.6;cursor:default}
+.bc-projector-button.camera-connecting{color:var(--amber)}
+.bc-output-drawer>summary{display:flex;align-items:center;gap:6px}
+.bc-output-drawer>summary svg{flex:none;width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.bc-output-drawer[open]>summary{color:var(--color-accent)}
+.bc-output-drawer[data-state=live]>summary{color:var(--color-accent)}
+.bc-camera-indicator{font-size:9px;line-height:14px;color:#4bc785}
+.bc-output-drawer[data-state=connecting] .bc-camera-indicator,.bc-output-drawer[data-state=stopping] .bc-camera-indicator{color:var(--amber)}
+.bc-output-drawer[data-state=error] .bc-camera-indicator{color:var(--red,#ee5c63)}
+.bc-camera-panel{box-sizing:border-box;height:calc(var(--layer-dock-height) - var(--lc-ctl,20px));padding:6px;overflow:auto;font:var(--font);font-size:11px}
+.bc-camera-panel .bc-projector-title{padding:3px 2px 6px;font-size:11px;color:var(--txt-hi);border-bottom:1px solid var(--line)}
+.bc-camera-panel .bc-camera-state{margin:9px 2px 6px;overflow-wrap:anywhere}
+.bc-camera-panel .bc-camera-device,.bc-camera-panel .bc-camera-format{margin-left:2px;margin-right:2px;overflow-wrap:anywhere}
+.bc-camera-panel .bc-camera-action{width:100%;margin:10px 0;border-color:var(--color-accent);background:color-mix(in srgb,var(--color-accent) 16%,var(--inset));color:var(--txt-hi)}
+.bc-camera-panel .bc-projector-hint{margin:10px 2px 0}
+.bc-layer-docks.no-preview-scene{--source-choices-width:0px;--media-controls-width:0px;grid-template-columns:minmax(0,1fr)}
+.bc-layer-docks.no-preview-scene>.bc-layer-center{grid-column:1;grid-row:1}

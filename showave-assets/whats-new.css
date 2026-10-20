@@ -1,0 +1,8 @@
+/* Downloads: updates in testing since the published preview. Reuses the eco cards. */
+.whats-new-list{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.whats-new-list li{position:relative;padding-left:17px;color:var(--muted,#aeb7c5);font-size:14px;line-height:1.55}
+.whats-new-list li::before{content:"";position:absolute;left:0;top:.6em;width:6px;height:6px;border-radius:50%;background:#ff824a}
+#whats-new .eco-card h3{font-size:25px}
+#whats-new .eco-card .eco-spec{margin:18px 0 0}
+html[data-showave-appearance] .whats-new-list li{color:var(--sw-muted)!important}
+html[data-showave-appearance] .whats-new-list li::before{background:var(--sw-link)!important}

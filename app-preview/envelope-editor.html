@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<title>Envelope Editor: SHOWAVE Live</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<script src="showave-brand.js"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+  /* ---- page shell ------------------------------------------------------
+     .win-root / .win-title / .win-toolbar / .statusline / .sect / .prow /
+     .tb-* / .pval / .dropdown are all themed by the shared sheets — only the
+     geometry that is unique to the envelope editor lives here. */
+  .e-bar{ flex-wrap:wrap; row-gap:var(--space-2); }
+  .e-bar .grp{ display:inline-flex; align-items:center; gap:var(--space-2); }
+  .e-center{ flex:1; display:flex; flex-direction:column; min-width:0; }
+  .e-canvas{ flex:1; position:relative; min-height:0; background:var(--inset); }
+  #env{ position:absolute; inset:0; width:100%; height:100%; cursor:crosshair; }
+  .e-right{ flex:0 0 270px; width:270px; background:var(--panel);
+    border-left:1px solid var(--line); overflow-y:auto; }
+
+  .t-dim{ color:var(--n600); }
+  #target{ cursor:context-menu; }
+  #interp{ min-width:132px; text-align:left; display:inline-flex; align-items:center; gap:var(--space-2); }
+  #interp .car{ margin-left:auto; color:var(--n600); font-size:9px; }
+  #kfCount{ font-variant-numeric:tabular-nums; }
+
+  /* ---- the little P at the bottom right of the envelope ---------------- */
+  .p-btn{ position:absolute; right:var(--space-3); bottom:var(--space-3);
+    width:19px; height:19px; display:grid; place-items:center; cursor:pointer;
+    background:transparent; border:1px solid var(--n800); border-radius:var(--radius-sm);
+    color:var(--n400); font-size:10px; letter-spacing:.04em; }
+  .p-btn:hover{ color:var(--n100); border-color:var(--a600);
+    background:color-mix(in srgb,var(--color-accent) 12%,transparent); }
+  .p-btn.on{ color:var(--a200); border-color:var(--color-accent);
+    box-shadow:0 0 0 1px var(--color-accent), 0 0 10px -3px var(--color-accent); }
+
+  /* ---- menu bits arena.css does not already carry ---------------------- */
+  /* CASING. Resolume shouts in the string, never with a stylesheet: of the 878
+     keys in reference/docs/gui/English.txt exactly 25 are all-caps, and each is a
+     compact transport/action button (RECORD, STOP, TAP, RESYNC, LINK, PAUSE,
+     METRONOME, PICK, ADD), an alarm (LOW MEMORY!!) or an acronym. Section
+     headers, menu group headings, tab labels, column headers and state chips are
+     Title Case throughout the string table and all 83 manual pages. The blanket
+     text-transform rules in this window were removed for that reason and the
+     caps-tuned tracking relaxed with them; nocturne.css and windows.css, which
+     this window also loads, no longer shout their equivalents, so leaving these
+     would paint one class of element in two conventions in one window. */
+  .dd-group{ padding:var(--space-2) 22px var(--space-1) 10px; font-size:9.5px; letter-spacing:.01em; color:var(--n700); cursor:default; }
+  .dd-foot{ display:flex; gap:var(--space-2); align-items:center;
+    margin-top:var(--space-1); padding:var(--space-2) var(--space-3) var(--space-1);
+    border-top:1px solid var(--n800); }
+  .dd-foot .sp{ margin-left:auto; }
+  .dd-item .mng{ margin-left:auto; display:flex; gap:var(--space-2); padding-left:var(--space-4);
+    color:var(--n600); }
+  .dd-item .mng b{ font-weight:400; cursor:pointer; }
+  .dd-item .mng b:hover{ color:var(--n100); }
+  /* arena.css darkens the tick on hover for the retired filled-menu look */
+  .dropdown .dd-item:hover .chk{ color:var(--color-accent); }
+  .dropdown .dd-note{ padding:var(--space-1) var(--space-3) var(--space-2) 24px;
+    font-size:10px; color:var(--n700); max-width:230px; white-space:normal; }
+
+  /* ---- keyframe number entry, inside the properties .prow grid --------- */
+  .prow input.num{ width:100%; height:15px; padding:0 var(--space-2); font-size:11px;
+    font-variant-numeric:tabular-nums; }
+  .prow .wide{ grid-column:3/7; display:flex; align-items:center; gap:3px; }
+  .prow .wide .tb-btn{ flex:1; min-width:0; text-align:left; display:inline-flex;
+    align-items:center; gap:var(--space-2); }
+  .prow .wide .tb-btn .car{ margin-left:auto; color:var(--n600); font-size:9px; }
+  .prow .wide .pval{ display:inline-block; }
+  .prow output{ font-size:10.5px; color:var(--n500); font-variant-numeric:tabular-nums;
+    padding-left:var(--space-2); }
+  .prow #durUnit{ flex:0 0 78px; width:78px; }
+  .prow .wide input[type=range]{ flex:1; min-width:0; }
+  .prow .wide output{ flex:0 0 26px; text-align:right; padding-left:var(--space-1); }
+  .statusline{ overflow:hidden; }
+  .statusline span{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .statusline .sp{ margin-left:auto; text-align:right; }
+
+  /* ---- the parameter read-out: a big input line, a smaller output line -- */
+  .pslider{ position:relative; flex:1; height:13px; background:var(--inset);
+    border:1px solid var(--n800); border-radius:var(--radius-sm); overflow:hidden; }
+  .pslider i.in{ position:absolute; top:0; bottom:0; width:2px; background:var(--n300); }
+  .pslider i.out{ position:absolute; top:3px; bottom:3px; width:1px;
+    background:var(--color-accent); box-shadow:0 0 7px -1px var(--color-accent); }
+</style>
+</head>
+<body>
+<div class="win-root">
+  <div class="win-title"><span data-showave-brand="live">SHOWAVE Live</span> Envelope Editor
+    <span class="t-dim" id="envTitle">Linear</span>
+    <span class="sp"><a class="plainlink" href="presets.html">← presets</a>
+      &nbsp;·&nbsp;<a class="plainlink" href="index.html">SHOWAVE Live</a></span></div>
+
+  <!-- ============================================================
+       TOOLBAR — in the order the Envelopes chapter walks through:
+       Using Envelopes → Easing / Interpolation Curves →
+       Adding and Removing Keyframes → Toggles, Dropdowns and Palettes
+       ============================================================ -->
+  <div class="win-toolbar e-bar">
+    <span class="grp"><span class="tb-label">Parameter</span>
+      <span class="pval" id="target" title="Right click a parameter and select Envelope from the dropdown">Layer 1 · Opacity</span></span>
+    <div class="tb-sep"></div>
+
+    <span class="grp"><span class="tb-label">Interpolation</span>
+      <button class="tb-btn" id="interp" type="button" disabled>Linear<span class="car">▾</span></button></span>
+    <div class="tb-sep"></div>
+
+    <span class="grp">
+      <button class="tb-btn" id="addKf" type="button">Add Keyframe</button>
+      <button class="tb-btn" id="delKf" type="button">Remove Keyframe</button>
+      <button class="tb-btn" id="resetKf" type="button">Reset</button></span>
+    <div class="tb-sep"></div>
+
+    <span class="grp"><span class="tb-label">Parameter Type</span>
+      <select class="tb-select" id="ptype" title="Toggles, dropdowns and palettes jump from state to state">
+        <option>Slider</option><option>Toggle</option><option>Dropdown</option><option>Palette</option></select></span>
+    <div class="tb-sep"></div>
+
+    <span class="grp"><span class="tb-label">Playmode</span>
+      <select class="tb-select" id="loop">
+        <option>Loop</option><option>Ping Pong</option><option>Random</option>
+        <option>Play Once and Eject</option><option>Play Once and Hold</option></select>
+      <button class="tb-btn" id="playBtn" type="button">▶ Preview</button></span>
+
+    <span class="tb-sp"></span>
+    <span class="tb-label" id="kfCount"></span>
+  </div>
+
+  <div class="win-main">
+    <div class="e-center">
+      <div class="e-canvas">
+        <canvas id="env"></canvas>
+        <!-- "To save a preset, hit the little P at the bottom right of the envelope." -->
+        <button class="p-btn" id="pBtn" type="button" title="Envelope presets">P</button>
+      </div>
+      <div class="statusline">
+        <span title="To add a keyframe, double click the curve where you want to add it. To remove a keyframe, double click it. To adjust a keyframe, simply click and drag it around.">Double click the curve to add · double click a keyframe to remove · drag to adjust</span>
+        <span class="sp" title="Use the arrow keys to nudge the keyframe into the sweet spot. The shift modifier works for bigger increments. Shift-click to select more than one keyframe. Right click a keyframe for its interpolation curve.">Arrows nudge · Shift for bigger increments · Shift-click multi-select · right click for the curve</span>
+      </div>
+    </div>
+
+    <div class="e-right">
+      <div class="sect"><h3>Keyframe</h3><div class="sect-body sbody">
+        <div class="prow"><span class="tw"></span><label>Index</label>
+          <div class="wide"><span class="pval" id="kIdx">N/A</span></div></div>
+        <div class="prow"><span class="tw"></span><label>Phase</label>
+          <input class="num" type="number" id="kPhase" step="0.001" min="0" max="1" disabled></div>
+        <div class="prow"><span class="tw"></span><label id="kValLabel">Opacity</label>
+          <input class="num" type="number" id="kValue" step="0.001" min="0" max="1" disabled></div>
+        <div class="prow"><span class="tw"></span><label>Interpolation</label>
+          <div class="wide"><button class="tb-btn" id="kCurve" type="button" disabled>Linear<span class="car">▾</span></button></div></div>
+        <div class="hint">The phase is where the keyframe sits on the x-axis. The other value is the
+          output of the envelope, named the same as the parameter.</div>
+      </div></div>
+
+      <div class="sect"><h3>Playback</h3><div class="sect-body sbody">
+        <div class="prow"><span class="tw"></span><label>Animation</label><select id="phase"></select></div>
+        <div class="prow"><span class="tw"></span><label>Duration</label>
+          <div class="wide"><input class="num" type="number" id="dur" value="4" min="0.1" step="0.1">
+            <select id="durUnit"><option>Beats</option><option>Seconds</option></select></div></div>
+        <div class="prow"><span class="tw"></span><label>In</label>
+          <div class="wide"><input type="range" id="inPt" min="0" max="100" value="0" data-out><output>0</output></div></div>
+        <div class="prow"><span class="tw"></span><label>Out</label>
+          <div class="wide"><input type="range" id="outPt" min="0" max="100" value="100" data-out><output>100</output></div></div>
+        <div class="prow"><span class="tw"></span><label>Invert</label>
+          <div class="wide"><input type="checkbox" id="invert"></div></div>
+      </div></div>
+
+      <div class="sect"><h3>Output</h3><div class="sect-body sbody">
+        <div class="prow"><span class="tw"></span><label>Parameter</label>
+          <div class="wide"><div class="pslider" id="pslide"><i class="in"></i><i class="out"></i></div></div></div>
+        <div class="prow"><span class="tw"></span><label id="outLabel">Opacity</label>
+          <div class="wide"><span class="pval" id="curVal">0.00</span></div></div>
+        <div class="prow"><span class="tw"></span><label>Applied to</label>
+          <div class="wide"><span class="pval" id="appliedTo">Layer 1 · Opacity</span></div></div>
+        <div class="hint">The big vertical line is the input. The smaller line right next to it is the
+          output, after the envelope is applied.</div>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<script src="arena-data.js"></script>
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+/* the parameter this envelope is applied to — the keyframe's y value is
+   "named the same as the parameter" */
+const PARAM = { owner:'Layer 1', name:'Opacity' };
+
+/* ---- provided presets ("some presets we provided for you") ------------- */
+const SHIPPED = ['4 To The Floor','ADSR','ASR','Digital','EasyEase','Jaws','LFO','Noise','Saw','Up N Down'];
+const SHAPES = {
+  'Linear':[[0,0],[1,1]],
+  '4 To The Floor':[[0,1],[.24,0],[.25,1],[.49,0],[.5,1],[.74,0],[.75,1],[1,0]],
+  'ADSR':[[0,0],[.1,1],[.3,.6],[.7,.6],[1,0]],
+  'ASR':[[0,0],[.2,1],[.8,1],[1,0]],
+  'Digital':[[0,0],[.25,0],[.25,1],[.5,1],[.5,0],[.75,0],[.75,1],[1,1]],
+  'EasyEase':[[0,0],[.5,1],[1,0]],
+  'Jaws':[[0,0],[.15,1],[.3,.2],[.45,.8],[.6,.1],[.8,.5],[1,0]],
+  'LFO':[[0,.5],[.25,1],[.5,.5],[.75,0],[1,.5]],
+  'Noise':[[0,.3],[.15,.8],[.3,.1],[.45,.9],[.6,.35],[.75,.7],[.9,.2],[1,.5]],
+  'Saw':[[0,0],[.99,1],[1,0]],
+  'Up N Down':[[0,0],[.5,1],[1,0]]
+};
+
+/* ---- interpolation curves, exactly the families the manual lists -------
+   "Quadratic, Sine, Circular and Exponential do basic easing at various
+    strengths. Elastic, Back and Bounce ... Hold simply holds the value of
+    the previous keyframe until the current one is reached."
+   "An In curve will apply the curve at the start of the interpolation. An
+    Out curve will apply it towards the end. And In/Out ... equally on both." */
+const C1=1.70158, C2=C1*1.525, C3=C1+1, C4=2*Math.PI/3, C5=2*Math.PI/4.5;
+function bounceOut(t){ const n=7.5625, d=2.75;
+  if(t<1/d) return n*t*t;
+  if(t<2/d) return n*(t-=1.5/d)*t+.75;
+  if(t<2.5/d) return n*(t-=2.25/d)*t+.9375;
+  return n*(t-=2.625/d)*t+.984375; }
+const EASE = {
+  'Linear':t=>t,
+  'Quadratic In':t=>t*t,
+  'Quadratic Out':t=>1-(1-t)*(1-t),
+  'Quadratic In/Out':t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2,
+  'Sine In':t=>1-Math.cos(t*Math.PI/2),
+  'Sine Out':t=>Math.sin(t*Math.PI/2),
+  'Sine In/Out':t=>-(Math.cos(Math.PI*t)-1)/2,
+  'Circular In':t=>1-Math.sqrt(1-t*t),
+  'Circular Out':t=>Math.sqrt(1-(t-1)*(t-1)),
+  'Circular In/Out':t=>t<.5?(1-Math.sqrt(1-Math.pow(2*t,2)))/2:(Math.sqrt(1-Math.pow(-2*t+2,2))+1)/2,
+  'Exponential In':t=>t===0?0:Math.pow(2,10*t-10),
+  'Exponential Out':t=>t===1?1:1-Math.pow(2,-10*t),
+  'Exponential In/Out':t=>t===0?0:t===1?1:t<.5?Math.pow(2,20*t-10)/2:(2-Math.pow(2,-20*t+10))/2,
+  'Elastic In':t=>t===0?0:t===1?1:-Math.pow(2,10*t-10)*Math.sin((t*10-10.75)*C4),
+  'Elastic Out':t=>t===0?0:t===1?1:Math.pow(2,-10*t)*Math.sin((t*10-.75)*C4)+1,
+  'Elastic In/Out':t=>t===0?0:t===1?1:t<.5?-(Math.pow(2,20*t-10)*Math.sin((20*t-11.125)*C5))/2
+                                        :(Math.pow(2,-20*t+10)*Math.sin((20*t-11.125)*C5))/2+1,
+  'Back In':t=>C3*t*t*t-C1*t*t,
+  'Back Out':t=>1+C3*Math.pow(t-1,3)+C1*Math.pow(t-1,2),
+  'Back In/Out':t=>t<.5?(Math.pow(2*t,2)*((C2+1)*2*t-C2))/2
+                      :(Math.pow(2*t-2,2)*((C2+1)*(t*2-2)+C2)+2)/2,
+  'Bounce In':t=>1-bounceOut(1-t),
+  'Bounce Out':t=>bounceOut(t),
+  'Bounce In/Out':t=>t<.5?(1-bounceOut(1-2*t))/2:(1+bounceOut(2*t-1))/2,
+  'Hold':t=>t>=1?1:0
+};
+const CURVE_MENU = [
+  {g:'Linear'}, 'Linear',
+  {g:'Easing'}, 'Quadratic In','Quadratic Out','Quadratic In/Out',
+  'Sine In','Sine Out','Sine In/Out',
+  'Circular In','Circular Out','Circular In/Out',
+  'Exponential In','Exponential Out','Exponential In/Out',
+  {g:'Animation'}, 'Elastic In','Elastic Out','Elastic In/Out',
+  'Back In','Back Out','Back In/Out',
+  'Bounce In','Bounce Out','Bounce In/Out',
+  {g:'Hold'}, 'Hold'
+];
+
+/* ---- state ------------------------------------------------------------- */
+/* "By default, a linear envelope is applied." */
+let name='Linear';
+let pts = SHAPES.Linear.map(p=>({x:p[0], y:p[1], c:'Linear'}));
+let selSet = new Set(), sel = -1;
+let playing=false, t0=0, ph=0, pingDir=1, randT=0, randPh=0;
+
+/* toggles / dropdowns / palettes jump from state to state */
+const LEVELS = { 'Slider':0, 'Toggle':2, 'Dropdown':5, 'Palette':8 };
+function levels(){ const n=LEVELS[$('#ptype').value]||0; if(n<2) return null;
+  return Array.from({length:n},(_,i)=>i/(n-1)); }
+function snapY(v){ const L=levels(); if(!L) return v;
+  return L.reduce((a,b)=>Math.abs(b-v)<Math.abs(a-v)?b:a); }
+
+/* ---- design tokens, read out of the sheets for the canvas -------------- */
+let TK={};
+function readTokens(){
+  const cs=getComputedStyle(document.documentElement), g=n=>cs.getPropertyValue(n).trim();
+  TK={ inset:g('--inset'), n900:g('--n900'), n800:g('--n800'), n700:g('--n700'),
+       n600:g('--n600'), n400:g('--n400'), n300:g('--n300'), n100:g('--n100'),
+       accent:g('--color-accent'), a400:g('--a400') };
+}
+function alpha(hex,a){
+  let h=(hex||'').replace('#','');
+  if(h.length===3) h=h.split('').map(c=>c+c).join('');
+  const n=parseInt(h,16)||0;
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
+}
+addEventListener('openlive:appearancechange',()=>{
+  readTokens();
+  draw();
+  paint();
+});
+
+/* ---- the animation menu ("right click a parameter") -------------------- */
+let openMenus=[], presetOpen=false;
+function closeMenus(){ openMenus.forEach(m=>m.remove()); openMenus=[]; presetOpen=false;
+  $('#pBtn').classList.remove('on'); }
+document.addEventListener('mousedown',e=>{
+  if(e.target.closest('.dropdown')||e.target.closest('#pBtn')) return;
+  closeMenus();
+});
+function menu(items, cx, cy){
+  closeMenus();
+  const d=document.createElement('div'); d.className='dropdown';
+  items.forEach(it=>{
+    if(it==='-'){ const s=document.createElement('div'); s.className='dd-sep'; d.appendChild(s); return; }
+    if(it && it.g!==undefined){ const g=document.createElement('div'); g.className='dd-group';
+      g.textContent=it.g; d.appendChild(g); return; }
+    if(it && it.note!==undefined){ const n=document.createElement('div'); n.className='dd-note';
+      n.textContent=it.note; d.appendChild(n); return; }
+    const row=document.createElement('div');
+    row.className='dd-item'+(it.disabled?' disabled':'');
+    row.innerHTML='<span class="chk">'+(it.on?'✓':'')+'</span>';
+    const t=document.createElement('span'); t.textContent=it.l; row.appendChild(t);
+    if(it.manage){
+      const m=document.createElement('span'); m.className='mng';
+      m.innerHTML='<b data-act="rename" title="Rename">✎</b><b data-act="delete" title="Delete">✕</b>';
+      row.appendChild(m);
+    }
+    if(!it.disabled) row.addEventListener('click',ev=>{
+      const act=ev.target.dataset&&ev.target.dataset.act;
+      if(it.fn) it.fn(act);
+      if(!it.keep) closeMenus();
+    });
+    d.appendChild(row);
+  });
+  if(items.foot) d.appendChild(items.foot);
+  document.body.appendChild(d);
+  const r=d.getBoundingClientRect();
+  d.style.left=Math.max(4,Math.min(cx, innerWidth-r.width-6))+'px';
+  d.style.top =Math.max(4,Math.min(cy, innerHeight-r.height-6))+'px';
+  openMenus.push(d);
+  return d;
+}
+
+/* "To enable an envelope, simply right click a parameter and select Envelope
+    from the dropdown." */
+function animationMenu(cx,cy){
+  const cur=$('#phase').value;
+  const items=[{l:PARAM.owner+' · '+PARAM.name, disabled:true}, '-'];
+  PARAM_ANIMATION.forEach(v=>items.push({l:v, on:v===cur, fn:()=>{ $('#phase').value=v; }}));
+  menu(items,cx,cy);
+}
+$('#target').addEventListener('contextmenu',e=>{ e.preventDefault(); animationMenu(e.clientX,e.clientY); });
+$('#target').addEventListener('click',e=>{ animationMenu(e.clientX,e.clientY); });
+
+/* "Right click on the ... keyframe of the envelope, and choose Quadratic
+    In/Out from the drop down." */
+function curveMenu(cx,cy){
+  if(sel<1) return;
+  const cur=pts[sel].c;
+  const items=[{l:'Keyframe '+(sel+1)+': curve from keyframe '+sel, disabled:true}, '-'];
+  CURVE_MENU.forEach(v=>{
+    if(v && v.g!==undefined){ items.push(v); return; }
+    items.push({l:v, on:v===cur, fn:()=>setCurve(v)});
+  });
+  menu(items,cx,cy);
+}
+function setCurve(v){
+  const idx=[...selSet].filter(i=>i>0);
+  (idx.length?idx:[sel]).forEach(i=>{ if(i>0) pts[i].c=v; });
+  showKf(); draw();
+}
+$('#interp').addEventListener('click',e=>{ const r=e.currentTarget.getBoundingClientRect();
+  curveMenu(r.left, r.bottom+2); });
+$('#kCurve').addEventListener('click',e=>{ const r=e.currentTarget.getBoundingClientRect();
+  curveMenu(r.left, r.bottom+2); });
+
+/* ---- envelope presets, behind the little P ----------------------------- */
+const STORE='nocturne.envelope.presets';
+let manageMode=false;
+function userPresets(){ try{ return JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ return {}; } }
+function saveUser(o){ try{ localStorage.setItem(STORE, JSON.stringify(o)); }catch(e){} }
+function loadPreset(n, data){
+  name=n;
+  pts = (data||SHAPES[n]||SHAPES.Linear).map(p=>({x:p[0], y:p[1], c:p[2]||'Linear'}));
+  selSet.clear(); sel=-1; $('#envTitle').textContent=n; showKf(); draw();
+}
+function presetPopup(){
+  const btn=$('#pBtn'), r=btn.getBoundingClientRect(), U=userPresets();
+  const uNames=Object.keys(U).sort();
+  const items=[];
+  items.push({g:'Presets'});
+  if(!uNames.length) items.push({l:'No saved presets yet', disabled:true});
+  uNames.forEach(n=>items.push({ l:n, on:n===name, manage:manageMode, keep:manageMode,
+    fn:act=>{
+      if(!manageMode){ loadPreset(n, U[n]); return; }
+      if(act==='rename'){
+        const nn=prompt('Rename preset', n);
+        if(nn && nn!==n){ const o=userPresets(); o[nn]=o[n]; delete o[n]; saveUser(o);
+          if(name===n){ name=nn; $('#envTitle').textContent=nn; }
+          closeMenus(); presetPopup(); }
+      } else if(act==='delete'){
+        if(confirm('Delete preset "'+n+'"?')){ const o=userPresets(); delete o[n]; saveUser(o);
+          closeMenus(); presetPopup(); }
+      }
+    }}));
+  items.push('-');
+  items.push({g:'Provided'});
+  SHIPPED.forEach(n=>items.push({ l:n, on:n===name, keep:manageMode,
+    fn:()=>{ if(!manageMode) loadPreset(n); } }));
+  if(manageMode) items.push({note:'Provided presets cannot be renamed or deleted.'});
+
+  const foot=document.createElement('div'); foot.className='dd-foot';
+  const save=document.createElement('button'); save.type='button';
+  save.className='tb-btn small'; save.textContent='Save';
+  save.addEventListener('click',()=>{
+    const n=prompt('Save envelope preset as', name==='Linear'?'My Envelope':name);
+    if(!n) return;
+    const o=userPresets(); o[n]=pts.map(p=>[+p.x.toFixed(4), +p.y.toFixed(4), p.c]);
+    saveUser(o); name=n; $('#envTitle').textContent=n;
+    closeMenus(); presetPopup();
+  });
+  const man=document.createElement('button'); man.type='button';
+  man.className='tb-btn small'+(manageMode?' on':''); man.textContent='Manage…';
+  man.addEventListener('click',()=>{ manageMode=!manageMode; closeMenus(); presetPopup(); });
+  const sp=document.createElement('span'); sp.className='sp';
+  foot.appendChild(save); foot.appendChild(sp); foot.appendChild(man);
+  items.foot=foot;
+
+  const d=menu(items, r.left, r.top);
+  const dr=d.getBoundingClientRect();
+  d.style.left=Math.max(4, Math.min(r.right-dr.width, innerWidth-dr.width-6))+'px';
+  d.style.top =Math.max(4, r.top-dr.height-4)+'px';
+  btn.classList.add('on');
+  presetOpen=true;
+}
+$('#pBtn').addEventListener('click',()=>{
+  if(presetOpen){ manageMode=false; closeMenus(); return; }
+  presetPopup();
+});
+
+/* ---- animation menu select (kept in sync with the right hand panel) ---- */
+PARAM_ANIMATION.forEach(p=>$('#phase').appendChild(new Option(p,p)));
+$('#phase').value='Envelope';
+
+/* ---- canvas ------------------------------------------------------------ */
+const c=$('#env'), x=c.getContext('2d');
+function resize(){ c.width=c.clientWidth; c.height=c.clientHeight; draw(); }
+addEventListener('resize',resize);
+function PX(p){ return [p.x*c.width, (1-p.y)*c.height]; }
+
+function valueAt(t){
+  if(!pts.length) return 0;
+  if(t<=pts[0].x) return pts[0].y;
+  for(let i=1;i<pts.length;i++){
+    if(t<=pts[i].x){
+      const a=pts[i-1], b=pts[i];
+      const span=(b.x-a.x)||1e-6;
+      const f=Math.max(0,Math.min(1,(t-a.x)/span));
+      const e=(EASE[b.c]||EASE.Linear)(f);
+      return a.y+(b.y-a.y)*e;
+    }
+  }
+  return pts[pts.length-1].y;
+}
+
+function draw(){
+  const w=c.width, h=c.height;
+  if(!w||!h) return;
+  x.fillStyle=TK.inset; x.fillRect(0,0,w,h);
+
+  /* grid */
+  x.lineWidth=1; x.strokeStyle=TK.n900;
+  for(let i=1;i<16;i++){ x.beginPath(); x.moveTo(Math.round(w*i/16)+.5,0); x.lineTo(Math.round(w*i/16)+.5,h); x.stroke(); }
+  for(let i=1;i<8;i++){ x.beginPath(); x.moveTo(0,Math.round(h*i/8)+.5); x.lineTo(w,Math.round(h*i/8)+.5); x.stroke(); }
+  x.strokeStyle=TK.n800;
+  for(let i=1;i<4;i++){ x.beginPath(); x.moveTo(Math.round(w*i/4)+.5,0); x.lineTo(Math.round(w*i/4)+.5,h); x.stroke(); }
+
+  /* "you'll see indication in grey of where the jumps occur" */
+  const L=levels();
+  if(L){
+    x.strokeStyle=TK.n700; x.setLineDash([3,3]);
+    L.forEach(v=>{ const y=Math.round((1-v)*h)+.5;
+      x.beginPath(); x.moveTo(0,y); x.lineTo(w,y); x.stroke(); });
+    x.setLineDash([]);
+  }
+
+  /* the curve, sampled so every interpolation reads truthfully */
+  const step=Math.max(1, w/720);
+  x.beginPath();
+  for(let px=0; px<=w; px+=step){
+    const v=valueAt(px/w), py=(1-v)*h;
+    if(px===0) x.moveTo(0,py); else x.lineTo(px,py);
+  }
+  x.strokeStyle=TK.accent; x.lineWidth=2; x.stroke();
+  x.lineTo(w,h); x.lineTo(0,h); x.closePath();
+  x.fillStyle=alpha(TK.accent,.10); x.fill();
+
+  /* keyframes */
+  pts.forEach((p,i)=>{
+    const a=PX(p), on=selSet.has(i);
+    x.fillStyle = on ? TK.n100 : TK.accent;
+    x.fillRect(a[0]-4, a[1]-4, 8, 8);
+    if(i===sel){ x.strokeStyle=TK.n100; x.lineWidth=1;
+      x.strokeRect(a[0]-6.5, a[1]-6.5, 13, 13); }
+  });
+
+  /* the input / output pair, while previewing */
+  if(playing){
+    const px=ph*w;
+    x.strokeStyle=TK.n400; x.lineWidth=2;
+    x.beginPath(); x.moveTo(px,0); x.lineTo(px,h); x.stroke();
+    x.strokeStyle=TK.accent; x.lineWidth=1;
+    x.beginPath(); x.moveTo(px+4,h*.14); x.lineTo(px+4,h*.86); x.stroke();
+  }
+
+  /* the x-axis is expressed in phase */
+  x.fillStyle=TK.n700; x.font='9.5px Inter, system-ui, sans-serif';
+  ['0','0.25','0.5','0.75','1'].forEach((t,i)=>{
+    const px = i===0 ? 4 : i===4 ? w-34 : w*i/4;
+    x.textAlign = i===0?'left' : i===4?'right' : 'center';
+    x.fillText(t, px, h-5);
+  });
+  x.textAlign='left'; x.fillText('phase', 4, 12);
+
+  $('#kfCount').textContent = pts.length+' keyframes';
+  paint();
+}
+
+/* ---- picking, dragging, adding, removing ------------------------------- */
+function pick(mx,my){
+  for(let i=pts.length-1;i>=0;i--){ const a=PX(pts[i]);
+    if(Math.abs(a[0]-mx)<7 && Math.abs(a[1]-my)<7) return i; }
+  return -1;
+}
+function at(e){ const r=c.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; }
+
+/* "To adjust a keyframe, simply click and drag it around." */
+c.addEventListener('mousedown',e=>{
+  if(e.button!==0) return;
+  const [mx,my]=at(e), i=pick(mx,my);
+  if(i<0){ if(!e.shiftKey){ selSet.clear(); sel=-1; showKf(); draw(); } return; }
+  if(e.shiftKey){ if(selSet.has(i)&&selSet.size>1) selSet.delete(i); else selSet.add(i); }
+  else if(!selSet.has(i)){ selSet.clear(); selSet.add(i); }
+  sel=i; showKf(); draw();
+
+  const start=pts.map(p=>({x:p.x,y:p.y})), moving=[...selSet];
+  const mv=ev=>{
+    const [nx,ny]=at(ev);
+    const dx=(nx-mx)/c.width, dy=-(ny-my)/c.height;
+    moving.forEach(k=>{
+      let px=start[k].x+dx, py=Math.max(0,Math.min(1,start[k].y+dy));
+      if(k===0) px=0; else if(k===pts.length-1) px=1;
+      pts[k].x=Math.max(0,Math.min(1,px));
+      pts[k].y=snapY(py);
+    });
+    showKf(); draw();
+  };
+  const up=()=>{ removeEventListener('mousemove',mv); removeEventListener('mouseup',up); reorder(); };
+  addEventListener('mousemove',mv); addEventListener('mouseup',up);
+});
+
+function reorder(){
+  const keep=[...selSet].map(i=>pts[i]), primary=sel>=0?pts[sel]:null;
+  pts.sort((a,b)=>a.x-b.x);
+  selSet=new Set(keep.map(o=>pts.indexOf(o)).filter(i=>i>=0));
+  sel = primary ? pts.indexOf(primary) : -1;
+  showKf(); draw();
+}
+
+/* "To add a keyframe, double click the curve where you want to add it."
+   "To remove a keyframe, double click it." */
+c.addEventListener('dblclick',e=>{
+  const [mx,my]=at(e), i=pick(mx,my);
+  if(i>=0){
+    if(i>0 && i<pts.length-1){ pts.splice(i,1); selSet.clear(); sel=-1; showKf(); draw(); }
+    return;
+  }
+  const t=Math.max(0,Math.min(1,mx/c.width));
+  const onCurve=(1-valueAt(t))*c.height;
+  let v = Math.abs(onCurve-my)<10 ? valueAt(t) : Math.max(0,Math.min(1,1-my/c.height));
+  pts.push({x:t, y:snapY(v), c:'Linear'});
+  pts.sort((a,b)=>a.x-b.x);
+  selSet.clear(); sel=pts.findIndex(p=>p.x===t); if(sel>=0) selSet.add(sel);
+  showKf(); draw();
+});
+
+c.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  const [mx,my]=at(e), i=pick(mx,my);
+  if(i<0) return;
+  if(!selSet.has(i)){ selSet.clear(); selSet.add(i); }
+  sel=i; showKf(); draw();
+  curveMenu(e.clientX, e.clientY);
+});
+
+/* ---- keyframe read-out / manual entry ---------------------------------- */
+function showKf(){
+  const has = sel>=0;
+  $('#kIdx').textContent = has ? (selSet.size>1 ? (sel+1)+' of '+pts.length+' · '+selSet.size+' selected'
+                                                : (sel+1)+' of '+pts.length) : 'N/A';
+  $('#kPhase').disabled = !has; $('#kValue').disabled = !has;
+  if(has){ $('#kPhase').value = pts[sel].x.toFixed(3); $('#kValue').value = pts[sel].y.toFixed(3); }
+  else { $('#kPhase').value=''; $('#kValue').value=''; }
+  const curvable = sel>0;
+  $('#kCurve').disabled = !curvable; $('#interp').disabled = !curvable;
+  const label = curvable ? pts[sel].c : 'Linear';
+  $('#kCurve').innerHTML = label+'<span class="car">▾</span>';
+  $('#interp').innerHTML = label+'<span class="car">▾</span>';
+}
+$('#kPhase').addEventListener('change',()=>{
+  if(sel<0) return;
+  let v=Math.max(0,Math.min(1, parseFloat($('#kPhase').value)||0));
+  if(sel===0) v=0; else if(sel===pts.length-1) v=1;
+  pts[sel].x=v; reorder();
+});
+$('#kValue').addEventListener('change',()=>{
+  if(sel<0) return;
+  pts[sel].y=snapY(Math.max(0,Math.min(1, parseFloat($('#kValue').value)||0)));
+  showKf(); draw();
+});
+
+/* "you can also use the arrow keys to nudge the keyframe into the sweet
+    spot. The shift modifier also works for bigger increments." */
+addEventListener('keydown',e=>{
+  if(sel<0) return;
+  const tag=e.target.tagName;
+  if(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') return;
+  const step=e.shiftKey?0.02:0.004;
+  const move=d=>{
+    [...selSet].forEach(i=>{
+      if(i===0||i===pts.length-1) return;
+      pts[i].x=Math.max(0,Math.min(1,pts[i].x+d));
+    });
+    reorder(); e.preventDefault();
+  };
+  if(e.key==='ArrowLeft') move(-step);
+  else if(e.key==='ArrowRight') move(step);
+  else if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+    const d=(e.key==='ArrowUp'?1:-1)*step;
+    [...selSet].forEach(i=>{ pts[i].y=snapY(Math.max(0,Math.min(1,pts[i].y+d))); });
+    showKf(); draw(); e.preventDefault();
+  }
+  else if(e.key==='Delete'||e.key==='Backspace'){
+    const gone=[...selSet].filter(i=>i>0&&i<pts.length-1).map(i=>pts[i]);
+    if(!gone.length) return;
+    pts=pts.filter(p=>!gone.includes(p));
+    selSet.clear(); sel=-1; showKf(); draw(); e.preventDefault();
+  }
+});
+
+/* ---- toolbar ----------------------------------------------------------- */
+$('#addKf').addEventListener('click',()=>{
+  const t=.5, v=snapY(valueAt(t));
+  pts.push({x:t, y:v, c:'Linear'});
+  pts.sort((a,b)=>a.x-b.x);
+  selSet.clear(); sel=pts.findIndex(p=>p.x===t&&p.y===v); if(sel>=0) selSet.add(sel);
+  showKf(); draw();
+});
+$('#delKf').addEventListener('click',()=>{
+  const gone=[...selSet].filter(i=>i>0&&i<pts.length-1).map(i=>pts[i]);
+  if(!gone.length) return;
+  pts=pts.filter(p=>!gone.includes(p));
+  selSet.clear(); sel=-1; showKf(); draw();
+});
+$('#resetKf').addEventListener('click',()=>{
+  const U=userPresets();
+  loadPreset(name, U[name]);
+});
+$('#ptype').addEventListener('change',()=>{
+  pts.forEach(p=>p.y=snapY(p.y));
+  showKf(); draw();
+});
+$('#playBtn').addEventListener('click',e=>{
+  playing=!playing; t0=performance.now(); ph=0; pingDir=1; randT=0; randPh=0;
+  e.currentTarget.classList.toggle('on',playing);
+  e.currentTarget.textContent = playing ? '■ Stop' : '▶ Preview';
+  if(!playing) draw();
+});
+$$('input[type=range][data-out]').forEach(r=>r.addEventListener('input',()=>{
+  r.parentElement.querySelector('output').value=r.value; }));
+$$('.sect > h3').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('folded')));
+
+/* ---- preview transport ------------------------------------------------- */
+function durationSeconds(){
+  const d=parseFloat($('#dur').value)||4;
+  return $('#durUnit').value==='Beats' ? d*60/120 : d;   /* 120 BPM, as the main window */
+}
+function advance(now){
+  const dur=Math.max(.1,durationSeconds())*1000, mode=$('#loop').value;
+  const raw=(now-t0)/dur;
+  if(mode==='Loop'){ ph=raw%1; }
+  else if(mode==='Ping Pong'){ const p=raw%2; ph = p<1 ? p : 2-p; }
+  else if(mode==='Random'){
+    if(now-randT > dur/4){ randT=now; randPh=Math.random(); }
+    ph=randPh;
+  }
+  else if(mode==='Play Once and Hold'){ ph=Math.min(1,raw); }
+  else { /* Play Once and Eject */
+    if(raw>=1){ playing=false; ph=0;
+      const b=$('#playBtn'); b.classList.remove('on'); b.textContent='▶ Preview'; }
+    else ph=raw;
+  }
+}
+function outputValue(){
+  const i=(+$('#inPt').value)/100, o=(+$('#outPt').value)/100;
+  const t=i+(o-i)*ph;
+  let v=valueAt(Math.max(0,Math.min(1,t)));
+  if($('#invert').checked) v=1-v;
+  return v;
+}
+function paint(){
+  const v=outputValue();
+  $('#curVal').textContent=v.toFixed(2);
+  $('#pslide i.in').style.left=(ph*100)+'%';
+  $('#pslide i.out').style.left=(Math.max(0,Math.min(1,v))*100)+'%';
+}
+(function loop(){
+  if(playing){ advance(performance.now()); draw(); paint(); }
+  requestAnimationFrame(loop);
+})();
+
+/* ---- boot -------------------------------------------------------------- */
+$('#kValLabel').textContent=PARAM.name;
+$('#outLabel').textContent=PARAM.name;
+$('#appliedTo').textContent=PARAM.owner+' · '+PARAM.name;
+readTokens();
+showKf();
+resize();
+paint();
+</script>
+</body>
+</html>

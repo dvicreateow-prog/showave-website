@@ -1,0 +1,628 @@
+/* SHOWAVE GSL5 companion library
+   --------------------------------------------------------------------------
+   The lighting library is a non-modal floating work surface. It deliberately
+   borrows the compact browser anatomy already used by #rightCol while keeping
+   its own selectors and lifecycle: lighting configuration and show assets do
+   not become media-browser categories. All colour comes from the active
+   SHOWAVE appearance tokens so dark, light and custom themes stay aligned. */
+
+#glibWindow{
+  position:fixed;
+  z-index:880;
+  right:386px;
+  bottom:22px;
+  width:clamp(330px,29vw,390px);
+  height:clamp(352px,45vh,420px);
+  min-width:300px;
+  min-height:260px;
+  max-width:calc(100vw - 16px);
+  max-height:calc(100vh - 52px);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  resize:both;
+  color:var(--txt);
+  background:var(--panel);
+  border:1px solid var(--glass-border,var(--line2));
+  border-radius:var(--radius-md,4px);
+  box-shadow:var(--shadow-lg,0 12px 38px var(--menu-shadow));
+  font:var(--font);
+  isolation:isolate;
+}
+
+#glibWindow[hidden]{ display:none; }
+#glibWindow[data-glib-minimized="true"]{
+  height:25px !important;
+  min-height:25px;
+  resize:none;
+}
+#glibWindow.minimized{
+  height:25px !important;
+  min-height:25px;
+  resize:none;
+}
+#glibWindow[data-glib-minimized="true"] > :not(.glib-header),
+#glibWindow.minimized > :not(.glib-header){ display:none; }
+#glibWindow[data-glib-dragging="true"]{ opacity:.96; }
+
+.glib-header{
+  flex:0 0 25px;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:2px 4px 2px 7px;
+  overflow:hidden;
+  color:var(--txt-hi);
+  background:var(--head);
+  border-bottom:1px solid var(--glass-border,var(--line));
+  cursor:move;
+  touch-action:none;
+  user-select:none;
+}
+.glib-mark{
+  flex:0 0 auto;
+  padding:0 4px;
+  color:var(--mint);
+  border:1px solid color-mix(in srgb,var(--mint) 55%,var(--line2));
+  border-radius:2px;
+  font-size:8.5px;
+  font-weight:700;
+  letter-spacing:.04em;
+  line-height:14px;
+}
+#glibTitle{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:11px;
+  font-weight:600;
+}
+.glib-title-action,
+.glib-window-action{
+  appearance:none;
+  flex:0 0 auto;
+  height:19px;
+  border:1px solid transparent;
+  border-radius:2px;
+  color:var(--txt-dim);
+  background:transparent;
+  cursor:pointer;
+  line-height:17px;
+}
+.glib-title-action{
+  margin-left:auto;
+  padding:0 6px;
+  border-color:var(--glass-border,var(--line2));
+  color:var(--txt);
+  background:var(--inset);
+  font-size:9.5px;
+}
+.glib-window-action{
+  width:21px;
+  padding:0;
+  font-size:15px;
+}
+.glib-title-action:hover,
+.glib-window-action:hover{
+  color:var(--txt-hi);
+  background:color-mix(in srgb,var(--mint) 10%,var(--panel2));
+  border-color:var(--mint);
+}
+.glib-window-action.glib-close:hover{
+  color:var(--txt-hi);
+  background:var(--red);
+  border-color:var(--red);
+}
+
+.glib-tabs{
+  flex:0 0 auto;
+  display:flex;
+  min-width:0;
+  overflow-x:auto;
+  scrollbar-width:none;
+  background:color-mix(in srgb,var(--head) 86%,var(--inset));
+  border-bottom:1px solid var(--glass-border,var(--line));
+}
+.glib-tabs::-webkit-scrollbar{ display:none; }
+.glib-tab{
+  appearance:none;
+  flex:1 1 0;
+  min-width:43px;
+  height:22px;
+  padding:3px 4px;
+  overflow:hidden;
+  border:0;
+  border-radius:0;
+  color:var(--txt-dim);
+  background:transparent;
+  font:inherit;
+  font-size:10px;
+  line-height:16px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.glib-tab:hover{ color:var(--txt-hi); }
+.glib-tab.on,
+.glib-tab[aria-selected="true"]{
+  color:var(--txt-hi);
+  background:var(--panel);
+  box-shadow:inset 0 -2px 0 var(--mint);
+}
+
+.glib-toolbar{
+  flex:0 0 25px;
+  display:flex;
+  align-items:center;
+  padding:2px 5px;
+  background:var(--panel);
+  border-bottom:1px solid var(--glass-border,var(--line));
+}
+.glib-search-field{
+  position:relative;
+  display:flex;
+  flex:1 1 auto;
+  min-width:0;
+  align-items:center;
+}
+#glibSearch{
+  width:100%;
+  height:20px;
+  min-width:0;
+  padding:1px 25px 1px 6px;
+  border:1px solid var(--glass-border,var(--line2));
+  border-radius:2px;
+  outline:0;
+  color:var(--txt);
+  background:var(--inset);
+  font:inherit;
+  user-select:text;
+}
+#glibSearch::placeholder{ color:var(--txt-dim); }
+#glibSearchClear{
+  appearance:none;
+  position:absolute;
+  right:2px;
+  width:20px;
+  height:18px;
+  padding:0;
+  border:0;
+  color:var(--txt-dim);
+  background:transparent;
+  line-height:18px;
+  cursor:pointer;
+}
+#glibSearchClear:hover{ color:var(--txt-hi); }
+
+.glib-import-tools{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  min-height:27px;
+  padding:3px 5px;
+  overflow-x:auto;
+  border-bottom:1px solid var(--glass-border,var(--line));
+  background:color-mix(in srgb,var(--mint) 5%,var(--panel2));
+  scrollbar-width:none;
+}
+.glib-import-tools[hidden]{ display:none; }
+.glib-import-tools::-webkit-scrollbar{ display:none; }
+.glib-import-tools :is(button,a){
+  appearance:none;
+  flex:0 0 auto;
+  min-height:19px;
+  padding:1px 6px;
+  border:1px solid var(--glass-border,var(--line2));
+  border-radius:2px;
+  color:var(--txt);
+  background:var(--btn);
+  font:inherit;
+  font-size:8.5px;
+  font-weight:650;
+  line-height:15px;
+  text-decoration:none;
+  cursor:pointer;
+}
+.glib-import-tools :is(button,a):hover{ color:var(--txt-hi); border-color:var(--mint); }
+#glibPersonalityCount{ margin-left:auto; color:var(--txt-dim); font-size:8.5px; white-space:nowrap; }
+
+.glib-tree{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  outline:0;
+  color:var(--txt);
+  background:color-mix(in srgb,var(--panel) 90%,var(--inset));
+  font-size:11.5px;
+}
+.glib-tree:empty::before{
+  content:"No lighting items in this panel";
+  display:block;
+  padding:12px 10px;
+  color:var(--txt-dim);
+  font-size:10.5px;
+}
+.glib-section{
+  position:sticky;
+  top:0;
+  z-index:1;
+  min-height:19px;
+  padding:2px 8px;
+  color:var(--mint);
+  background:color-mix(in srgb,var(--mint) 7%,var(--panel2));
+  border-bottom:1px solid color-mix(in srgb,var(--line) 74%,transparent);
+  font-size:9.5px;
+  font-weight:600;
+  letter-spacing:.035em;
+  line-height:15px;
+  text-transform:uppercase;
+}
+.glib-row{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-rows:auto auto;
+  align-items:center;
+  column-gap:7px;
+  min-height:34px;
+  padding:4px 7px 4px 9px;
+  border-bottom:1px solid color-mix(in srgb,var(--line) 66%,transparent);
+  outline:0;
+  color:var(--txt);
+  background:transparent;
+}
+.glib-row:hover{
+  color:var(--txt-hi);
+  background:color-mix(in srgb,var(--mint) 9%,var(--panel2));
+}
+.glib-row.sel,
+.glib-row[aria-selected="true"]{
+  color:var(--txt-hi);
+  background:color-mix(in srgb,var(--mint) 17%,var(--panel2));
+  box-shadow:inset 2px 0 0 var(--mint);
+}
+.glib-row[draggable="true"]{ cursor:grab; }
+.glib-row[draggable="true"]:active{ cursor:grabbing; }
+.glib-row-main{
+  grid-column:1;
+  grid-row:1;
+  min-width:0;
+  overflow:hidden;
+  color:inherit;
+  font-size:11px;
+  font-weight:600;
+  line-height:14px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.glib-row-meta{
+  grid-column:1;
+  grid-row:2;
+  min-width:0;
+  overflow:hidden;
+  color:var(--txt-dim);
+  font-size:9.5px;
+  font-weight:400;
+  line-height:12px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.glib-row.sel .glib-row-meta,
+.glib-row[aria-selected="true"] .glib-row-meta{ color:var(--txt); }
+.glib-badge{
+  grid-column:2;
+  grid-row:1 / span 2;
+  max-width:72px;
+  overflow:hidden;
+  padding:1px 4px;
+  border:1px solid color-mix(in srgb,var(--mint) 42%,var(--line2));
+  border-radius:2px;
+  color:var(--mint);
+  background:color-mix(in srgb,var(--mint) 7%,var(--inset));
+  font-size:8px;
+  font-weight:700;
+  line-height:13px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.glib-row.glib-catalog-row{
+  grid-template-columns:minmax(0,1fr) auto auto;
+  grid-template-areas:"main badge action" "meta meta action";
+}
+.glib-row-action{
+  grid-area:action;
+  align-self:center;
+  min-width:42px;
+  min-height:22px;
+  margin-left:2px;
+  padding:1px 5px;
+  border:1px solid color-mix(in srgb,var(--mint) 55%,var(--line2));
+  border-radius:2px;
+  color:var(--mint);
+  background:color-mix(in srgb,var(--mint) 8%,var(--inset));
+  font:inherit;
+  font-size:8px;
+  font-weight:700;
+  cursor:pointer;
+}
+.glib-row-action:hover{ color:var(--txt-hi); background:color-mix(in srgb,var(--mint) 20%,var(--panel2)); }
+.glib-row.sel .glib-badge,
+.glib-row[aria-selected="true"] .glib-badge{
+  border-color:var(--mint);
+  color:var(--txt-hi);
+}
+.glib-empty{
+  padding:11px 10px;
+  color:var(--txt-dim);
+  font-size:10.5px;
+  line-height:1.45;
+}
+.glib-tree [data-glib-action]{
+  appearance:none;
+  width:calc(100% - 12px);
+  min-height:23px;
+  margin:5px 6px;
+  padding:3px 7px;
+  border:1px solid var(--glass-border,var(--line2));
+  border-radius:2px;
+  color:var(--txt);
+  background:var(--inset);
+  font:inherit;
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:.035em;
+  text-align:left;
+  cursor:pointer;
+}
+.glib-tree [data-glib-action]:hover{
+  border-color:var(--mint);
+  color:var(--txt-hi);
+  background:color-mix(in srgb,var(--mint) 10%,var(--panel2));
+}
+/* The renderer may reuse SHOWAVE's proven tree rows or emit the dedicated
+   glib names below. Both remain strictly scoped to this window. */
+.glib-tree :is(.tgroup,.glib-group,.glib-section){
+  padding:2px 8px;
+  color:var(--mint);
+  background:color-mix(in srgb,var(--mint) 6%,var(--panel2));
+  border-bottom:1px solid color-mix(in srgb,var(--line) 74%,transparent);
+  line-height:16px;
+}
+.glib-tree :is(.titem,.tree-category,.tree-plugin,.tree-preset,.glib-item,.glib-row){
+  min-height:20px;
+  color:var(--txt);
+}
+.glib-tree :is(.titem,.tree-category,.tree-plugin,.tree-preset,.glib-item,.glib-row):hover{
+  color:var(--txt-hi);
+  background:color-mix(in srgb,var(--mint) 9%,var(--panel2));
+}
+.glib-tree :is(.titem,.tree-category,.tree-plugin,.tree-preset,.glib-item,.glib-row).sel,
+.glib-tree :is(.titem,.tree-category,.tree-plugin,.tree-preset,.glib-item,.glib-row)[aria-selected="true"]{
+  color:var(--mint-t);
+  background:var(--mint);
+}
+.glib-section{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  min-height:20px;
+  font-weight:600;
+}
+.glib-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"main badge" "meta badge";
+  align-items:center;
+  gap:0 7px;
+  padding:3px 8px 3px 20px;
+  border-bottom:1px solid color-mix(in srgb,var(--line2) 34%,transparent);
+  line-height:14px;
+}
+.glib-row-main{
+  grid-area:main;
+  min-width:0;
+  overflow:hidden;
+  color:inherit;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.glib-row-meta{
+  grid-area:meta;
+  min-width:0;
+  overflow:hidden;
+  color:var(--txt-dim);
+  font-size:9.5px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.glib-badge{
+  grid-area:badge;
+  align-self:center;
+  padding:0 3px;
+  border:1px solid var(--glass-border,var(--line2));
+  border-radius:2px;
+  color:var(--txt-dim);
+  background:var(--inset);
+  font-size:8px;
+  font-weight:600;
+  line-height:13px;
+  white-space:nowrap;
+}
+.glib-empty{
+  padding:14px 10px;
+  color:var(--txt-dim);
+  font-size:10.5px;
+  line-height:1.45;
+  text-align:center;
+}
+.glib-tree [data-glib-action]{
+  appearance:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:19px;
+  margin:4px;
+  padding:1px 7px;
+  border:1px solid var(--glass-border,var(--line2));
+  border-radius:2px;
+  color:var(--txt);
+  background:var(--btn);
+  font:inherit;
+  text-decoration:none;
+  cursor:pointer;
+}
+.glib-tree [data-glib-action]:hover{
+  color:var(--txt-hi);
+  border-color:var(--mint);
+  background:color-mix(in srgb,var(--mint) 9%,var(--btn-hi));
+}
+.glib-tree [draggable="true"]{ cursor:grab; }
+.glib-tree [draggable="true"]:active{ cursor:grabbing; }
+
+.glib-footer{
+  flex:0 0 auto;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  min-height:30px;
+  padding:4px 7px;
+  border-top:1px solid var(--glass-border,var(--line));
+  color:var(--txt-dim);
+  background:var(--head);
+  font-size:9.5px;
+}
+#glibHint{
+  margin:0;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#glibStatus{
+  color:var(--amber);
+  font:inherit;
+  font-weight:600;
+  white-space:nowrap;
+}
+#glibStatus[data-state="armed"]{ color:var(--red); }
+#glibStatus[data-state="connected"]{ color:var(--mint); }
+
+#glibWindow :is(button,input,[tabindex]):focus-visible{
+  outline:2px solid var(--mint);
+  outline-offset:-2px;
+}
+
+/* The selected SHOWAVE Clip owns this compact lighting rack. It deliberately
+   reuses the host's dark panels and blue/mint accents instead of introducing
+   a second visual language for GSL5. */
+.lighting-quantity-control{
+  display:grid;
+  grid-template-columns:24px minmax(52px,1fr) 24px;
+  align-items:center;
+  gap:3px;
+}
+.lighting-quantity-control :is(button,input),
+.lighting-clip-actions button,
+.lighting-effect-row button{
+  min-height:22px;
+  border:1px solid var(--line,#35383d);
+  border-radius:3px;
+  background:var(--panel2,#16181b);
+  color:var(--txt,#cdd2d8);
+  font:700 10px/1 system-ui,sans-serif;
+}
+.lighting-quantity-control input{
+  width:100%;
+  min-width:0;
+  padding:3px 6px;
+  text-align:center;
+}
+.lighting-quantity-control button:hover,
+.lighting-clip-actions button:hover,
+.lighting-effect-row button:hover:not(:disabled){
+  border-color:var(--blue,#168cff);
+  color:var(--txt-hi,#fff);
+}
+.lighting-needs-patch{ color:var(--amber,#ffb547)!important; }
+.lighting-clip-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:5px 8px 7px 24px;
+  color:var(--txt-dim,#848b94);
+  font-size:9px;
+}
+.lighting-clip-actions button{ padding:3px 8px; color:var(--mint,#38c997); }
+.lighting-effect-row{
+  display:grid;
+  grid-template-columns:26px minmax(0,1fr) auto;
+  align-items:center;
+  gap:6px;
+  min-height:38px;
+  padding:4px 6px;
+  border-bottom:1px solid var(--line,#2d3035);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--blue,#168cff) 8%,transparent),transparent 58%);
+}
+.lighting-effect-row.bypassed{ opacity:.52; }
+.lighting-effect-row > span{ min-width:0; }
+.lighting-effect-row strong,
+.lighting-effect-row small{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lighting-effect-row strong{ color:var(--txt-hi,#eef3f8); font-size:10px; }
+.lighting-effect-row small{ margin-top:3px; color:var(--txt-dim,#848b94); font-size:8.5px; }
+.lighting-effect-toggle{ color:var(--blue,#168cff)!important; }
+.lighting-effect-actions{ display:flex; gap:2px; }
+.lighting-effect-actions button{ width:22px; padding:0; }
+.lighting-effect-actions button:disabled{ opacity:.25; }
+
+/* Existing CSS includes this accessibility helper on most builds. Keep a
+   local definition so the label remains correctly hidden if this stylesheet
+   is loaded independently during component tests. */
+#glibWindow .sr-only{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0;
+}
+
+@media (max-width:900px){
+  #glibWindow{
+    right:8px;
+    bottom:24px;
+    width:min(370px,calc(100vw - 16px));
+    height:min(390px,44vh);
+  }
+}
+
+@media (max-width:560px){
+  #glibWindow{
+    left:6px;
+    right:6px;
+    bottom:22px;
+    width:auto;
+    min-width:0;
+    height:min(360px,44vh);
+  }
+  .glib-tab{ min-width:48px; }
+  .glib-title-action{ max-width:75px; overflow:hidden; text-overflow:ellipsis; }
+}
+
+@media (max-height:650px){
+  #glibWindow{
+    bottom:21px;
+    height:min(310px,43vh);
+    min-height:230px;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  #glibWindow *{ scroll-behavior:auto !important; }
+}

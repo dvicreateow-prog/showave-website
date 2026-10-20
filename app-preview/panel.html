@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<title>Panel: SHOWAVE Live</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<script src="showave-brand.js"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="workspace.css">
+<link rel="stylesheet" href="openlive-phone-mirror.css">
+<link rel="stylesheet" href="advanced-output.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+/* ===========================================================================
+   panel.html — page-specific rules only.
+   The shell (.win-root .win-title .rlogo .statusline .tb-btn .win-chip) is
+   themed by windows.css and used as-is; the panel itself (.ws-panel .ws-head
+   .ws-title .ws-btn .ws-body) by workspace.css. Nothing below re-declares any
+   of those rules — this file only says how the one panel fills the window.
+   =========================================================================== */
+
+/* An undocked panel runs edge to edge. Its one shared header owns the panel
+   menu and drag gesture; a second dock-card title would repeat that row. */
+#wsPop > .ws-panel{ flex:1; min-width:0; border:0; border-radius:0; }
+
+/* the title strip's secondary text, same role as the other windows' subtitle.
+   An undocked window can be dragged very narrow, so the subtitle is the part
+   that gives way — never the buttons on the right. */
+.win-title .sub{ color:var(--n600); font-variant-numeric:tabular-nums;
+  min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.win-title #ptitle{ white-space:nowrap; }
+
+/* menu group heading and menu footnote — the house's tiny-meta type, the same
+   two helpers the workspace window's menus use */
+/* CASING. Resolume shouts in the string, never with a stylesheet: of the 878
+   keys in reference/docs/gui/English.txt exactly 25 are all-caps, and each is a
+   compact transport/action button (RECORD, STOP, TAP, RESYNC, LINK, PAUSE,
+   METRONOME, PICK, ADD), an alarm (LOW MEMORY!!) or an acronym. Section
+   headers, menu group headings, tab labels, column headers and state chips are
+   Title Case throughout the string table and all 83 manual pages. The blanket
+   text-transform rules in this window were removed for that reason and the
+   caps-tuned tracking relaxed with them; nocturne.css and windows.css, which
+   this window also loads, no longer shout their equivalents, so leaving these
+   would paint one class of element in two conventions in one window. */
+.dd-head{ padding:5px 22px 2px 24px; font-size:9.5px; letter-spacing:.01em; color:var(--n700); cursor:default; }
+.dd-note{ padding:1px 22px 5px 24px; font-size:9.5px; color:var(--n700);
+  white-space:normal; max-width:280px; cursor:default; }
+
+/* the status line's running hint */
+.statusline .hint{ font-size:10.5px; color:var(--n600); flex:0 1 auto; min-width:0;
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+</style>
+</head>
+<body class="ws-popout win-root">
+
+<!-- ===== TITLE BAR ========================================================
+     The strip every OpenLive window wears, so an undocked panel reads as part
+     of the application. The manual: "This will create a new window which you
+     can drag onto your secondary, tertiary, quaternary … screen." — that is
+     what this window is for, and what the chip on the right says.
+     ==================================================================== -->
+<div class="win-title" id="winTitle">
+  <span data-showave-brand="live">SHOWAVE Live</span><span id="ptitle">Panel</span>
+  <span class="sub" id="psub"></span>
+  <span class="sp"></span>
+  <span class="win-chip on" id="screenChip"
+        title="Drag this window onto your secondary, tertiary, quaternary … screen">undocked</span>
+  <button class="tb-btn small" id="btnMax" title="Fill this screen">Maximise</button>
+  <button class="tb-btn small" id="btnDock"
+          title="Dock this area back into the workspace window">Dock</button>
+  <button class="tb-btn small" id="btnMenu"
+          aria-label="Panel menu"
+          title="The panel menu: the same menu right-clicking the top of the panel gives">≡</button>
+</div>
+
+<!-- ===== THE PANEL ===== -->
+<div id="wsPop"></div>
+
+<!-- ===== STATUS LINE ===== -->
+<div class="statusline">
+  <span class="conn offline" id="conn">Offline</span>
+  <span class="hint" id="hint"></span>
+  <span style="margin-left:auto"></span>
+  <span class="v" id="clock">00:00</span>
+</div>
+
+<!-- Connected Outputs come from the machine, not from arena-data.js, which
+     no longer ships the three invented displays it used to. Without this
+     module advanced-output.js falls back to an empty group. -->
+<script src="openlive-displays.js"></script>
+<script src="arena-data.js"></script>
+<script src="resolume-extracted.js"></script>
+<script src="arena-live.js"></script>
+<script src="workspace.js"></script>
+<script src="openlive-phone-mirror.js"></script>
+<script src="panel-kit.js"></script>
+<script src="panels/layers-and-clips.js"></script>
+<script src="panels/toolbar.js"></script>
+<script src="panels/monitor.js"></script>
+<script src="panels/composition.js"></script>
+<script src="panels/layer.js"></script>
+<script src="panels/clip.js"></script>
+<script src="panels/column.js"></script>
+<script src="panels/group.js"></script>
+<script src="panels/files.js"></script>
+<script src="panels/compositions.js"></script>
+<script src="panels/effects.js"></script>
+<script src="panels/sources.js"></script>
+<script src="panels/slices.js"></script>
+<script src="advanced-output.js"></script>
+<script src="panels/clip-time.js"></script>
+<script src="panels/notes.js"></script>
+<script src="panels/recording.js"></script>
+<script src="panels/render-queue.js"></script>
+<script src="panels/shortcuts.js"></script>
+<script src="panels/smpte.js"></script>
+<script>
+/* An undocked panel is the same module, in its own OS window, with its own
+   connection to the same Arena. Closing it hands the panel back to the
+   workspace that opened it (workspace.js polls for the close).
+
+   Everything this window does past that comes straight out of the Layouts
+   chapter of the manual:
+
+     "To undock a panel from the main interface, right click on the panel and
+      select undock. This will create a new window which you can drag onto your
+      secondary, tertiary … screen."      → this page, with a real title bar
+     "You can undock multiple panels at the same time."
+                                          → Duplicate opens a second window
+     "To restore a panel simply drag and drop the panel (not the window) back
+      into a window."                     → the panel's title bar is the drag
+                                            handle, and dragging it out of this
+                                            window docks it back
+     "Panels can be hidden by right clicking the top of the panel and selecting
+      the hide option."                   → the contextual menu on .ws-head
+     "To make hidden panels reappear go to the View menu and select them there."
+                                          → said in the menu, next to Hide
+     "To create multiple monitors, simply right click on an existing monitor and
+      press duplicate."                   → Duplicate, for type=Monitor
+*/
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const q = new URLSearchParams(location.search);
+const type = q.get('type') || 'Clip';
+let payload = null;
+try { payload = JSON.parse(q.get('node') || 'null'); } catch {}
+const node = Object.assign({}, payload || {}, { type, uid: q.get('uid') || 'pop_' + Date.now(), leaf: true,
+  subject_type: q.get('subject') || undefined,
+  instance: q.get('instance') || undefined });
+
+const WS = window.Workspace;
+const title = WS.titleOf(type);
+const HINT = 'Drag the area header onto an edge to split, or into the centre to tab · Dock returns this area to its previous position';
+
+document.title = title + ': SHOWAVE Live';
+$('#ptitle').textContent = title;
+const detail = [node.subject_type, node.instance ? '#' + node.instance : '']
+  .filter(Boolean).join(' ');
+$('#psub').textContent = detail || '';
+$('#hint').textContent = HINT;
+
+/* ---- the panel ---------------------------------------------------------
+   The shared header already supplies the panel's menu and drag handle. Keep
+   those listeners on that element when native chrome turns it into a toolbar. */
+const host  = $('#wsPop');
+const panel = document.createElement('div');
+panel.className = 'ws-panel';
+panel.dataset.type = type;
+panel.dataset.uid = node.uid;
+
+const head = $('#winTitle');
+head.draggable = true;
+
+const body = document.createElement('div');
+body.className = 'ws-body';
+panel.appendChild(body);
+host.appendChild(panel);
+
+/* build through the registry, exactly as the docked case does */
+(function build(){
+  const reg = WS.get(type);
+  if (reg && reg.build) { try { reg.build(body, node, WS); } catch(e){ console.error(e); } }
+  else body.innerHTML = `<div class="ws-todo"><b>${type}</b><span>no panel module registered</span></div>`;
+})();
+addEventListener('beforeunload', () => {
+  const reg = WS.get(type);
+  if (reg && reg.destroy) { try { reg.destroy(body, node); } catch {} }
+});
+
+/* ---- the workspace that opened us ---------------------------------------
+   Everything that puts the panel back is really an operation on that window,
+   so every reach for it is guarded: opened straight from the address bar there
+   is no opener, and the window says so rather than pretending. */
+function ws(){
+  try { const o = window.opener; return (o && !o.closed && o.Workspace) ? o : null; }
+  catch { return null; }
+}
+let noteT = 0;
+function note(t){
+  const h = $('#hint');
+  h.textContent = t; h.style.color = 'var(--a300)';
+  clearTimeout(noteT);
+  noteT = setTimeout(() => { h.textContent = HINT; h.style.color = ''; }, 5000);
+}
+
+/* ---- one popup menu at a time, in the chrome the rest of the app uses ---- */
+let dd = [];
+function closeDD(n = 0){ while (dd.length > n) dd.pop().remove(); }
+addEventListener('mousedown', e => {
+  if (dd.length && !(e.target.closest && e.target.closest('.dropdown'))) closeDD();
+}, true);
+addEventListener('keydown', e => { if (e.key === 'Escape') closeDD(); });
+function buildDD(items, x, y, lvl){
+  closeDD(lvl);
+  const d = document.createElement('div');
+  d.className = 'dropdown';
+  items.forEach(it => {
+    if (it.sep)  { const s = document.createElement('div'); s.className = 'dd-sep';  d.appendChild(s); return; }
+    if (it.head) { const h = document.createElement('div'); h.className = 'dd-head'; h.textContent = it.head; d.appendChild(h); return; }
+    if (it.note) { const n = document.createElement('div'); n.className = 'dd-note'; n.textContent = it.note; d.appendChild(n); return; }
+    const e = document.createElement('div');
+    e.className = 'dd-item' + (it.dis ? ' disabled' : '');
+    e.innerHTML = `<span class="chk">${it.on ? '✓' : ''}</span><span></span>`;
+    e.lastChild.textContent = it.l;
+    if (it.title) e.title = it.title;
+    if (!it.dis) e.addEventListener('click', () => { closeDD(); if (it.fn) it.fn(); });
+    d.appendChild(e);
+  });
+  document.body.appendChild(d);
+  const r = d.getBoundingClientRect();
+  d.style.left = Math.max(4, Math.min(x, innerWidth  - r.width  - 4)) + 'px';
+  d.style.top  = Math.max(4, Math.min(y, innerHeight - r.height - 4)) + 'px';
+  dd.push(d);
+  return d;
+}
+
+/* ---- the panel's contextual menu, on the top of the panel ---------------- */
+function panelMenu(x, y){
+  const linked = !!ws();
+  const items = [
+    { head: title },
+    { l:'Hide', dis: linked ? 0 : 1, fn: hidePanel,
+      title:'Panels can be hidden by right clicking the top of the panel and selecting the hide option' },
+    { note:'To make hidden panels reappear go to the View menu and select them there.' },
+    { l:'Undock', on:true, dis:1,
+      title:'Already undocked: this window is the panel’s own window' },
+  ];
+  items.push({ l:'Duplicate Area', dis: linked ? 0 : 1, fn: duplicateArea,
+    title:'Open an independent copy of this area' });
+  items.push({ sep:1 },
+    { l:'Restore', dis: linked ? 0 : 1, fn: dockBack,
+      title:'To restore a panel simply drag and drop the panel (not the window) back into a window' });
+  if (!linked)
+    items.push({ note:'The workspace window that opened this panel is not reachable, so Hide and Restore are unavailable here.' });
+  buildDD(items, x, y, 0);
+}
+head.addEventListener('contextmenu', e => { e.preventDefault(); panelMenu(e.clientX, e.clientY); });
+$('#btnMenu').addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  panelMenu(r.left - 130, r.bottom + 4);
+});
+
+/* ---- hide -----------------------------------------------------------------
+   The workspace polls for this window's close and re-docks the panel when it
+   goes, so a hide has to land after that restore. setTimeout is deliberately
+   handed a string: the callback then belongs to the workspace's own window and
+   survives this one closing. */
+function hidePanel(){
+  const op = ws();
+  if (!op) return note('No workspace window to hide this panel in.');
+  try { op.Workspace.hidePanel(node.uid); } catch {}
+  try { op.focus(); } catch {}
+  closeSelf('Hidden. Bring it back from the View menu in the workspace window.');
+}
+
+/* ---- restore ---------------------------------------------------------------
+   "To restore a panel simply drag and drop the panel (not the window) back into
+   a window." Closing is the restore: workspace.js is already watching for it. */
+function dockBack(){
+  const op = ws();
+  if (!op) return note('No workspace window to dock into. This panel was opened on its own.');
+  try { op.focus(); } catch {}
+  try { op.Workspace.redock(node.uid); } catch {}
+  closeSelf('Docked back into the workspace window.');
+}
+function closeSelf(msg){
+  window.close();
+  /* a window the page did not open cannot be closed by script — say so rather
+     than leaving the click looking broken */
+  setTimeout(() => { if (!window.closed) note(msg + ' (this browser kept the window open; close it yourself)'); }, 400);
+}
+$('#btnDock').addEventListener('click', dockBack);
+
+/* ---- drag the panel, not the window, back into a window -------------------
+   The head carries the same payload workspace.js's drop targets read, and a
+   drag that leaves this window is treated as the drop: the only window that can
+   take the panel is the one that undocked it. */
+head.addEventListener('dragstart', e => {
+  if(e.target.closest('a,button,input,select,.menu-top')){ e.preventDefault(); return; }
+  try { e.dataTransfer.setData('text/plain', JSON.stringify({ ws:'tab', uid:node.uid, type })); } catch {}
+  e.dataTransfer.effectAllowed = 'move';
+});
+
+/* ---- duplicate ------------------------------------------------------------
+   "To create multiple monitors, simply right click on an existing monitor and
+   press duplicate." Undocked, a duplicate is a second undocked window —
+   "You can undock multiple panels at the same time." */
+function duplicateArea(){
+  const op = ws();
+  if (!op) return note('No workspace window to duplicate this area in.');
+  const copy = op.Workspace.duplicate(node.uid);
+  note(copy ? 'Area duplicated in another window.' : 'The browser blocked the duplicate window.');
+}
+
+/* ---- this window on this screen -------------------------------------------
+   Maximise is the one bit of window chrome a page may genuinely drive on a
+   window it was opened by. If the browser refuses, the button says so and goes
+   dead rather than lying. */
+let restoreGeom = null;
+$('#btnMax').addEventListener('click', () => {
+  const b = $('#btnMax');
+  if (!restoreGeom) {
+    const w0 = outerWidth;
+    restoreGeom = { x: screenX, y: screenY, w: outerWidth, h: outerHeight };
+    try { moveTo(0, 0); resizeTo(screen.availWidth, screen.availHeight); } catch {}
+    setTimeout(() => {
+      if (outerWidth === w0 && screen.availWidth !== w0) {
+        restoreGeom = null;
+        b.disabled = true;
+        b.title = 'This browser will not let the page resize this window';
+        note('This browser will not let the page resize its own window.');
+      } else { b.textContent = 'Restore Size'; b.classList.add('on'); }
+    }, 220);
+  } else {
+    const g = restoreGeom; restoreGeom = null;
+    try { moveTo(g.x, g.y); resizeTo(g.w, g.h); } catch {}
+    b.textContent = 'Maximise'; b.classList.remove('on');
+  }
+});
+
+/* ---- live status ---- */
+const AL = window.ArenaLive;
+function paintConn(){
+  const p = $('#conn');
+  p.className = 'conn ' + AL.status;
+  p.textContent = AL.status === 'live' ? 'LIVE' : AL.status === 'connecting' ? 'connecting' : 'offline';
+}
+AL.on('status', paintConn); paintConn();
+setInterval(() => { $('#clock').textContent =
+  new Date().toLocaleTimeString('en-GB').slice(0, 5); }, 1000);
+
+/* the chip reports whether this window still has a workspace behind it */
+(function paintChip(){
+  const c = $('#screenChip');
+  const linked = !!ws();
+  c.classList.toggle('on', linked);
+  c.textContent = linked ? 'undocked' : 'standalone';
+  c.title = linked
+    ? 'Drag this window onto your secondary, tertiary, quaternary … screen'
+    : 'Opened on its own. There is no workspace window to dock back into';
+  setTimeout(paintChip, 2000);
+})();
+})();
+</script>
+</body>
+</html>

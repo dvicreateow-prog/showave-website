@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script>
+<script src="openlive-control-icons.js?v=vector-2"></script>
+<link rel="stylesheet" href="openlive-icon-polish.css?v=vector-2">
+<script src="openlive-icon-polish.js?v=vector-2"></script>
+<meta charset="utf-8">
+<title>SHOWAVE Encode: Media Preparation</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="showave-brand.js"></script>
+<script src="openlive-interface-typography.js?v=interface-fonts-1"></script>
+<script src="openlive-appearance.js?v=interface-fonts-1"></script>
+<link rel="stylesheet" href="arena.css">
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="windows.css">
+<link rel="stylesheet" href="openlive-appearance.css?v=interface-fonts-1">
+<style>
+  /* ---- page shell only; every look comes from arena/nocturne/windows ---- */
+  #alleyRoot{ display:flex; flex-direction:column; height:100vh; overflow:hidden;
+    background:transparent; }
+  #menubar .logo{ display:flex; align-items:center; gap:var(--space-2);
+    padding:0 var(--space-4) 0 var(--space-3); font-size:11.5px; color:var(--n300); }
+  #menubar .logo b{ color:var(--color-accent); font-weight:600; letter-spacing:-.015em; }
+
+  .a-main{ flex:1; display:flex; min-height:0; }
+  .a-list{ flex:1; display:flex; flex-direction:column; min-width:0;
+    border-right:1px solid var(--glass-border);
+    background:color-mix(in srgb,var(--color-bg) 34%,transparent); }
+  .a-list .pbody{ padding:0; }
+  .a-side{ flex:0 0 320px; width:320px; overflow-y:auto;
+    display:flex; flex-direction:column;
+    background:
+      linear-gradient(180deg,var(--glass-reflection-start) 0,var(--glass-reflection-end) 32%),
+      color-mix(in srgb,var(--color-surface) 68%,var(--glass-bg));
+    box-shadow:inset 1px 0 0 var(--glass-caustic); }
+  .a-list > .browser-tools{
+    background:
+      linear-gradient(180deg,var(--glass-reflection-start) 0,var(--glass-reflection-end) 76%),
+      color-mix(in srgb,var(--color-surface) 58%,var(--glass-bg));
+    border-color:var(--glass-border); }
+
+  /* the Convert / Queue button lives on the bottom of the list, and the overall
+     progress takes over that same area while a conversion runs */
+  .a-action{ flex:0 0 auto; display:flex; align-items:center; gap:var(--space-3);
+    padding:var(--space-3) var(--space-4);
+    background:
+      linear-gradient(180deg,var(--glass-reflection-start) 0,var(--glass-reflection-end) 72%),
+      color-mix(in srgb,var(--color-surface) 62%,var(--glass-bg));
+    border-top:1px solid var(--glass-border); min-height:38px;
+    box-shadow:inset 0 1px 1px var(--glass-highlight); }
+  .a-action .prog{ display:none; }
+  .a-action.running .prog{ display:block; }
+  .a-action.running #actionBtn{ display:none; }
+  .a-action .a-hint{ font-size:10.5px; color:var(--n600); margin-left:auto;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .prog{ flex:1; min-width:0; height:16px; background:var(--inset);
+    border:1px solid var(--n800); border-radius:var(--radius-sm);
+    position:relative; overflow:hidden; }
+  .prog i{ position:absolute; inset:0 auto 0 0; width:0%;
+    background:linear-gradient(90deg,var(--a600),var(--color-accent)); }
+  .prog span{ position:absolute; inset:0; text-align:center; font-size:10px;
+    line-height:14px; color:var(--n200); font-variant-numeric:tabular-nums; }
+  td .prog{ height:11px; } td .prog i{ opacity:.9; }
+
+  /* monitor + the trim slider directly below it */
+  .a-side .mon{ flex:0 0 auto; height:172px; border-right:0;
+    border-bottom:1px solid var(--line); border-radius:0; border-left:0;
+    border-top:0;
+    background:
+      linear-gradient(180deg,var(--glass-reflection-start) 0,var(--glass-reflection-end) 44%),
+      color-mix(in srgb,var(--color-surface) 66%,var(--glass-bg)); }
+  .a-side .mon-foot{ gap:var(--space-2); font-size:10.5px; color:var(--n500);
+    padding:0 var(--space-3); display:flex; align-items:center; }
+  .a-side .mon-foot b{ color:var(--n300); font-weight:400; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap; }
+  .trim{ flex:0 0 auto; height:24px;
+    background:color-mix(in srgb,var(--color-surface) 62%,var(--glass-bg));
+    border-bottom:1px solid var(--line); position:relative; cursor:col-resize; }
+  .trim .range{ position:absolute; top:0; bottom:0;
+    background:color-mix(in srgb,var(--color-accent) 18%,transparent);
+    border-left:2px solid var(--color-accent); border-right:2px solid var(--color-accent); }
+  /* CASING. Resolume shouts in the string, never with a stylesheet: of the 878
+     keys in reference/docs/gui/English.txt exactly 25 are all-caps, and each is a
+     compact transport/action button (RECORD, STOP, TAP, RESYNC, LINK, PAUSE,
+     METRONOME, PICK, ADD), an alarm (LOW MEMORY!!) or an acronym. Section
+     headers, menu group headings, tab labels, column headers and state chips are
+     Title Case throughout the string table and all 83 manual pages. The blanket
+     text-transform rules in this window were removed for that reason and the
+     caps-tuned tracking relaxed with them; nocturne.css and windows.css, which
+     this window also loads, no longer shout their equivalents, so leaving these
+     would paint one class of element in two conventions in one window. */
+  .trim .tlab{ position:absolute; right:var(--space-2); top:0; line-height:24px;
+    font-size:9.5px; letter-spacing:.01em; color:var(--n600);
+    font-variant-numeric:tabular-nums; pointer-events:none; }
+
+  /* the settings column: the properties-panel row, with a wider label gutter */
+  .a-side .sect.folded > .sect-body{ display:none; }
+  .a-side .prow{ grid-template-columns:112px 1fr; gap:var(--space-2);
+    height:auto; min-height:19px; padding:1px var(--space-3) 1px 0; }
+  .a-side .prow > label{ font-size:11.5px; color:var(--n500); }
+  .a-side .prow select, .a-side .prow .wide, .a-side .prow .grp{ grid-column:2; }
+  .a-side .prow select, .a-side .prow input[type=text], .a-side .prow input[type=number]{
+    background:var(--inset); border:1px solid var(--n800); color:var(--n200);
+    border-radius:var(--radius-sm); height:17px; padding:0 var(--space-2); font-size:11.5px;
+    min-width:0; width:100%; }
+  .a-side .prow input[type=number], .a-side .prow input.time{ font-variant-numeric:tabular-nums; }
+  .a-side .prow input[type=checkbox]{ accent-color:var(--color-accent); justify-self:start; }
+  .a-side .prow .pval{ justify-self:stretch; min-width:0; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap; }
+  .a-side .prow .grp{ display:flex; align-items:center; gap:var(--space-2); min-width:0; }
+  .a-side .prow .grp label{ flex:0 0 auto; font-size:11.5px; color:var(--n500); }
+  .a-side .hint{ padding:var(--space-1) var(--space-3) var(--space-3) var(--space-3);
+    color:var(--n600); font-size:10.5px; }
+  #presetBtn{ display:flex; align-items:center; gap:var(--space-2); width:100%;
+    justify-content:space-between; overflow:hidden; text-align:left; }
+  #presetBtn #presetName{ overflow:hidden; text-overflow:ellipsis; }
+  #presetBtn .caret{ color:var(--n600); font-size:9.5px; }
+
+  /* list panes */
+  .a-list .win-drop{ margin:var(--space-3); }
+  table.datatable tr{ cursor:default; }
+  table.datatable tr.done td{ color:var(--n600); }
+  table.datatable td.state{ font-size:10.5px; letter-spacing:.01em;
+    color:var(--n600); }
+  table.datatable tr.done td.state{ color:var(--a300); }
+  table.datatable td.act{ text-align:right; white-space:nowrap; }
+  .revealic{ color:var(--n700); cursor:pointer; padding:0 var(--space-2); visibility:hidden; }
+  table.datatable tr:hover .revealic{ visibility:visible; }
+  .revealic:hover{ color:var(--a200); }
+  .statusline .note{ margin-left:auto; color:var(--n500); }
+
+  .dialog .fw-body .formrow label{ flex:0 0 150px; width:150px; min-width:150px; }
+  #dlgSavePreset .dialog, #dlgFootage .dialog, #dlgPresets .dialog{ min-width:420px; }
+  #dlgPresets .listwrap{ max-height:240px; overflow-y:auto; border:1px solid var(--n800);
+    border-radius:var(--radius-sm); }
+</style>
+<link rel="stylesheet" href="openlive-alley.css?v=utility-lab-4">
+</head>
+<body>
+<div id="alleyRoot" data-pane="tView" data-source="empty">
+
+  <header id="menubar">
+    <div class="showave-brand-lockup--nav" data-showave-brand="encode"></div>
+    <div id="menubarMenus" style="display:flex"></div>
+    <div class="mb-right"><span id="aCount">0 files</span></div>
+  </header>
+
+  <div class="win-tabs" id="mainTabs" role="tablist" aria-label="SHOWAVE Encode sections">
+    <div class="win-tab active" data-pane="tView" role="tab" tabindex="0" aria-selected="true" aria-controls="tView">View</div>
+    <div class="win-tab" data-pane="tConvert" role="tab" tabindex="-1" aria-selected="false" aria-controls="tConvert">Convert</div>
+    <div class="win-tab" data-pane="tQueue" role="tab" tabindex="-1" aria-selected="false" aria-controls="tQueue">Queue</div>
+    <div class="win-tab" data-pane="tFootage" role="tab" tabindex="-1" aria-selected="false" aria-controls="tFootage">Footage</div>
+    <!-- The free-tools suite. Alley is already the media-preparation window, so
+         convert/extract/test belong here rather than in a new window. -->
+    <div class="win-tab" data-pane="tTools" role="tab" tabindex="-1" aria-selected="false" aria-controls="tTools">Tools</div>
+  </div>
+
+  <div class="a-main">
+    <div class="a-list" id="aList">
+      <div class="browser-tools">
+        <select class="tb-select" id="aRoot"><option>This PC</option><option>D:\Footage</option><option>Desktop</option><option>Downloads</option></select>
+        <input type="text" id="aSearch" placeholder="Filter…">
+        <button class="tb-btn" type="button" id="btnAdd" title="Add files">+ Add</button>
+        <button class="tb-btn" type="button" id="btnRemove" title="Remove selected">−</button>
+      </div>
+
+      <div class="pbody">
+        <div class="pane active" id="tView">
+          <table class="datatable"><thead><tr>
+            <th>File Name</th><th>Type</th><th>Codec</th><th>Dimensions</th><th>Framerate</th><th class="num">Size</th><th class="num">Duration</th>
+          </tr></thead><tbody id="viewBody"></tbody></table>
+          <div class="win-drop alley-empty" id="dropView">
+            <span class="alley-empty-mark" aria-hidden="true">+</span>
+            <strong>Add source media</strong>
+            <span>Drop files or a folder here, or choose files from your computer.</span>
+            <button class="tb-btn on" id="dropAddFiles" type="button">Choose Files</button>
+            <small>Video · audio · images · PDF · PowerPoint · image sequences</small>
+          </div>
+        </div>
+
+        <div class="pane" id="tConvert">
+          <table class="datatable"><thead><tr>
+            <th>Source</th><th>Preset</th><th>Destination</th><th>Output</th>
+          </tr></thead><tbody id="convBody"></tbody></table>
+          <div class="win-drop alley-empty" id="dropConv">
+            <span class="alley-empty-mark" aria-hidden="true">02</span>
+            <strong>No conversion targets yet</strong>
+            <span>Select source files in View, then add them to the conversion list.</span>
+            <button class="tb-btn" type="button" data-go-pane="tView">Return to View</button>
+            <small>Use Ctrl or Cmd to tune multiple targets together before queueing.</small>
+          </div>
+        </div>
+
+        <div class="pane" id="tQueue">
+          <table class="datatable"><thead><tr>
+            <th>Job</th><th>Preset</th><th>Progress</th><th>Status</th>
+          </tr></thead><tbody id="queueBody"></tbody></table>
+          <div class="win-empty alley-empty" id="queueEmpty">
+            <span class="alley-empty-mark" aria-hidden="true">03</span>
+            <strong>Queue is ready</strong>
+            <span>Add conversion targets, review their settings, then start the job here.</span>
+            <button class="tb-btn" type="button" data-go-pane="tConvert">Open Convert List</button>
+            <small>Each job reports its real encoder status; failed work never advances to 100%.</small>
+          </div>
+        </div>
+
+        <div class="pane" id="tFootage">
+          <table class="datatable"><thead><tr>
+            <th>Pack</th><th>Artist</th><th class="num">Clips</th><th class="num">Size</th><th>State</th><th></th>
+          </tr></thead><tbody id="footBody"></tbody></table>
+          <div class="footage-connection" role="status">
+            <span class="footage-connection-dot" aria-hidden="true"></span>
+            <div><strong>Footage account not connected</strong>
+              <span>The catalogue is shown as a reference. Downloads stay disabled until a real account adapter is configured.</span></div>
+          </div>
+        </div>
+
+        <div class="pane" id="tTools">
+          <section class="tools-shell" aria-labelledby="toolsTitle">
+            <header class="tools-hero">
+              <div class="tools-hero-copy">
+                <span class="tools-kicker">Local Utility Lab</span>
+                <h2 id="toolsTitle">Media tools with honest capability checks</h2>
+                <p>Every runnable tool works locally in this SHOWAVE window. Device checks still ask for permission when you press Start; missing adapters are labelled before you click.</p>
+              </div>
+              <div class="tools-health" aria-label="Tool readiness">
+                <div><strong id="toolsReadyCount">N/A</strong><span>Runnable</span></div>
+                <div><strong id="toolsBlockedCount">N/A</strong><span>Needs setup</span></div>
+                <div><strong id="toolsTotalCount">N/A</strong><span>Total</span></div>
+              </div>
+            </header>
+
+            <div class="tools-toolbar">
+              <div class="tools-filters" role="group" aria-label="Filter tools">
+                <button class="tool-filter active" type="button" data-filter="all" aria-pressed="true">All</button>
+                <button class="tool-filter" type="button" data-filter="media" aria-pressed="false">Media</button>
+                <button class="tool-filter" type="button" data-filter="capture" aria-pressed="false">Devices</button>
+                <button class="tool-filter" type="button" data-filter="script" aria-pressed="false">Scripts</button>
+                <button class="tool-filter" type="button" data-filter="blocked" aria-pressed="false">Needs setup</button>
+              </div>
+              <label class="tool-search"><span class="sr-only">Search tools</span>
+                <input id="toolSearch" type="search" placeholder="Search tools…" autocomplete="off">
+              </label>
+            </div>
+
+            <div class="tools-stage">
+              <div class="tools-catalog">
+                <div class="tools-catalog-head"><strong>Tool catalogue</strong><span id="toolVisibleCount">N/A</span></div>
+                <div id="toolsGrid" aria-label="SHOWAVE Encode tools"></div>
+                <div class="tools-no-results" id="toolsNoResults" hidden>No tools match this filter.</div>
+              </div>
+              <aside id="toolPanel" aria-label="Selected tool"></aside>
+            </div>
+            <script id="alleyToolsAuditData" type="application/json">{}</script>
+          </section>
+        </div>
+      </div>
+
+      <!-- the Convert button, on the bottom of the list -->
+      <div class="a-action" id="actionBar">
+        <button class="tb-btn big on" id="actionBtn" type="button">Convert</button>
+        <div class="prog" id="prog"><i></i><span></span></div>
+        <span class="a-hint" id="actionHint"></span>
+      </div>
+    </div>
+
+    <!-- conversion settings -->
+    <div class="a-side">
+      <div class="mon" id="monWrap">
+        <div class="mon-head"><span>Source Monitor</span><span class="mon-state" id="monitorState">No source</span></div>
+        <div class="mon-body"><canvas id="prevCanvas" width="320" height="150"></canvas></div>
+        <div class="mon-foot"><b id="prevName">No file selected</b>
+          <span style="margin-left:auto"></span>
+          <span class="pval" id="prevDur">00:00:00.000</span></div>
+      </div>
+      <!-- the slider below the monitor trims the footage to length -->
+      <div class="trim" id="trim" title="Drag to trim your footage to length">
+        <div class="range" id="trimRange" style="left:0%;right:0%"></div>
+        <div class="tlab" id="trimLab">Trim</div>
+      </div>
+
+      <div class="sect" id="sVideo"><h3>Video</h3><div class="sect-body">
+        <div class="prow"><label>Output Codec</label><span class="pval" id="codecName">H.264 / MP4</span></div>
+        <div class="prow" id="dxvRow" hidden><label>DXV Flavor</label><select id="dxv"></select></div>
+        <div class="prow"><label>Size</label><select id="size"></select></div>
+        <div class="prow"><label>Width</label><div class="grp">
+          <input type="number" id="w" value="1920">
+          <label for="h">Height</label><input type="number" id="h" value="1080"></div></div>
+        <div class="prow"><label>Scaling</label><select id="scale"></select></div>
+        <div class="hint" id="codecNote"></div>
+      </div></div>
+
+      <div class="sect" id="sTrim"><h3>Trim</h3><div class="sect-body">
+        <div class="prow"><label>In Point</label><input type="text" class="time wide" id="tIn" value="00:00:00.000"></div>
+        <div class="prow"><label>Out Point</label><input type="text" class="time wide" id="tOut" value="00:00:08.000"></div>
+        <div class="prow"><label>Duration</label><span class="pval" id="tDur">00:00:08.000</span></div>
+      </div></div>
+
+      <div class="sect" id="sAudio"><h3>Audio</h3><div class="sect-body">
+        <div class="prow"><label>Include Audio</label><input type="checkbox" checked id="audioOn"></div>
+        <div class="prow"><label>Format</label><span class="pval" id="audioFmt">Browser-selected track</span></div>
+        <div class="prow"><label>Sample Rate</label><select id="srate" disabled title="Controlled by the browser muxer"><option>Source / browser</option></select></div>
+        <div class="prow"><label>Bit Depth</label><select id="bdepth" disabled title="Controlled by the browser muxer"><option>Source / browser</option></select></div>
+        <div class="hint">The browser muxer controls audio encoding. Include Audio is applied; sample rate and bit depth remain visible only as native-adapter reference fields.</div>
+      </div></div>
+
+      <div class="sect" id="sOutput"><h3>Output Folder</h3><div class="sect-body">
+        <div class="prow"><label>Output Folder</label><select id="outFolder">
+          <option>Browser Downloads</option><option>Browser Downloads / Preset Name</option><option>Browse…</option></select></div>
+        <div class="prow"><label>File Name</label><input type="text" class="wide" id="outName" placeholder="Use source name"></div>
+        <div class="prow"><label>Result</label><span class="pval" id="resultName">N/A</span></div>
+        <div class="hint">Browser Downloads finishes without a hidden system dialog. Browse… opens the native save picker. Duplicate names receive a number.</div>
+      </div></div>
+
+      <div class="sect" id="sPresets"><h3>Presets</h3><div class="sect-body">
+        <div class="prow"><label>Preset</label>
+          <button class="tb-btn wide" type="button" id="presetBtn">
+            <span id="presetName">H264 High Quality</span><span class="caret">▾</span></button></div>
+        <div class="hint">Change any value and the preset drops to Custom. Save… stores every setting,
+          including the Output Folder, and names your files and folders. DXV, Motion JPEG, and ProRes
+          remain visible as compatibility references but require a native encoder adapter.</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="statusline">
+    <span id="statusFlow">Source + Preset + Destination → Job → Output</span>
+    <span class="v" id="cores">Using 16 CPU cores</span>
+    <span class="note" id="noteText"></span>
+  </div>
+</div>
+
+<!-- Footage download — resolution, format and download location -->
+<div class="overlay" id="dlgFootage">
+  <div class="dialog">
+    <div class="fw-title">Download Footage <span class="x" data-close="dlgFootage">✕</span></div>
+    <div class="fw-body">
+      <div class="formrow"><label>Footage Pack</label><span class="pval" id="fdPack" style="flex:1">N/A</span></div>
+      <div class="formrow"><label>Resolution</label><select id="fdRes">
+        <option>3840 x 2160</option><option selected>1920 x 1080</option><option>1280 x 720</option></select></div>
+      <div class="formrow"><label>Format</label><select id="fdFmt">
+        <option selected>DXV 3</option><option>H.264</option><option>ProRes 422</option></select></div>
+      <div class="formrow"><label>Download Location</label><select id="fdLoc">
+        <option selected>Downloads</option><option>Desktop</option><option>D:\Footage</option><option>Browse…</option></select></div>
+      <div class="hint">No footage account adapter is configured. Download controls remain disabled,
+        and SHOWAVE does not simulate a transfer.</div>
+    </div>
+    <div class="btnrow"><button class="tb-btn" type="button" data-close="dlgFootage">Cancel</button>
+      <button class="tb-btn on" type="button" id="fdGo">Download</button></div>
+  </div>
+</div>
+
+<!-- Presets ▸ Save… -->
+<div class="overlay" id="dlgSavePreset">
+  <div class="dialog">
+    <div class="fw-title">Save Preset <span class="x" data-close="dlgSavePreset">✕</span></div>
+    <div class="fw-body">
+      <div class="formrow"><label>Preset Name</label><input type="text" id="spName" value="Custom"></div>
+      <div class="hint">Choose the name carefully: it is used for naming your converted files and folders.</div>
+    </div>
+    <div class="btnrow"><button class="tb-btn" type="button" data-close="dlgSavePreset">Cancel</button>
+      <button class="tb-btn on" type="button" id="spSave">Save</button></div>
+  </div>
+</div>
+
+<!-- Presets ▸ Manage… -->
+<div class="overlay" id="dlgPresets">
+  <div class="dialog">
+    <div class="fw-title">Manage Presets <span class="x" data-close="dlgPresets">✕</span></div>
+    <div class="fw-body">
+      <div class="listwrap"><table class="datatable"><thead><tr>
+        <th>Preset</th><th>Codec</th><th>Format</th><th></th></tr></thead>
+        <tbody id="mpBody"></tbody></table></div>
+      <div class="hint">SHOWAVE Encode includes four DXV-compatible presets; the rest are yours to add.
+        Compatible factory presets stay read-only, so only presets saved here can be removed.</div>
+    </div>
+    <div class="btnrow"><button class="tb-btn on" type="button" data-close="dlgPresets">Close</button></div>
+  </div>
+</div>
+
+<input type="file" id="filePick" multiple accept="video/*,audio/*,image/*,application/pdf,.pdf,.ppt,.pptx,.pps,.ppsx" style="display:none">
+<input type="file" id="folderPick" webkitdirectory directory multiple style="display:none">
+
+<script src="arena-data.js"></script>
+<script src="vendor/fflate/fflate.min.js?v=0.8.2"></script>
+<script src="openlive-powerpoint-player.js?v=independent-1"></script>
+<script src="openlive-documents.js"></script>
+<script src="openlive-tools.js?v=encode-core-2"></script>
+<script>
+/* ---------- Alley clone ---------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+/* the four DXV flavours, spelled the way the shipped presets spell them
+   ({pf}\Resolume Alley\default\Presets → <Conversion Format="High Quality, With Alpha">) */
+const DXV_FORMATS=['Normal Quality, No Alpha','Normal Quality, With Alpha',
+  'High Quality, No Alpha','High Quality, With Alpha'];
+const SIZES=['Same as Source','3840 x 2160','1920 x 1080','1280 x 720','1024 x 768','800 x 600','Custom…'];
+const SCALING=['Fit','Fill','Stretch'];
+
+/* the 11 Conversion presets Alley installs, with their real attributes */
+/* Renamed from PRESETS. arena-data.js:206 declares `const PRESETS` at top
+   level, and this inline script declared it again — two lexical bindings of the
+   same name in the same global scope is a SyntaxError, which aborted this
+   ENTIRE script before it ran a line. The visible symptom was that no tab in
+   Alley switched and no list ever rendered; the cause was one name. */
+const ALLEY_PRESETS=[
+  {n:'DXV Normal Quality No Alpha',   codec:'DXV 3',      fmt:'Normal Quality, No Alpha',   audio:1, scale:'Fit', out:'Browser Downloads', ship:1, native:1},
+  {n:'DXV Normal Quality With Alpha', codec:'DXV 3',      fmt:'Normal Quality, With Alpha', audio:1, scale:'Fit', out:'Browser Downloads', ship:1, native:1},
+  {n:'DXV High Quality No Alpha',     codec:'DXV 3',      fmt:'High Quality, No Alpha',     audio:1, scale:'Fit', out:'Browser Downloads', ship:1, native:1},
+  {n:'DXV High Quality With Alpha',   codec:'DXV 3',      fmt:'High Quality, With Alpha',   audio:1, scale:'Fit', out:'Browser Downloads', ship:1, native:1},
+  {n:'H264 Low Quality',              codec:'H264',       fmt:'Low Quality',                audio:1, scale:'Fit', out:'Browser Downloads', ship:1, container:'mp4', bitrate:3000000},
+  {n:'H264 Medium Quality',           codec:'H264',       fmt:'Medium Quality',             audio:1, scale:'Fit', out:'Browser Downloads', ship:1, container:'mp4', bitrate:6000000},
+  {n:'H264 High Quality',             codec:'H264',       fmt:'High Quality',               audio:1, scale:'Fit', out:'Browser Downloads', ship:1, container:'mp4', bitrate:10000000},
+  {n:'Motion JPEG',                   codec:'Motion JPEG',fmt:'Normal Quality',             audio:1, scale:'Fit', out:'Browser Downloads', ship:1, native:1},
+  {n:'ProRes 422 Normal Quality',     codec:'ProRes',     fmt:'422 Normal Quality',         audio:1, scale:'Fit', out:'Browser Downloads', ship:1, native:1},
+  {n:'ProRes 422 High Quality',       codec:'ProRes',     fmt:'422 High Quality',           audio:1, scale:'Fit', out:'Browser Downloads', ship:1, native:1},
+  {n:'ProRes 4444',                   codec:'ProRes',     fmt:'4444',                       audio:1, scale:'Fit', out:'Browser Downloads', ship:1, native:1}
+];
+
+/* Empty on purpose. This list used to ship six invented rows — "liquid_gold.mov,
+   ProRes 422, 3840x2160, 1.2 GB" and friends — with codecs, dimensions, frame
+   rates, sizes and durations that were typed, not probed. They also had no File
+   behind them, so selecting one and converting it could never do anything. The
+   real add path writes '—' for anything it has not measured. */
+const FILES=[];
+const FOOTAGE_CONNECTED=false;
+const FOOTAGE=[];
+
+const S={ preset:'H264 High Quality', codec:'H264', dur:8, in:0, out:8 };
+
+DXV_FORMATS.forEach(v=>$('#dxv').appendChild(new Option(v,v)));
+SIZES.forEach(v=>$('#size').appendChild(new Option(v,v)));
+SCALING.forEach(v=>$('#scale').appendChild(new Option(v,v)));
+
+/* ---------- status note ---------- */
+let noteT=0;
+function note(msg){ $('#noteText').textContent=msg; clearTimeout(noteT);
+  noteT=setTimeout(()=>{ $('#noteText').textContent=''; },6000); }
+/* a web page has no OS shell; say so instead of faking it */
+function reveal(name){ note('“'+name+'”: a web page cannot open the OS file browser.'); }
+
+/* ---------- dropdown machinery (arena.css .dropdown/.dd-item/.dd-sep) ---------- */
+let dd=[];
+function closeDD(n=0){ while(dd.length>n) dd.pop().remove();
+  if(!n) $$('.menu-top.open').forEach(m=>{
+    m.classList.remove('open'); m.setAttribute('aria-expanded','false');
+  }); }
+function buildDD(items,x,y,lvl){
+  closeDD(lvl);
+  const d=document.createElement('div'); d.className='dropdown'; d.setAttribute('role','menu');
+  items.forEach(it=>{
+    if(it.sep){ d.appendChild(Object.assign(document.createElement('div'),{className:'dd-sep'})); return; }
+    const e=document.createElement('div'); e.className='dd-item'+(it.dis?' disabled':'');
+    e.setAttribute('role','menuitem'); e.tabIndex=it.dis?-1:0;
+    if(it.dis) e.setAttribute('aria-disabled','true');
+    const on = typeof it.on==='function' ? it.on() : it.on;
+    e.innerHTML=`<span class="chk">${it.chk&&on?'✓':''}</span><span>${it.l}</span>`+
+      (it.k?`<span class="kbd">${it.k}</span>`:'')+(it.sub?`<span class="arrow">▸</span>`:'');
+    if(it.sub) e.addEventListener('mouseenter',()=>{const r=e.getBoundingClientRect(); buildDD(it.sub,r.right-2,r.top-3,lvl+1);});
+    else {
+      e.addEventListener('mouseenter',()=>closeDD(lvl+1));
+      e.addEventListener('click',()=>{ if(it.dis) return; closeDD(); if(it.act) it.act(); });
+    }
+    e.addEventListener('keydown',event=>{
+      if((event.key==='Enter'||event.key===' ')&&!it.dis){ event.preventDefault(); e.click(); }
+    });
+    d.appendChild(e);
+  });
+  document.body.appendChild(d);
+  const r=d.getBoundingClientRect();
+  d.style.left=Math.max(4,Math.min(x,innerWidth-r.width-4))+'px';
+  d.style.top=Math.max(4,Math.min(y,innerHeight-r.height-4))+'px';
+  dd.push(d); return d;
+}
+addEventListener('mousedown',e=>{ if(!e.target.closest('.dropdown')&&!e.target.closest('.menu-top')&&
+  !e.target.closest('#presetBtn')) closeDD(); });
+addEventListener('keydown',event=>{
+  if(event.key!=='Escape') return;
+  const trigger=$('.menu-top.open'); closeDD(); trigger&&trigger.focus();
+});
+
+/* ---------- menu bar ---------- */
+function presetItems(act){ return ALLEY_PRESETS.map(p=>({
+  l:p.native?p.n+': native encoder required':p.n,
+  dis:!!p.native, chk:1, on:()=>S.preset===p.n, act:()=>act(p.n)
+})); }
+const A_MENUS=[
+ {label:'File', items:[
+   {l:'Add Files…', k:'Ctrl+O', act:()=>$('#filePick').click()},
+   {l:'Add Folder…', act:()=>$('#folderPick').click()},{sep:1},
+   {l:'Remove Selected', act:removeSelected},
+   {l:'Clear List', act:()=>{ FILES.length=0; sel.clear(); renderView(); syncAction(); }},{sep:1},
+   {l:'Show in OS File Browser', act:()=>reveal(firstSelName()||'no selection')},{sep:1},
+   {l:'Quit', k:'Ctrl+Q', act:()=>note('Quit is handled by the browser tab.')}]},
+ {label:'Edit', items:[
+   {l:'Select All', k:'Ctrl+A', act:selectAll},
+   {l:'Select None', act:()=>{ sel.clear(); renderView(); syncAction(); }},{sep:1},
+   {l:'Convert With Preset', sub:presetItems(n=>addToConvert(n))},
+   {l:'Convert With Multiple Presets…', act:()=>{ goTab('tView');
+     note('Add the selection with one preset, then add it again with another. The View list stays focused.'); }},{sep:1},
+   {l:'Queue Selected First', act:()=>queueNow(true)}]},
+ {label:'View', items:[
+   {l:'View Tab',    chk:1, on:()=>curTab()==='tView',    act:()=>goTab('tView')},
+   {l:'Convert Tab', chk:1, on:()=>curTab()==='tConvert', act:()=>goTab('tConvert')},
+   {l:'Queue Tab',   chk:1, on:()=>curTab()==='tQueue',   act:()=>goTab('tQueue')},
+   {l:'Footage Tab', chk:1, on:()=>curTab()==='tFootage', act:()=>goTab('tFootage')},{sep:1},
+   {l:'Show Preview', chk:1, on:()=>!$('#monWrap').hidden, act:()=>{
+     $('#monWrap').hidden=!$('#monWrap').hidden; syncPreviewLoop(); }},
+   {l:'Show Trim',    chk:1, on:()=>!$('#trim').hidden,    act:()=>{ $('#trim').hidden=!$('#trim').hidden; }}]},
+ {label:'Help', items:[
+   {l:'Encode Guide', act:()=>note('Browser jobs produce honest MP4 outputs. DXV, Motion JPEG, and ProRes need the native encoder adapter.')},
+   {l:'About DXV Codec', act:()=>note('DXV 3 reference presets are preserved for compatibility, but this browser build cannot encode DXV.')},{sep:1},
+   {l:'Check for updates…', dis:1},
+   {l:'About', act:()=>note('SHOWAVE Encode: an Afro Unity Group product. Created and developed by Godrick Sankofa.')}]}
+];
+A_MENUS.forEach(m=>{
+  const t=document.createElement('div'); t.className='menu-top'; t.textContent=m.label;
+  t.setAttribute('role','menuitem'); t.setAttribute('aria-haspopup','menu');
+  t.setAttribute('aria-expanded','false'); t.tabIndex=0;
+  const open=()=>{ closeDD(); t.classList.add('open'); t.setAttribute('aria-expanded','true');
+    const r=t.getBoundingClientRect(); return buildDD(m.items,r.left,r.bottom+1,0); };
+  t.addEventListener('mousedown',e=>{ e.stopPropagation(); t.focus({preventScroll:true});
+    t.classList.contains('open')?closeDD():open(); });
+  t.addEventListener('keydown',event=>{
+    if(!['Enter',' ','ArrowDown'].includes(event.key)) return;
+    event.preventDefault(); const menu=t.classList.contains('open')?dd[0]:open();
+    menu&&menu.querySelector('.dd-item:not(.disabled)')?.focus();
+  });
+  t.addEventListener('mouseenter',()=>{ if(dd.length&&$$('.menu-top.open').length) open(); });
+  $('#menubarMenus').appendChild(t);
+});
+
+/* ---------- tabs ---------- */
+function curTab(){ return $('#mainTabs .win-tab.active').dataset.pane; }
+function activateAlleyTab(t,focus){
+  if(!t) return;
+  const pane=t.dataset.pane;
+  $$('#mainTabs .win-tab').forEach(x=>{
+    const on=x===t; x.classList.toggle('active',on);
+    x.setAttribute('aria-selected',String(on)); x.tabIndex=on?0:-1;
+  });
+  $$('.a-list .pane').forEach(p=>p.classList.toggle('active',p.id===pane));
+  $('#alleyRoot').dataset.pane=pane;
+  $('#statusFlow').textContent=pane==='tTools'?'Local utility → Verified output':
+    pane==='tFootage'?'Footage library → Account adapter required':
+    'Source + Preset + Destination → Job → Output';
+  syncAction();
+  dispatchEvent(new CustomEvent('openlive:alleytabchange',{detail:{pane}}));
+  if(focus) t.focus({preventScroll:true});
+}
+$('#mainTabs').addEventListener('click',e=>activateAlleyTab(e.target.closest('.win-tab'),false));
+$('#mainTabs').addEventListener('keydown',event=>{
+  const current=event.target.closest('.win-tab');
+  if(!current||!['ArrowLeft','ArrowRight','Home','End','Enter',' '].includes(event.key)) return;
+  event.preventDefault();
+  if(event.key==='Enter'||event.key===' '){ activateAlleyTab(current,false); return; }
+  const tabs=$$('#mainTabs .win-tab'), at=tabs.indexOf(current);
+  const next=event.key==='Home'?tabs[0]:event.key==='End'?tabs[tabs.length-1]:
+    tabs[(at+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];
+  activateAlleyTab(next,true);
+});
+function goTab(id){ $(`#mainTabs [data-pane="${id}"]`).click(); }
+
+/* ---------- View list ---------- */
+const sel=new Set();
+function firstSelName(){ const i=[...sel][0]; return i==null?null:FILES[i].name; }
+function renderView(){
+  const q=$('#aSearch').value.toLowerCase();
+  const b=$('#viewBody'); b.innerHTML='';
+  FILES.forEach((f,i)=>{
+    if(q&&!f.name.toLowerCase().includes(q)) return;
+    const tr=document.createElement('tr');
+    if(sel.has(i)) tr.className='sel';
+    tr.innerHTML=`<td>${f.name}</td><td>${f.type}</td><td>${f.codec}</td><td>${f.dim}</td>
+      <td>${f.fps}</td><td class="num">${f.size}</td><td class="num">${f.dur}</td>`;
+    tr.addEventListener('click',ev=>{
+      if(!(ev.ctrlKey||ev.metaKey)) sel.clear();
+      sel.has(i)?sel.delete(i):sel.add(i);
+      renderView(); loadSelected(); syncAction();
+    });
+    tr.addEventListener('contextmenu',ev=>{
+      ev.preventDefault();
+      if(!sel.has(i)){ sel.clear(); sel.add(i); renderView(); loadSelected(); syncAction(); }
+      /* the manual: right click on the file and choose the preset from the list */
+      buildDD([...presetItems(n=>addToConvert(n)),{sep:1},
+        {l:'Queue Selected First', act:()=>{ addToConvert(S.preset); queueNow(true); }},{sep:1},
+        {l:'Show in OS File Browser', act:()=>reveal(f.name)},
+        {l:'Remove', act:removeSelected}], ev.clientX, ev.clientY, 0);
+    });
+    b.appendChild(tr);
+  });
+  $('#dropView').style.display=FILES.length?'none':'';
+  $('#aCount').textContent=FILES.length+' files'+(sel.size?` · ${sel.size} selected`:'');
+}
+function selectAll(){ goTab('tView'); sel.clear(); FILES.forEach((f,i)=>sel.add(i));
+  renderView(); loadSelected(); syncAction(); }
+function removeSelected(){
+  [...sel].sort((a,b)=>b-a).forEach(i=>FILES.splice(i,1));
+  sel.clear(); renderView(); loadSelected(); syncAction();
+}
+$('#aSearch').addEventListener('input',renderView);
+$('#btnRemove').addEventListener('click',removeSelected);
+$('#btnAdd').addEventListener('click',()=>$('#filePick').click());
+$('#dropAddFiles').addEventListener('click',()=>$('#filePick').click());
+$$('[data-go-pane]').forEach(button=>button.addEventListener('click',()=>goTab(button.dataset.goPane)));
+addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='a'&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){
+    e.preventDefault(); selectAll();
+  }
+});
+
+/* ---------- adding real files: picker + drag and drop ---------- */
+function human(n){ const u=['B','KB','MB','GB']; let i=0; while(n>=1024&&i<u.length-1){ n/=1024; i++; }
+  return (i?n.toFixed(1):n)+' '+u[i]; }
+function kindOf(t,name){
+  if(/^video\//.test(t)) return 'Video';
+  if(/^audio\//.test(t)) return 'Audio';
+  if(/^image\//.test(t)) return 'Image';
+  return (name.split('.').pop()||'').toUpperCase()||'File';
+}
+function probeSource(record,file){
+  const mediaKind=/^video\//.test(file.type)?'video':(/^audio\//.test(file.type)?'audio':'');
+  record.codec=(file.type.split('/')[1]||'N/A').split(';')[0].toUpperCase();
+  if(!mediaKind) return;
+  const media=document.createElement(mediaKind);
+  const url=URL.createObjectURL(file);
+  const finish=()=>{ URL.revokeObjectURL(url); media.remove(); };
+  media.preload='metadata'; media.muted=true;
+  media.onloadedmetadata=()=>{
+    if(mediaKind==='video'&&media.videoWidth&&media.videoHeight)
+      record.dim=media.videoWidth+' × '+media.videoHeight;
+    if(Number.isFinite(media.duration)) record.dur=fmt(media.duration);
+    const index=FILES.indexOf(record);
+    renderView();
+    if(index>=0&&sel.has(index)) loadSelected();
+    finish();
+  };
+  media.onerror=finish;
+  media.src=url;
+}
+function addFile(f){
+  /* Keep the File itself. The record used to copy name and size and drop the
+     object, which left the converter with nothing to convert — the reason the
+     queue could only ever animate a bar. */
+  const record={ name:f.name, type:kindOf(f.type,f.name), codec:'N/A', dim:'N/A', fps:'N/A',
+    size:human(f.size), dur:'N/A', file:f };
+  FILES.push(record); probeSource(record,f);
+}
+function addSequence(folder,list){
+  const bytes=list.reduce((a,f)=>a+f.size,0);
+  FILES.push({ name:folder+'/', type:'Image Sequence', codec:(list[0]?.name.split('.').pop()||'N/A').toUpperCase(),
+    dim:'N/A', fps:'25', size:human(bytes), dur:'N/A' });
+}
+$('#filePick').addEventListener('change',e=>{ [...e.target.files].forEach(addFile);
+  e.target.value=''; goTab('tView'); renderView(); syncAction(); });
+$('#folderPick').addEventListener('change',e=>{
+  const list=[...e.target.files]; if(list.length){
+    const folder=(list[0].webkitRelativePath||'folder/').split('/')[0];
+    addSequence(folder,list);
+  }
+  e.target.value=''; goTab('tView'); renderView(); syncAction();
+});
+const listEl=$('#aList');
+listEl.addEventListener('dragover',e=>{ e.preventDefault();
+  const d=$('#dropView'); if(d) d.classList.add('over'); });
+listEl.addEventListener('dragleave',()=>{ const d=$('#dropView'); if(d) d.classList.remove('over'); });
+listEl.addEventListener('drop',e=>{
+  e.preventDefault(); const d=$('#dropView'); if(d) d.classList.remove('over');
+  const items=[...(e.dataTransfer.items||[])];
+  const dirs=items.map(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry()).filter(x=>x&&x.isDirectory);
+  dirs.forEach(dir=>FILES.push({ name:dir.name+'/', type:'Image Sequence', codec:'N/A',
+    dim:'N/A', fps:'25', size:'N/A', dur:'N/A' }));
+  if(!dirs.length) [...(e.dataTransfer.files||[])].forEach(addFile);
+  goTab('tView'); renderView(); syncAction();
+});
+
+/* ---------- Convert list ---------- */
+const convert=[], queue=[]; const convSel=new Set();
+function renderConv(){
+  const b=$('#convBody'); b.innerHTML='';
+  convert.forEach((c,i)=>{
+    const tr=document.createElement('tr');
+    if(convSel.has(i)) tr.className='sel';
+    tr.innerHTML=`<td>${c.name}</td><td>${c.preset}</td><td>${c.folder}</td><td>${c.result}</td>`;
+    tr.addEventListener('click',ev=>{
+      if(!(ev.ctrlKey||ev.metaKey)) convSel.clear();
+      convSel.has(i)?convSel.delete(i):convSel.add(i);
+      renderConv(); loadTarget(); syncAction();
+    });
+    tr.addEventListener('contextmenu',ev=>{ ev.preventDefault();
+      if(!convSel.has(i)){ convSel.clear(); convSel.add(i); renderConv(); loadTarget(); }
+      buildDD([...presetItems(n=>{ setPreset(n); applyToTargets(); }),{sep:1},
+        {l:'Queue Selected First', act:()=>queueNow(true)},{sep:1},
+        {l:'Show in OS File Browser', act:()=>reveal(c.result)},
+        {l:'Remove', act:()=>{ [...convSel].sort((a,b)=>b-a).forEach(k=>convert.splice(k,1));
+          convSel.clear(); renderConv(); syncAction(); }}], ev.clientX, ev.clientY, 0); });
+    b.appendChild(tr);
+  });
+  $('#dropConv').style.display=convert.length?'none':'';
+}
+function addToConvert(presetName){
+  if(!sel.size){ note('Select a file in the View list first.'); return; }
+  const preset=presetByName(presetName);
+  if(preset&&preset.native){
+    note(preset.codec+' needs the native encoder adapter. Choose an H264 preset for a browser job.');
+    return;
+  }
+  setPreset(presetName);
+  const before=convert.length;
+  let skipped=0;
+  [...sel].sort((a,b)=>a-b).forEach(i=>{
+    const f=FILES[i];
+    if(f.type!=='Video'){ skipped++; return; }
+    convert.push({ name:f.name, base:f.name.replace(/\/$/,'').replace(/\.[^.]+$/,''),
+      preset:presetName, folder:$('#outFolder').value, result:'', file:f.file||null,
+      options:currentEncodeOptions(presetName) });
+    const c=convert[convert.length-1]; c.result=uniqueOut(outFor(c.base,c.preset));
+  });
+  if(skipped) note(skipped+' non-video source'+(skipped>1?'s were':' was')+' left in View; use the matching Tool Lab utility.');
+  if(convert.length===before) return;
+  renderConv(); goTab('tConvert'); syncAction();
+}
+/* changing a setting while conversion targets are selected retunes just those */
+function applyToTargets(){
+  if(!convSel.size) return;
+  [...convSel].forEach(i=>{ const c=convert[i]; c.preset=S.preset; c.folder=$('#outFolder').value;
+    c.options=currentEncodeOptions(c.preset);
+    c.result=uniqueOut(outFor(c.base,c.preset),i); });
+  renderConv();
+}
+function loadTarget(){
+  const i=[...convSel][0]; if(i==null) return;
+  const c=convert[i]; $('#outFolder').value=c.folder; setPreset(c.preset);
+}
+
+/* ---------- Queue ---------- */
+function renderQueue(){
+  const b=$('#queueBody'); b.innerHTML='';
+  queue.forEach(q=>{
+    const tr=document.createElement('tr');
+    if(q.pct>=100) tr.className='done';
+    tr.innerHTML=`<td>${q.name}</td><td>${q.preset}</td>
+      <td><div class="prog"><i style="width:${q.pct}%"></i></div></td>
+      <td class="state">${q.note ? q.note : (q.pct>=100?'Finished':(q.pct>0?'Converting':'Pending'))}</td>`;
+    tr.addEventListener('contextmenu',ev=>{ ev.preventDefault();
+      buildDD([{l:'Reveal in OS File Browser', act:()=>reveal(q.result)},
+        {l:'Queue First', dis:q.pct>0, act:()=>{ const k=queue.indexOf(q);
+          queue.splice(k,1); queue.unshift(q); renderQueue(); }}], ev.clientX, ev.clientY, 0); });
+    b.appendChild(tr);
+  });
+  $('#queueEmpty').style.display=queue.length?'none':'';
+}
+function queueNow(selectedFirst){
+  if(!convert.length){ note('Nothing on the Convert list yet.'); return; }
+  let take;
+  if(selectedFirst&&convSel.size) take=[...convSel].sort((a,b)=>a-b);
+  else take=convert.map((c,i)=>i);
+  take.forEach(i=>queue.push({...convert[i], pct:0}));
+  take.sort((a,b)=>b-a).forEach(i=>convert.splice(i,1));
+  convSel.clear(); renderConv(); renderQueue(); goTab('tQueue'); run(); syncAction();
+}
+
+/* ---------- Footage ---------- */
+function renderFootage(){
+  const b=$('#footBody'); b.innerHTML='';
+  FOOTAGE.forEach((f,i)=>{
+    const tr=document.createElement('tr');
+    if(f.state==='Done') tr.className='done';
+    if(footSel===i) tr.classList.add('sel');
+    tr.innerHTML=`<td>${f.pack}</td><td>${f.artist}</td><td class="num">${f.clips}</td>
+      <td class="num">${f.size}</td><td class="state">${FOOTAGE_CONNECTED?(f.state||'Ready'):'Not connected'}</td>
+      <td class="act">${FOOTAGE_CONNECTED?'<span class="revealic" title="Show in OS file browser">📁</span>':''}
+      <button class="tb-btn small" type="button" ${FOOTAGE_CONNECTED?'':'disabled'}>${FOOTAGE_CONNECTED?(f.state==='Done'?'Downloaded':'Download'):'Unavailable'}</button></td>`;
+    tr.addEventListener('click',ev=>{
+      footSel=i;
+      if(ev.target.closest('.revealic')){ reveal(f.pack); renderFootage(); return; }
+      if(ev.target.closest('button')){ if(FOOTAGE_CONNECTED) openFootageDlg(i); renderFootage(); return; }
+      if(!FOOTAGE_CONNECTED){ note('Footage downloads need a configured account adapter.'); renderFootage(); return; }
+      /* a downloaded pack plays in Alley right away */
+      if(f.state==='Done'){ $('#prevName').textContent=f.pack; $('#prevDur').textContent='N/A'; }
+      else note('Download the pack first. Only a finished pack can play.');
+      renderFootage();
+    });
+    b.appendChild(tr);
+  });
+}
+let footSel=-1, fdIndex=-1;
+function openFootageDlg(i){
+  if(!FOOTAGE_CONNECTED){ note('Footage downloads need a configured account adapter.'); return; }
+  fdIndex=i; $('#fdPack').textContent=FOOTAGE[i].pack; show('dlgFootage');
+}
+$('#fdGo').addEventListener('click',()=>{
+  hide('dlgFootage');
+  note('Footage downloads are unavailable until a real account adapter is configured.');
+});
+
+/* ---------- dialogs ---------- */
+function show(id){ $('#'+id).classList.add('show'); }
+function hide(id){ $('#'+id).classList.remove('show'); }
+$$('[data-close]').forEach(x=>x.addEventListener('click',()=>hide(x.dataset.close)));
+
+/* ---------- presets ---------- */
+function presetByName(n){ return ALLEY_PRESETS.find(p=>p.n===n); }
+function setPreset(n){
+  S.preset=n;
+  const p=presetByName(n);
+  if(p){
+    S.codec=p.codec;
+    if(DXV_FORMATS.includes(p.fmt)) $('#dxv').value=p.fmt;
+    if(p.size) $('#size').value=p.size;
+    if(p.scale) $('#scale').value=p.scale;
+    if(p.out) $('#outFolder').value=p.out;
+    $('#audioOn').checked=!!p.audio;
+  }
+  $('#presetName').textContent=n;
+  syncVideo(); syncResult();
+}
+function goCustom(){ S.preset='Custom'; $('#presetName').textContent='Custom';
+  syncVideo(); syncResult(); applyToTargets(); }
+$('#presetBtn').addEventListener('mousedown',e=>{
+  e.stopPropagation();
+  if(dd.length){ closeDD(); return; }
+  const r=$('#presetBtn').getBoundingClientRect();
+  buildDD([...presetItems(n=>{ setPreset(n); applyToTargets(); }),{sep:1},
+    {l:'Save…', act:()=>{ $('#spName').value=S.preset==='Custom'?'':S.preset; show('dlgSavePreset'); }},
+    {l:'Manage…', act:openManage}], r.left, r.bottom+2, 0);
+});
+$('#spSave').addEventListener('click',()=>{
+  const n=$('#spName').value.trim(); if(!n){ note('Give the preset a name.'); return; }
+  const rec={ n, codec:S.codec, fmt:$('#dxv').value, audio:$('#audioOn').checked?1:0,
+    size:$('#size').value, scale:$('#scale').value, out:$('#outFolder').value, ship:0 };
+  const at=ALLEY_PRESETS.findIndex(p=>p.n===n);
+  if(at>=0) ALLEY_PRESETS[at]=rec; else ALLEY_PRESETS.push(rec);
+  hide('dlgSavePreset'); setPreset(n); applyToTargets();
+  note('Preset “'+n+'” saved with every setting, including the Output Folder.');
+});
+function openManage(){
+  const b=$('#mpBody'); b.innerHTML='';
+  ALLEY_PRESETS.forEach(p=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${p.n}</td><td>${p.codec}</td><td>${p.fmt}</td>
+      <td class="act">${p.ship?`<span class="tb-label">${p.native?'native adapter':'browser ready'}</span>`:
+        '<button class="tb-btn small danger" type="button">Delete</button>'}</td>`;
+    const del=tr.querySelector('button');
+    if(del) del.addEventListener('click',()=>{ const i=ALLEY_PRESETS.indexOf(p); ALLEY_PRESETS.splice(i,1);
+      if(S.preset===p.n) setPreset(ALLEY_PRESETS[0].n); openManage(); });
+    b.appendChild(tr);
+  });
+  show('dlgPresets');
+}
+
+/* ---------- video settings ---------- */
+function syncVideo(){
+  const isDxv = S.codec==='DXV 3';
+  const p=presetByName(S.preset);
+  $('#codecName').textContent=S.codec==='H264'?'H.264 / MP4':S.codec;
+  $('#dxvRow').hidden=!isDxv;
+  $('#dxv').disabled=!isDxv;
+  $('#codecNote').textContent = p&&p.native
+    ? S.codec+' requires the native encoder adapter and cannot be queued in this browser.'
+    : 'Browser MP4 re-encode · real-time · '+((p&&p.fmt)||'custom quality')+'.';
+  const sz=$('#size').value;
+  const custom = sz==='Custom…';
+  const fixed = sz!=='Same as Source';
+  $('#w').disabled=!custom; $('#h').disabled=!custom;
+  $('#scale').disabled=!fixed;
+  const m=sz.match(/(\d+)\s*x\s*(\d+)/);
+  if(m){ $('#w').value=m[1]; $('#h').value=m[2]; }
+  $('#srate').disabled=$('#bdepth').disabled=true;
+  $('#audioFmt').style.opacity=$('#audioOn').checked?1:.45;
+}
+['dxv','size','scale','w','h'].forEach(id=>$('#'+id).addEventListener('change',goCustom));
+$('#audioOn').addEventListener('change',goCustom);
+['srate','bdepth'].forEach(id=>$('#'+id).addEventListener('change',goCustom));
+$('#outFolder').addEventListener('change',()=>{ goCustom(); });
+$('#outName').addEventListener('input',()=>{ syncResult(); applyToTargets(); });
+
+/* ---------- output naming ---------- */
+function extFor(codec){ return codec==='H264' ? '.mp4' : '.mov'; }
+function currentEncodeOptions(presetName){
+  const p=presetByName(presetName);
+  const options={
+    container:(p&&p.container)||'mp4',
+    bitrate:(p&&p.bitrate)||8000000,
+    dropAudio:!$('#audioOn').checked,
+    scale:$('#scale').value.toLowerCase(),
+    startTime:S.in,
+    endTime:S.out
+  };
+  const size=$('#size').value;
+  const dimensions=size==='Custom…'
+    ? [Number($('#w').value),Number($('#h').value)]
+    : ((size.match(/(\d+)\s*x\s*(\d+)/)||[]).slice(1).map(Number));
+  if(dimensions.length===2&&dimensions.every(n=>Number.isFinite(n)&&n>0)){
+    options.width=dimensions[0]; options.height=dimensions[1];
+  }
+  return options;
+}
+function outFor(base,presetName){
+  const p=presetByName(presetName);
+  const ext=extFor(p?p.codec:S.codec);
+  const custom=$('#outName').value.trim();
+  const stem=custom||base;
+  return $('#outFolder').value.includes('Preset Name')
+    ? `${presetName}\\${base}${ext}` : `${stem} - ${presetName}${ext}`;
+}
+/* duplicate filenames are resolved by adding numbers */
+function uniqueOut(path,skip){
+  const taken=n=>convert.some((c,i)=>i!==skip&&c.result===n)||queue.some(q=>q.result===n);
+  let out=path, k=2;
+  const m=path.match(/^(.*)(\.[^.\\]+)$/)||[path,path,''];
+  while(taken(out)){ out=`${m[1]} ${k}${m[2]}`; k++; }
+  return out;
+}
+function syncResult(){
+  const i=[...sel][0];
+  const f=(i!=null?FILES[i]:FILES[0]);
+  if(!f){ $('#resultName').textContent='N/A'; $('#resultName').title=''; return; }
+  const r=outFor(f.name.replace(/\/$/,'').replace(/\.[^.]+$/,''),S.preset);
+  $('#resultName').textContent=r; $('#resultName').title=r;
+}
+
+/* ---------- action button: Convert → Queue → Start ---------- */
+function syncAction(){
+  const t=curTab(), b=$('#actionBtn'), h=$('#actionHint');
+  if(t==='tView'){ b.textContent='Convert'; b.disabled=!sel.size;
+    h.textContent=sel.size?sel.size+' file'+(sel.size>1?'s':'')+' → Convert list':'Select a file to convert'; }
+  else if(t==='tConvert'){ b.textContent='Queue'; b.disabled=!convert.length;
+    h.textContent=convSel.size?'Queue '+convSel.size+' selected first':(convert.length+' waiting'); }
+  else if(t==='tQueue'){ b.textContent='Start'; b.disabled=!queue.length||running||queue.every(q=>q.pct>=100);
+    h.textContent=queue.length?queue.filter(q=>q.pct>=100).length+' of '+queue.length+' finished':''; }
+  else if(t==='tFootage'){ b.textContent='Download'; b.disabled=!FOOTAGE_CONNECTED;
+    h.textContent=FOOTAGE_CONNECTED?'Download with SHOWAVE Encode: resolution, format and destination':'Footage account adapter is not configured'; }
+  else { b.textContent='Choose a Tool'; b.disabled=true;
+    h.textContent='Select a ready utility from the local Tool Lab'; }
+}
+$('#actionBtn').addEventListener('click',()=>{
+  const t=curTab();
+  if(t==='tView') addToConvert(S.preset);
+  else if(t==='tConvert') queueNow(true);      /* the second of the two clicks: this starts it */
+  else if(t==='tQueue') run();
+  else if(t==='tFootage') openFootageDlg(footSel>=0?footSel:0);
+});
+
+/* ---------- the conversion itself ----------
+   This used to advance every bar by Math.random()*7 on a timer and then announce
+   that the converted files sat next to the originals. Nothing was read, nothing
+   was encoded and nothing was written — an affirmative claim that files existed.
+
+   It now drives openlive-tools.js, which is the same real MediaRecorder
+   pipeline the Tools tab uses. Progress is the encoder's own position, one item
+   at a time because they share one CPU and one encoder. Anything that cannot be
+   converted says why and is left at 0 rather than being walked to 100.
+
+   A browser cannot write "next to the originals": it has no path for a file the
+   user picked. Each result goes through OpenLiveTools.save(), which downloads by
+   default and opens a native picker only for an explicit Browse destination. */
+let running=false;
+function run(){
+  if(running||!queue.length) return;
+  if(!window.OpenLiveTools){ note('openlive-tools.js is not loaded, so nothing can be converted.'); return; }
+  running=true; $('#actionBar').classList.add('running'); syncAction();
+
+  const T=window.OpenLiveTools;
+  let saved=0, failed=0, skipped=0;
+
+  const paint=()=>{
+    renderQueue();
+    const overall=queue.reduce((a,q)=>a+q.pct,0)/(queue.length||1);
+    $('#prog i').style.width=overall+'%';
+    $('#prog span').textContent=Math.round(overall)+'%';
+  };
+
+  const finish=()=>{
+    running=false;
+    $('#prog span').textContent='Finished';
+    syncAction();
+    setTimeout(()=>{ $('#actionBar').classList.remove('running'); syncAction(); },900);
+    const parts=[];
+    if(saved)   parts.push(saved+' converted');
+    if(failed)  parts.push(failed+' failed');
+    if(skipped) parts.push(skipped+' skipped');
+    note(parts.length ? 'Conversion finished: '+parts.join(', ')+'.'
+                      : 'Nothing was converted.');
+  };
+
+  /* One at a time. Running the whole queue concurrently would contend for the
+     single hardware encoder and make every per-item progress figure meaningless. */
+  const step=i=>{
+    if(i>=queue.length){ finish(); return; }
+    const q=queue[i];
+    if(!q.file){
+      q.pct=0; q.note='No file on disk backs this row, so there is nothing to read.';
+      skipped++; paint(); step(i+1); return;
+    }
+    const preset=presetByName(q.preset);
+    if(preset&&preset.native){
+      q.pct=0; q.note=preset.codec+' requires the native encoder adapter; no substitute was produced.';
+      failed++; paint(); step(i+1); return;
+    }
+    const onProgress=frac=>{
+      if(typeof frac==='number' && isFinite(frac)) q.pct=Math.max(0,Math.min(100,frac*100));
+      paint();
+    };
+    /* reencodeVideo resolves {blob, name, info} — `name` already carries the
+       extension of the container the muxer actually produced, so it is used in
+       preference to the name the preset predicted. */
+    T.reencodeVideo(q.file,q.options||currentEncodeOptions(q.preset),onProgress)
+      .then(res=>T.save(res.blob,res.name,{picker:q.folder==='Browse…'}).then(where=>{
+        q.pct=100; q.result=res.name;
+        q.note=(where==='disk'?'Saved':'Downloaded')+': '+res.info;
+        saved++; paint(); step(i+1);
+      }))
+      .catch(err=>{
+        q.pct=0; q.note=(err&&err.message)||String(err);
+        failed++; paint(); step(i+1);
+      });
+  };
+  paint(); step(0);
+}
+
+/* ---------- trim: the slider below the monitor ---------- */
+function fmt(s){
+  s=Math.max(0,s);
+  const h=Math.floor(s/3600), m=Math.floor(s/60)%60, sec=Math.floor(s%60), ms=Math.round((s%1)*1000);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
+}
+function parse(t){
+  const m=String(t).match(/(\d+):(\d+):(\d+)(?:\.(\d+))?/);
+  if(!m) return 0;
+  return (+m[1])*3600+(+m[2])*60+(+m[3])+(m[4]?+('0.'+m[4]):0);
+}
+function drawTrim(){
+  const a=S.dur?S.in/S.dur:0, b=S.dur?S.out/S.dur:1;
+  $('#trimRange').style.left=(a*100)+'%';
+  $('#trimRange').style.right=((1-b)*100)+'%';
+  $('#tIn').value=fmt(S.in); $('#tOut').value=fmt(S.out); $('#tDur').textContent=fmt(S.out-S.in);
+  $('#trimLab').textContent=fmt(S.out-S.in);
+}
+const trim=$('#trim');
+trim.addEventListener('mousedown',function(e){
+  const r=this.getBoundingClientRect();
+  const at=ev=>Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width))*S.dur;
+  const near = Math.abs(at(e)-S.in) <= Math.abs(at(e)-S.out) ? 'in' : 'out';
+  const move=ev=>{
+    const t=at(ev);
+    if(near==='in') S.in=Math.min(t,S.out-0.01); else S.out=Math.max(t,S.in+0.01);
+    drawTrim();
+  };
+  move(e);
+  const up=()=>{ removeEventListener('mousemove',move); removeEventListener('mouseup',up); applyToTargets(); };
+  addEventListener('mousemove',move); addEventListener('mouseup',up);
+});
+/* the more precise trim tools, under the conversion settings */
+function commitTrimField(which){
+  if(which==='in') S.in=Math.min(Math.max(0,parse($('#tIn').value)),S.out-0.01);
+  else S.out=Math.max(Math.min(S.dur,parse($('#tOut').value)),S.in+0.01);
+  drawTrim(); applyToTargets();
+}
+[['tIn','in'],['tOut','out']].forEach(([id,which])=>{
+  const input=$('#'+id);
+  input.addEventListener('change',()=>commitTrimField(which));
+  input.addEventListener('blur',()=>commitTrimField(which));
+  input.addEventListener('keydown',event=>{
+    if(event.key==='Enter'){ event.preventDefault(); commitTrimField(which); input.select(); }
+  });
+});
+
+function loadSelected(){
+  const i=[...sel][0];
+  const f=i!=null?FILES[i]:null;
+  $('#prevName').textContent=f?f.name:'No file selected';
+  $('#prevDur').textContent=f?f.dur:'00:00:00.000';
+  $('#monitorState').textContent=f?'Ready':'No source';
+  $('#alleyRoot').dataset.source=f?'ready':'empty';
+  S.dur=f&&f.dur!=='N/A'?(parse(f.dur)||8):8;
+  S.in=0; S.out=S.dur; drawTrim(); syncResult();
+  setPreviewSource(f);
+}
+
+/* ---------- foldable settings sections ---------- */
+$$('.a-side .sect > h3').forEach(h=>{
+  const toggle=()=>{
+    const folded=h.parentElement.classList.toggle('folded');
+    h.setAttribute('aria-expanded',String(!folded));
+  };
+  h.setAttribute('role','button'); h.tabIndex=0; h.setAttribute('aria-expanded','true');
+  h.addEventListener('click',toggle);
+  h.addEventListener('keydown',event=>{
+    if(event.key==='Enter'||event.key===' '){ event.preventDefault(); toggle(); }
+  });
+});
+
+/* ---------- monitor ---------- */
+const pc=$('#prevCanvas'), px=pc.getContext('2d');
+let previewFrame=0, previewMedia=null, previewURL='';
+let previewBlack=getComputedStyle(document.documentElement).getPropertyValue('--content-black').trim();
+const reducePreviewMotion=typeof matchMedia==='function'
+  ?matchMedia('(prefers-reduced-motion: reduce)'):{matches:false};
+function paintPreviewBlack(){
+  px.fillStyle=previewBlack; px.fillRect(0,0,pc.width,pc.height);
+}
+function previewCanRun(){ return sel.size>0&&!document.hidden&&!$('#monWrap').hidden; }
+function paintPreviewFrame(){
+  paintPreviewBlack();
+  if(!previewMedia||previewMedia.readyState<2) return;
+  const factor=Math.min(pc.width/previewMedia.videoWidth,pc.height/previewMedia.videoHeight);
+  const width=previewMedia.videoWidth*factor, height=previewMedia.videoHeight*factor;
+  px.drawImage(previewMedia,(pc.width-width)/2,(pc.height-height)/2,width,height);
+}
+function draw(){
+  if(!previewCanRun()||reducePreviewMotion.matches){ previewFrame=0; return; }
+  paintPreviewFrame(); previewFrame=requestAnimationFrame(draw);
+}
+function clearPreviewSource(){
+  if(previewFrame){ cancelAnimationFrame(previewFrame); previewFrame=0; }
+  if(previewMedia){ previewMedia.pause(); previewMedia.removeAttribute('src'); previewMedia.load(); previewMedia=null; }
+  if(previewURL){ URL.revokeObjectURL(previewURL); previewURL=''; }
+}
+function setPreviewSource(record){
+  clearPreviewSource(); paintPreviewBlack();
+  if(!record||record.type!=='Video'||!record.file) return;
+  previewMedia=document.createElement('video');
+  previewMedia.muted=true; previewMedia.loop=true; previewMedia.playsInline=true; previewMedia.preload='metadata';
+  previewMedia.onloadeddata=syncPreviewLoop;
+  previewURL=URL.createObjectURL(record.file);
+  previewMedia.src=previewURL;
+}
+function syncPreviewLoop(){
+  if(previewFrame){ cancelAnimationFrame(previewFrame); previewFrame=0; }
+  paintPreviewBlack();
+  if(!previewCanRun()||!previewMedia) return;
+  if(reducePreviewMotion.matches){ previewMedia.pause(); paintPreviewFrame(); }
+  else previewMedia.play().then(()=>{ previewFrame=requestAnimationFrame(draw); }).catch(()=>paintPreviewFrame());
+}
+document.addEventListener('visibilitychange',syncPreviewLoop);
+addEventListener('pagehide',clearPreviewSource);
+if(typeof reducePreviewMotion.addEventListener==='function') reducePreviewMotion.addEventListener('change',syncPreviewLoop);
+addEventListener('openlive:appearancechange',()=>{
+  previewBlack=getComputedStyle(document.documentElement).getPropertyValue('--content-black').trim();
+  syncPreviewLoop();
+});
+
+/* ---------- boot ---------- */
+$('#cores').textContent='Using '+(navigator.hardwareConcurrency||8)+' CPU cores';
+setPreset(S.preset);
+renderView(); renderConv(); renderQueue(); renderFootage(); loadSelected(); syncAction();
+</script>
+<!-- After the inline script, because it queries #toolsGrid / #toolPanel, which
+     are markup above but only meaningful once the pane machinery exists. -->
+<script src="openlive-tools-ui.js?v=utility-lab-2"></script>
+<link rel="stylesheet" href="openlive-areas.css">
+<link rel="stylesheet" href="openlive-phone-mirror.css">
+<link rel="stylesheet" href="openlive-tool-areas.css">
+<script src="openlive-phone-mirror.js"></script>
+<script src="openlive-areas.js"></script>
+<script src="openlive-tool-areas.js"></script>
+</body>
+</html>

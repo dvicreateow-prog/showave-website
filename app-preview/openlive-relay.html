@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 'unsafe-inline'; img-src 'self' https://showave.afrounity.club http://127.0.0.1:8182 data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'self'; form-action 'none'"><script src="demo-guard.js?v=actual-14-1"></script><script src="demo-data.js?v=actual-14-1"></script><link rel="stylesheet" href="demo-boundary.css?v=actual-14-1">
+<script src="openlive-session-policy.js?v=session-only-1"></script><meta charset="utf-8"><title>SHOWAVE Shared State Relay</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand/showave-mark.svg"></head>
+<body>
+<script>
+(function () {
+  'use strict';
+  const KEY = 'openlive.relay.snapshot.v1';
+  const EVENT_KEY = 'openlive.relay.event.v1';
+  const CHANNEL = 'openlive-relay-v1';
+  let channel = null;
+  try { channel = 'BroadcastChannel' in window ? new BroadcastChannel(CHANNEL) : null; } catch (_) {}
+
+  function read() {
+    try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (_) { return null; }
+  }
+  function parentPost(message) {
+    try { parent.postMessage(Object.assign({ __openliveRelay: true }, message), '*'); } catch (_) {}
+  }
+  function broadcast(message) {
+    try { if (channel) channel.postMessage(message); } catch (_) {}
+  }
+  function accept(message, rebroadcast) {
+    if (!message || !message.kind) return;
+    if (message.kind === 'snapshot' && message.state) {
+      const current = read();
+      const incomingAt = Number(message.state.meta && message.state.meta.updatedAt) || 0;
+      const currentAt = Number(current && current.meta && current.meta.updatedAt) || 0;
+      const incomingRev = String(message.state.meta && message.state.meta.revision || '');
+      const currentRev = String(current && current.meta && current.meta.revision || '');
+      if (incomingAt > currentAt || (incomingAt === currentAt && incomingRev > currentRev)) {
+        try { localStorage.setItem(KEY, JSON.stringify(message.state)); } catch (_) {}
+      }
+    }
+    if (message.kind === 'event') {
+      try { localStorage.setItem(EVENT_KEY, JSON.stringify(message)); } catch (_) {}
+    }
+    parentPost(message);
+    if (rebroadcast) broadcast(message);
+  }
+
+  addEventListener('message', event => {
+    const message = event.data;
+    if (!message || !message.__openliveRelay) return;
+    if (message.kind === 'hello') {
+      parentPost({ kind: 'ready', state: read(), source: 'relay' });
+      return;
+    }
+    accept(message, true);
+  });
+  addEventListener('storage', event => {
+    if (event.key === KEY && event.newValue) {
+      try { parentPost({ kind: 'snapshot', state: JSON.parse(event.newValue), source: 'relay-storage' }); } catch (_) {}
+    }
+    if (event.key === EVENT_KEY && event.newValue) {
+      try { parentPost(JSON.parse(event.newValue)); } catch (_) {}
+    }
+  });
+  if (channel) channel.onmessage = event => accept(event.data, false);
+  parentPost({ kind: 'ready', state: read(), source: 'relay' });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+/* Keep the complete joined Afro Unity mark inside the hero's artwork area. */
+@media (min-width: 768px) {
+  .home-hero .home-hero-globe {
+    scale: .70 !important;
+    translate: -11% 4% !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .home-hero .home-hero-stick { height: auto; min-height: 100svh; overflow: hidden; }
+  .home-hero .home-hero-stick > .container { min-height: 100svh; }
+  .home-hero .home-hero-globe {
+    top: 82px;
+    left: 50%;
+    right: auto;
+    width: min(100vw, 520px);
+    height: min(100vw, 520px);
+    margin-left: max(-50vw, -260px);
+    scale: 1 !important;
+    translate: 0 0 !important;
+  }
+  .home-hero .home-hero-text-wrap {
+    isolation: isolate;
+    box-sizing: border-box;
+    width: 100%;
+    height: auto;
+    min-height: 100svh;
+    justify-content: flex-start;
+    padding: calc(min(100vw, 520px) + 48px) 0 28px;
+  }
+  .home-hero .home-hero-text-wrap::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: calc(min(100vw, 520px) + 22px) -24px -36px;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent, #08090be6 88px, #08090b 200px);
+    mask-image: none;
+  }
+  .home-hero .home-hero-title .heading {
+    max-width: 100%;
+    font-size: clamp(42px, 11.7vw, 68px);
+    line-height: .98;
+  }
+  .home-hero .home-hero-label { margin-bottom: 16px; }
+  .home-hero .home-hero-title { margin-bottom: 20px; }
+  .home-hero .home-hero-desc { max-width: 34ch; margin-bottom: 24px; }
+  .home-hero .home-hero-links { flex-wrap: wrap; gap: 10px; }
+  .home-hero .home-hero-links > a { min-height: 44px; }
+}

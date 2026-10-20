@@ -1,0 +1,3 @@
+/* Match the footer's existing monochrome dot lettering in every appearance. */
+.showave-branded-world-map { filter: none; }
+html[data-showave-scheme="dark"] .showave-branded-world-map { filter: invert(1); }

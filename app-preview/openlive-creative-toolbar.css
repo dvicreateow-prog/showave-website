@@ -1,0 +1,36 @@
+/* Match the compact SHOWAVE inspector chrome; never replace readiness/status. */
+.bc-creative-toolbar{display:flex;align-items:center;gap:8px;flex:none;min-height:30px;padding:2px 8px;background:var(--panel,#111213);border-block:1px solid var(--line,#292b2e);color:var(--txt,#ccc);font:var(--font,11px Arial);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;box-sizing:border-box}
+.bc-creative-toolbar[hidden]{display:none}
+.bc-creative-identity{flex:0 1 145px;min-width:70px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#9ea8b3}
+.bc-creative-actions{display:flex;gap:2px;min-width:0;overflow-x:auto;scrollbar-width:thin;align-items:center}
+.bc-creative-toolbar button,.bc-creative-dialog button{font:inherit;color:inherit;background:#17191c;border:1px solid #090a0b;border-radius:3px;padding:3px 7px;white-space:nowrap;cursor:pointer;line-height:16px}
+.bc-creative-toolbar button:hover:not(:disabled),.bc-creative-dialog button:hover:not(:disabled){background:#263442;border-color:#45647c}
+.bc-creative-toolbar button:disabled,.bc-creative-dialog button:disabled{opacity:.4;cursor:default}
+.bc-creative-toolbar button:focus-visible,.bc-creative-dialog :focus-visible{outline:2px solid #3daaff;outline-offset:1px}
+.bc-creative-status{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.bc-creative-dialog{box-sizing:border-box;width:330px;max-width:calc(100vw - 24px);max-height:calc(100vh - 32px);padding:0;background:var(--panel,#111213);color:var(--txt,#ccc);border:1px solid var(--line,#4d555d);border-radius:0;box-shadow:var(--shadow-md,0 12px 42px #000a);font:var(--font,11px Arial);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:auto}
+.bc-creative-dialog::backdrop{background:#0006}
+.bc-creative-dialog header{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#35383d,#17191c);padding:3px 6px;border-bottom:1px solid #070809;position:sticky;top:0;z-index:1}
+.bc-creative-dialog header strong{font-weight:400}
+.bc-creative-dialog form{margin:0;padding:0 8px 8px}
+.bc-creative-note{font-size:10px;line-height:1.4;color:#a1a8af;margin:8px}
+.bc-creative-fields{display:flex;flex-direction:column;gap:6px}
+.bc-creative-fields label{display:grid;grid-template-columns:1fr minmax(95px,1fr);align-items:center;gap:8px}
+.bc-creative-fields input,.bc-creative-fields select{min-width:0;width:100%;box-sizing:border-box;font:inherit;color:#ddd;background:#191b1d;border:1px solid #070809;border-radius:3px;padding:4px;max-height:30px}
+.bc-creative-fields input[type=color]{padding:1px;height:25px}
+.bc-creative-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}
+.bc-creative-grid button{white-space:normal;padding:3px}
+.bc-creative-error{color:#e3ba73;min-height:14px;margin:5px 0;overflow-wrap:anywhere}
+.bc-creative-dialog footer{display:flex;justify-content:flex-end;gap:6px;border-top:1px solid #292b2e;padding-top:6px}
+.bc-creative-dialog button[type=submit]{background:#124677;border-color:#267ebb}
+.bc-creative-eraser{width:660px}
+.bc-creative-mask{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:none;cursor:crosshair;background:repeating-conic-gradient(#303439 0% 25%,#24272b 0% 50%) 0 0/16px 16px;border:1px solid #454b52}
+@media(max-width:700px){.bc-creative-toolbar{gap:4px}.bc-creative-identity{flex-basis:85px}.bc-creative-actions button{padding-inline:5px}}
+
+/* Monochrome vector tools keep the labels readable and follow button state. */
+.bc-creative-actions>button{display:inline-flex;align-items:center;gap:5px;flex-shrink:0}
+.bc-creative-actions>button[hidden]{display:none}
+.bc-creative-icon{order:-1;display:inline-block;width:14px;height:14px;flex:0 0 14px;background:currentColor;mask:var(--creative-icon) center/contain no-repeat;-webkit-mask:var(--creative-icon) center/contain no-repeat;pointer-events:none}
+.bc-creative-actions>button.bc-creative-tool-start{margin-left:5px}
+.bc-creative-actions{padding-block:1px}
+@media(max-width:700px){.bc-creative-icon{width:13px;height:13px;flex-basis:13px}.bc-creative-actions>button{gap:4px}}
