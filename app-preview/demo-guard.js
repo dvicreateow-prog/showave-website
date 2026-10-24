@@ -10,7 +10,7 @@
   const requested = parameters.get('workspace');
   const previewToken = parameters.get('previewToken') || '';
   const workspace = routes[requested] ? requested : Object.keys(routes).find(key => routes[key] === currentFile) || 'live';
-  const status = { workspace, version:'0.1.0-preview.14', limitedActions:true, source:'actual-installed-frontend', blocked:0 };
+  const status = { workspace, version:'0.1.0-preview.16', limitedActions:true, source:'actual-installed-frontend', blocked:0 };
   // A direct top-level request must never run this package outside its sandbox.
   if (global.parent === global || global.origin !== 'null') {
     global.stop();

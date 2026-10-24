@@ -1,0 +1,500 @@
+/* Broadcast console finish & Creative T-Fader hardware module. */
+#workspaceStudio .ol-area-header:is([data-area-type="preview"],
+  [data-area-type="programme"],[data-area-type="crossfader"],
+  [data-area-type="transitions"]) {
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--head,#333) 92%,var(--txt-hi,#eee)) 0%,
+    var(--head,#333) 48%,
+    color-mix(in srgb,var(--head,#333) 93%,var(--inset,#111)) 100%);
+  color:var(--txt-hi,#eee);
+  border-bottom-color:var(--line,#191919);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--txt-hi,#eee) 12%,transparent),
+    inset 0 -1px 0 color-mix(in srgb,var(--inset,#111) 45%,transparent);
+}
+#workspaceStudio .ol-area-header:is([data-area-type="preview"],
+  [data-area-type="programme"],[data-area-type="crossfader"],
+  [data-area-type="transitions"]) > select {
+  font-weight:600;
+  text-shadow:0 1px 0 color-mix(in srgb,var(--inset,#111) 45%,transparent);
+}
+
+/* Full-bleed dockable T-fader console inside section[5] */
+.ol-area[data-area-type="crossfader"] > .ol-area-content {
+  overflow:hidden !important;
+}
+.ol-broadcast-panel.ol-broadcast-crossfader {
+  align-items:stretch !important;
+  justify-content:stretch !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  background:linear-gradient(180deg,#121720 0%,#0b0f16 100%);
+}
+.ol-broadcast-crossfader .bc-transition-console {
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 50px minmax(0,1fr);
+  gap:4px;
+  flex:1 1 auto;
+  width:100% !important;
+  max-width:none !important;
+  height:100% !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:6px 5px !important;
+  box-sizing:border-box;
+  border:0 !important;
+  border-radius:0 !important;
+  background:
+    radial-gradient(130% 55% at 50% 0%,rgba(56,189,248,.11) 0%,transparent 65%),
+    linear-gradient(180deg,#161c27 0%,#0f141d 50%,#0a0d13 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    inset 1px 0 0 rgba(255,255,255,.03),
+    inset -1px 0 0 rgba(0,0,0,.6),
+    inset 0 -1px 0 rgba(0,0,0,.85);
+}
+
+/* PVW & PGM stereo meter bus columns */
+.ol-broadcast-crossfader .bc-monitor-audio {
+  grid-row:1;
+  grid-column:1;
+  align-self:stretch;
+  align-items:stretch;
+  grid-template-columns:minmax(0,1fr) !important;
+  grid-template-rows:20px minmax(80px,1fr) auto !important;
+  gap:5px !important;
+  padding:4px 3px !important;
+  margin:0 !important;
+  border-radius:6px !important;
+  border:1px solid rgba(148,163,184,.14) !important;
+  background:linear-gradient(180deg,rgba(10,14,22,.82) 0%,rgba(6,9,15,.94) 100%) !important;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.68),0 1px 0 rgba(255,255,255,.04);
+  min-height:0;
+}
+.ol-broadcast-crossfader .bc-monitor-audio[data-monitor-audio="programme"] {
+  grid-column:3;
+}
+.ol-broadcast-crossfader .bc-console-bus-name {
+  grid-row:1;
+  grid-column:1;
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:4px;
+  font-size:8.5px;
+  font-weight:700;
+  letter-spacing:.08em;
+  line-height:1;
+  text-shadow:none;
+}
+.ol-broadcast-crossfader [data-monitor-audio="preview"] .bc-console-bus-name {
+  color:#34d399;
+  background:rgba(16,185,129,.12);
+  border:1px solid rgba(52,211,153,.28);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+.ol-broadcast-crossfader [data-monitor-audio="programme"] .bc-console-bus-name {
+  color:#38bdf8;
+  background:rgba(56,189,248,.12);
+  border:1px solid rgba(56,189,248,.28);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+.ol-broadcast-crossfader .bc-monitor-audio[data-state="clip"] .bc-console-bus-name {
+  color:#f87171;
+  background:rgba(239,68,68,.16);
+  border-color:rgba(248,113,113,.45);
+}
+
+/* Symmetric dual-lane segmented LED bargraph meters */
+.ol-broadcast-crossfader .bc-audio-meter-panel {
+  grid-row:2;
+  grid-column:1;
+  display:flex !important;
+  align-items:stretch;
+  justify-content:center;
+  min-height:0;
+  padding:2px 0 !important;
+}
+.ol-broadcast-crossfader .bc-stereo-meter,
+.ol-broadcast-crossfader [data-monitor-audio="preview"] .bc-stereo-meter,
+.ol-broadcast-crossfader [data-monitor-audio="programme"] .bc-stereo-meter {
+  display:grid !important;
+  grid-template-columns:7px 7px !important;
+  grid-template-rows:minmax(0,1fr) !important;
+  justify-content:center !important;
+  gap:4px !important;
+  padding:0 !important;
+  min-height:0;
+  flex:1;
+}
+.ol-broadcast-crossfader [data-monitor-audio="preview"] .bc-audio-lane:nth-child(1),
+.ol-broadcast-crossfader [data-monitor-audio="programme"] .bc-audio-lane:nth-child(1) {
+  grid-column:1 !important;
+  grid-row:1 !important;
+}
+.ol-broadcast-crossfader [data-monitor-audio="preview"] .bc-audio-lane:nth-child(2),
+.ol-broadcast-crossfader [data-monitor-audio="programme"] .bc-audio-lane:nth-child(2) {
+  grid-column:2 !important;
+  grid-row:1 !important;
+}
+.ol-broadcast-crossfader .bc-audio-scale {
+  display:none !important;
+}
+.ol-broadcast-crossfader .bc-audio-lane {
+  display:flex;
+  flex-direction:column-reverse;
+  align-items:center;
+  gap:3px;
+  min-height:0;
+}
+.ol-broadcast-crossfader .bc-audio-lane > span {
+  width:auto;
+  height:9px;
+  text-align:center;
+  font-size:7.5px;
+  font-weight:700;
+  line-height:9px;
+  color:#64748b;
+}
+.ol-broadcast-crossfader .bc-audio-track {
+  flex:1;
+  width:7px !important;
+  height:auto;
+  min-height:60px;
+  border-radius:2px;
+  background:
+    linear-gradient(0deg,
+      rgba(16,185,129,.20) 0% 66.667%,
+      rgba(245,158,11,.22) 66.667% 85%,
+      rgba(239,68,68,.26) 85% 100%),
+    #05080d !important;
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,.9),
+    inset 0 0 0 1px rgba(148,163,184,.16);
+}
+.ol-broadcast-crossfader .bc-audio-fill {
+  background:linear-gradient(0deg,
+    #10b981 0% 66.667%,
+    #f59e0b 66.667% 85%,
+    #ef4444 85% 100%);
+  box-shadow:0 0 8px rgba(16,185,129,.45);
+}
+.ol-broadcast-crossfader .bc-audio-track::after {
+  background:repeating-linear-gradient(0deg,
+    transparent 0 3px,
+    rgba(5,8,13,.88) 3px 4px) !important;
+}
+
+/* Stacked, unclipped cue headphone & volume controls */
+.ol-broadcast-crossfader .bc-console-listen-controls {
+  grid-row:3;
+  grid-column:1;
+  display:flex !important;
+  flex-direction:column !important;
+  flex-wrap:nowrap !important;
+  align-items:stretch !important;
+  justify-content:flex-end !important;
+  gap:3px !important;
+  min-height:0;
+  width:100%;
+}
+.ol-broadcast-crossfader .bc-listen-button,
+.ol-broadcast-crossfader .bc-monitor-audio:is([data-listening="suspended"],[data-listening="unavailable"]) .bc-listen-button {
+  flex:0 0 21px !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:21px !important;
+  min-height:21px !important;
+  padding:0 !important;
+  border-radius:4px !important;
+  border:1px solid rgba(148,163,184,.22) !important;
+  background:linear-gradient(180deg,#1e2533 0%,#121722 100%) !important;
+  color:#94a3b8;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+}
+.ol-broadcast-crossfader .bc-listen-button svg {
+  width:12px !important;
+  height:12px !important;
+}
+.ol-broadcast-crossfader .bc-listen-light {
+  right:3px !important;
+  bottom:3px !important;
+  width:3.5px !important;
+  height:3.5px !important;
+  background:#64748b;
+  opacity:.75;
+}
+.ol-broadcast-crossfader .bc-monitor-audio[data-listening="running"] .bc-listen-button {
+  background:linear-gradient(180deg,rgba(16,185,129,.28),rgba(5,150,105,.22)) !important;
+  border-color:rgba(52,211,153,.55) !important;
+  color:#ecfdf5 !important;
+}
+.ol-broadcast-crossfader .bc-monitor-audio[data-listening="running"] .bc-listen-light {
+  background:#34d399 !important;
+  box-shadow:0 0 5px #34d399;
+  opacity:1;
+}
+.ol-broadcast-crossfader .bc-monitor-audio:is([data-listening="suspended"],[data-listening="unavailable"]) .bc-listen-light {
+  background:#38bdf8;
+  opacity:.65;
+}
+.ol-broadcast-crossfader .bc-audio-listening {
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+}
+.ol-broadcast-crossfader .bc-console-level > summary {
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  width:100% !important;
+  min-width:0 !important;
+  height:17px !important;
+  min-height:17px !important;
+  padding:0 2px !important;
+  border-radius:3px !important;
+  border:1px solid rgba(148,163,184,.18) !important;
+  background:rgba(15,23,42,.75) !important;
+  color:#cbd5e1 !important;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.5);
+}
+.ol-broadcast-crossfader .bc-volume-value {
+  font-size:8px !important;
+  font-weight:600 !important;
+  line-height:15px !important;
+  letter-spacing:-.01em;
+  color:inherit !important;
+}
+
+/* Center Creative Broadcast T-Fader Well */
+.ol-broadcast-crossfader .bc-crossfader-rail.bc-crossfader-centred {
+  position:static;
+  grid-column:2;
+  grid-row:1;
+  align-self:stretch;
+  width:100%;
+  min-height:0;
+  padding:5px 3px !important;
+  border-radius:7px !important;
+  border:1px solid rgba(56,189,248,.28) !important;
+  background:
+    radial-gradient(90% 50% at 50% 50%,rgba(56,189,248,.07) 0%,transparent 80%),
+    linear-gradient(180deg,#090d15 0%,#05080d 50%,#090d15 100%) !important;
+  box-shadow:
+    inset 0 3px 8px rgba(0,0,0,.9),
+    inset 0 0 0 1px rgba(255,255,255,.03),
+    0 1px 0 rgba(255,255,255,.05) !important;
+  overflow:visible;
+}
+.ol-broadcast-crossfader .bc-crossfader-centred .bc-tbar {
+  flex:1;
+  min-height:0;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:20px 12px minmax(84px,1fr) 12px 22px !important;
+  gap:3px !important;
+  justify-items:center;
+  align-items:center;
+}
+.ol-broadcast-crossfader .bc-tbar-title {
+  grid-row:1;
+  width:100% !important;
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.ol-broadcast-crossfader .bc-tbar-name-wide,
+.ol-broadcast-crossfader .bc-tbar-name-rail {
+  display:none !important;
+}
+.ol-broadcast-crossfader .bc-tbar-title output {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:40px;
+  height:18px;
+  padding:0 3px;
+  border-radius:4px;
+  border:1px solid rgba(56,189,248,.38);
+  background:linear-gradient(180deg,#05080e 0%,#0b1320 100%);
+  color:#38bdf8;
+  font-size:9.5px;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+  line-height:1;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.85),0 0 8px rgba(56,189,248,.16);
+}
+.ol-broadcast-crossfader .bc-crossfader-centred .bc-tbar-ends > span::after {
+  padding:0 2px !important;
+  border:0 !important;
+  background:transparent !important;
+  font-size:7px !important;
+  font-weight:700 !important;
+  letter-spacing:.08em !important;
+  line-height:11px !important;
+}
+.ol-broadcast-crossfader .bc-crossfader-centred #transitionTbarEnd::after {
+  content:"▲ " attr(data-short) !important;
+  color:rgba(52,211,153,.88) !important;
+}
+.ol-broadcast-crossfader .bc-crossfader-centred #transitionTbarStart::after {
+  content:"▼ " attr(data-short) !important;
+  color:rgba(56,189,248,.88) !important;
+}
+
+/* Precision Calibrated T-Bar Track & 3D Machined Handle */
+.ol-broadcast-crossfader .bc-crossfader-centred .bc-tbar input[type="range"] {
+  grid-row:3;
+  appearance:none;
+  -webkit-appearance:none;
+  box-sizing:border-box;
+  writing-mode:vertical-lr;
+  direction:rtl;
+  width:42px !important;
+  height:100% !important;
+  min-height:0;
+  padding:0;
+  margin:0;
+  background:
+    linear-gradient(90deg,
+      transparent 0 11px,
+      #060910 11px 31px,
+      transparent 31px 100%),
+    linear-gradient(90deg,
+      rgba(56,189,248,.55) 0 10px,
+      transparent 10px 32px,
+      rgba(56,189,248,.55) 32px 100%) no-repeat 0 50% / 100% 1.5px,
+    repeating-linear-gradient(to bottom,
+      rgba(148,163,184,.42) 0 1px,
+      transparent 1px 25%),
+    repeating-linear-gradient(to bottom,
+      rgba(148,163,184,.18) 0 1px,
+      transparent 1px 6.25%) !important;
+  cursor:ns-resize;
+  touch-action:none;
+}
+.ol-broadcast-crossfader .bc-crossfader-centred .bc-tbar input[type="range"]::-webkit-slider-runnable-track {
+  width:10px !important;
+  height:100%;
+  border-radius:999px;
+  border:1px solid rgba(56,189,248,.38) !important;
+  background:linear-gradient(to top,
+    #0284c7 0%,
+    #38bdf8 calc(var(--tbar-position,0%) * .65),
+    #34d399 var(--tbar-position,0%),
+    #04070c var(--tbar-position,0%),
+    #080d16 100%) !important;
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,.92),
+    0 0 10px rgba(56,189,248,.22) !important;
+}
+.ol-broadcast-crossfader .bc-crossfader-centred .bc-tbar input[type="range"]::-webkit-slider-thumb {
+  appearance:none;
+  -webkit-appearance:none;
+  width:36px !important;
+  height:20px !important;
+  margin:0 0 0 -13px !important;
+  border-radius:5px !important;
+  border:1px solid rgba(125,211,252,.85) !important;
+  background:
+    linear-gradient(90deg,transparent 0 16%,rgba(255,255,255,.95) 16% 84%,transparent 84% 100%) no-repeat 50% 50% / 100% 2px,
+    linear-gradient(90deg,transparent 0 24%,rgba(15,23,42,.75) 24% 76%,transparent 76% 100%) no-repeat 50% calc(50% - 4px) / 100% 1px,
+    linear-gradient(90deg,transparent 0 24%,rgba(15,23,42,.75) 24% 76%,transparent 76% 100%) no-repeat 50% calc(50% + 4px) / 100% 1px,
+    linear-gradient(180deg,
+      #f1f5f9 0%,
+      #94a3b8 22%,
+      #334155 42%,
+      #0284c7 46%,
+      #38bdf8 50%,
+      #0284c7 54%,
+      #1e293b 58%,
+      #475569 82%,
+      #0f172a 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.85),
+    inset 0 -1px 0 rgba(2,6,23,.88),
+    0 4px 10px rgba(0,0,0,.82),
+    0 0 12px rgba(56,189,248,.45) !important;
+}
+.ol-broadcast-crossfader .bc-crossfader-centred .bc-tbar input[type="range"]:hover:not(:disabled)::-webkit-slider-thumb {
+  border-color:#fff !important;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 5px 12px rgba(0,0,0,.9),
+    0 0 16px rgba(56,189,248,.72) !important;
+}
+.ol-broadcast-crossfader .bc-crossfader-centred .bc-tbar input[type="range"]::-moz-range-track {
+  width:10px;
+  height:100%;
+  border-radius:999px;
+  border:1px solid rgba(56,189,248,.38);
+  background:#05080e;
+}
+.ol-broadcast-crossfader .bc-crossfader-centred .bc-tbar input[type="range"]::-moz-range-thumb {
+  width:36px;
+  height:20px;
+  border-radius:5px;
+  border:1px solid rgba(125,211,252,.85);
+  background:linear-gradient(180deg,#f1f5f9 0%,#94a3b8 38%,#38bdf8 50%,#1e293b 62%,#0f172a 100%);
+}
+
+/* Reset transition button */
+.ol-broadcast-crossfader .bc-tbar-reset {
+  grid-column:1;
+  grid-row:5;
+  width:36px !important;
+  height:21px !important;
+  min-width:20px !important;
+  min-height:18px !important;
+  padding:0 !important;
+  font-size:0 !important;
+  line-height:0 !important;
+  border-radius:4px !important;
+  border:1px solid rgba(148,163,184,.24) !important;
+  background:linear-gradient(180deg,#1e2533 0%,#111622 100%) !important;
+  color:#94a3b8;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+}
+.ol-broadcast-crossfader .bc-tbar-reset:hover:not(:disabled),
+.ol-broadcast-crossfader .bc-listen-button:hover:not(:disabled),
+.ol-broadcast-crossfader .bc-console-level > summary:hover,
+.ol-broadcast-crossfader .bc-console-level[open] > summary {
+  background:linear-gradient(180deg,#283244 0%,#192130 100%) !important;
+  border-color:rgba(56,189,248,.48) !important;
+  color:#f8fafc !important;
+}
+
+.ol-broadcast-transitions > .bc-transitionbar.bc-manual-transitionbar {
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--panel,#282828) 96%,var(--txt-hi,#eee)),
+    var(--panel,#282828) 58%);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--txt-hi,#eee) 9%,transparent),
+    inset 0 -1px 0 color-mix(in srgb,var(--inset,#111) 45%,transparent);
+}
+.ol-broadcast-transitions .bc-transition-field > span {
+  color:var(--txt-hi,#eee);
+  font-weight:600;
+}
+.ol-broadcast-transitions :is(#transitionType,#transitionMs) {
+  box-shadow:inset 0 1px 2px color-mix(in srgb,var(--inset,#111) 60%,transparent),
+    0 1px 0 color-mix(in srgb,var(--txt-hi,#eee) 7%,transparent);
+}
+@media(forced-colors:active) {
+  #workspaceStudio .ol-area-header:is([data-area-type="preview"],
+    [data-area-type="programme"],[data-area-type="crossfader"],
+    [data-area-type="transitions"]),
+  .ol-broadcast-crossfader .bc-transition-console,
+  .ol-broadcast-crossfader .bc-console-bus-name,
+  .ol-broadcast-crossfader .bc-tbar-title,
+  .ol-broadcast-crossfader .bc-audio-track,
+  .ol-broadcast-crossfader .bc-listen-button,
+  .ol-broadcast-crossfader .bc-console-level > summary,
+  .ol-broadcast-transitions > .bc-transitionbar.bc-manual-transitionbar,
+  .ol-broadcast-transitions :is(#transitionType,#transitionMs) {
+    background:Canvas !important;
+    color:CanvasText !important;
+    box-shadow:none !important;
+    text-shadow:none !important;
+  }
+}

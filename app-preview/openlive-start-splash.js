@@ -169,7 +169,7 @@
 
   const $ = id => document.getElementById(id);
   const projects = global.OpenLiveProjects;
-  $('showave-start-version').textContent = global.OpenLiveDesktop?.version || '0.1.0-preview.14';
+  $('showave-start-version').textContent = global.OpenLiveDesktop?.version || '0.1.0-preview.16';
   let showAllRecent = false;
   let mirrorPanel = null, mirrorExpanded = false;
   function publishMirrorState() {

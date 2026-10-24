@@ -322,8 +322,8 @@
         <p>No native iOS installer or macOS build is available in this preview set. The review kit’s iOS folder contains delivery and testing instructions only.</p>
         <h2>Before your first review</h2>
         <p>Use the platform version listed in <a href="/downloads">Downloads</a>; the earlier preview.1 package is superseded. Check the notes supplied with your platform build and keep a record of what you tested. Start with <a href="/manuals?article=getting-started">one original file and one production task</a>, then share a reproducible report through your existing team review channel.</p>
-        <h2>Planned for the next Windows preview</h2>
-        <p>Updates since preview.14 are being tested now: Grid Tool screen cards with mixed cabinet sizes, a cabinet library and signal plans, a shared vector calibration checker, millimetre and pixel layouts for Grid screens in Mapper, Whole / Cabinet / Section chase targets, a Multiview window, a Go Live button that starts every ready destination, and the Afro Unity globe on Home. The preview.14 installer doesn’t include them. See <a href="/downloads#whats-new">what’s coming</a> for more.</p>`
+        <h2>New in Windows 0.1.0-preview.16</h2>
+        <p>Windows preview.16 includes Grid Tool screen cards with mixed cabinet sizes, a cabinet library and signal plans, a shared vector calibration checker, millimetre and pixel layouts for Grid screens in Mapper, Whole / Cabinet / Section chase targets, Broadcast Studio’s Creative T-Fader console, Multiview window, 720p HD through 8K UHD output options, a Go Live button that starts every ready destination, and the Afro Unity globe on Home. See <a href="/downloads#whats-new">what’s new on Downloads</a> for details.</p>`
     }
   };
 
