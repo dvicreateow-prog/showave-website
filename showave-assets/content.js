@@ -322,8 +322,10 @@
         <p>No native iOS installer or macOS build is available in this preview set. The review kit’s iOS folder contains delivery and testing instructions only.</p>
         <h2>Before your first review</h2>
         <p>Use the platform version listed in <a href="/downloads">Downloads</a>; the earlier preview.1 package is superseded. Check the notes supplied with your platform build and keep a record of what you tested. Start with <a href="/manuals?article=getting-started">one original file and one production task</a>, then share a reproducible report through your existing team review channel.</p>
-        <h2>New in Windows 0.1.0-preview.16</h2>
-        <p>Windows preview.16 includes Grid Tool screen cards with mixed cabinet sizes, a cabinet library and signal plans, a shared vector calibration checker, millimetre and pixel layouts for Grid screens in Mapper, Whole / Cabinet / Section chase targets, Broadcast Studio’s Creative T-Fader console, Multiview window, 720p HD through 8K UHD output options, a Go Live button that starts every ready destination, and the Afro Unity globe on Home. See <a href="/downloads#whats-new">what’s new on Downloads</a> for details.</p>`
+        <h2>New in Windows 0.1.0-preview.17</h2>
+        <p>Windows preview.17 adds SHOWAVE Sign, a workspace for designing printable documents and capturing live autographs on a pad, a guest kiosk screen or paired tablets, with a Sign source for Show Grid cues and Broadcast scenes. Every tool now shares one SHOWAVE top bar, and Preferences, Shortcuts, Presets, Media Manager and the editors open as tabs. Broadcast Studio’s T-Fader console, the Show transport and every other window take a hardware-style finish. In the desktop app, tool tabs stay docked and the Sign output needs one click to fill its display. See <a href="/downloads#whats-new">what’s new on Downloads</a> for details.</p>
+        <h2>Windows 0.1.0-preview.16</h2>
+        <p>Windows preview.16 included Grid Tool screen cards with mixed cabinet sizes, a cabinet library and signal plans, a shared vector calibration checker, millimetre and pixel layouts for Grid screens in Mapper, Whole / Cabinet / Section chase targets, Broadcast Studio’s Creative T-Fader console, Multiview window, 720p HD through 8K UHD output options, a Go Live button that starts every ready destination, and the Afro Unity globe on Home.</p>`
     }
   };
 

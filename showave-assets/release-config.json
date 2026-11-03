@@ -1,11 +1,11 @@
 {
-  "version": "0.1.0-preview.16",
+  "version": "0.1.0-preview.17",
   "platforms": {
     "windows": {
-      "version": "0.1.0-preview.16",
-      "url": "https://github.com/dvicreateow-prog/showave-releases/releases/download/v0.1.0-preview.16/SHOWAVE-Live-Preview-Setup-0.1.0-preview.16-x64.exe",
-      "size": 254663999,
-      "sha256": "553c00672bf44481f461fb81d9489aef05c61637de0a42570bc17b6a1e75d6d1"
+      "version": "0.1.0-preview.17",
+      "url": "https://github.com/dvicreateow-prog/showave-releases/releases/download/v0.1.0-preview.17/SHOWAVE-Live-Preview-Setup-0.1.0-preview.17-x64.exe",
+      "size": 255073787,
+      "sha256": "a9d2e2fc229fa6735f8d08b52862f379706cbc36fadea6a0d4448cb235ebda69"
     },
     "linux": {
       "version": "0.1.0-preview.6",
